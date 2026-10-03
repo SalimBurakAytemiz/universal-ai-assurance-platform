@@ -2,25 +2,18 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-03 (branch auto/assurance-spine)
+## Last local run — 2026-10-04 (branch auto/session-independent-autopilot)
 
 Command: `npm run verify` (validate → typecheck → test)
 
-- validate: **OK** (policies, build graph, 72 agents, 143 skills, 9 adapters, knowledge, state)
+- validate: **OK** (policies, build graph 55 nodes, 72 agents, 143 skills, 9 adapters, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **137 passed / 137** across 16 files (post re-review)
+- vitest: **189 passed / 189** across 20 files
 
-| suite | tests | status |
-|-------|-------|--------|
-| authorization-kernel | 17 | PASS |
-| policy-engine | 7 | PASS |
-| audit | 3 | PASS |
-| boundary + broker-throw | 7 | PASS |
-| agent-registry / permissions / events | 17 | PASS |
-| skill-registry / tool-adapters / core repo | 11 | PASS |
-| project-model / digital-twin | 25 | PASS |
-| evidence-engine | 11 | PASS |
-| verification-engine | 7 | PASS |
-| release-gate | 10 | PASS |
+New this change — autopilot (`services/autopilot/test/`):
+- 5 restart/recovery proofs PASS (survive restart; WAITING_PROVIDER preserved; deterministic
+  continues while AI unavailable; AI resumes from checkpoint on provider return; no duplicate
+  commit/PR/merge after recovery).
+- bounded-backoff retry→FAIL, dependency gating, blocked-on-failed-dep, deterministic monitor parsing.
 
-Security/safety tests: PASS. P0/P1/P2/P3 open: 0 / 0 / 0 / 0.
+P0/P1/P2/P3 open: 0 / 0 / 0 / 0.

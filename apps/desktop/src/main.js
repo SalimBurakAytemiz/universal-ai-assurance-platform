@@ -26,6 +26,23 @@ function collectState() {
   const auth = readJsonSafe(".ai/security/AUTHORIZATION_STATE.json");
   const nodes = (graph && graph.nodes) || [];
   const byStatus = nodes.reduce((acc, n) => ((acc[n.status] = (acc[n.status] || 0) + 1), acc), {});
+
+  // Autopilot: read the durable job store + provider control (same files the service uses).
+  const apDoc = readJsonSafe(".ai/autopilot/jobs.json");
+  const provider = readJsonSafe(".ai/autopilot/provider.json");
+  const apJobs = (apDoc && apDoc.jobs) || [];
+  const apByState = apJobs.reduce((acc, j) => ((acc[j.state] = (acc[j.state] || 0) + 1), acc), {});
+  const autopilot = {
+    present: !!apDoc,
+    control: (apDoc && apDoc.meta && apDoc.meta.control) || "unknown",
+    providerAvailable: provider ? provider.available === true : false,
+    byState: apByState,
+    running: apJobs.filter((j) => j.state === "RUNNING").map((j) => j.name),
+    waitingProvider: apJobs.filter((j) => j.state === "WAITING_PROVIDER").map((j) => j.name),
+    retryScheduled: apJobs.filter((j) => j.state === "RETRY_SCHEDULED").map((j) => ({ name: j.name, nextRetryAt: j.nextRetryAt })),
+    jobs: apJobs.map((j) => ({ id: j.id, name: j.name, kind: j.kind, state: j.state, attempts: j.attempts, nextRetryAt: j.nextRetryAt || null })),
+  };
+
   return {
     product: (master && master.product) || "Universal AI Assurance Platform",
     repository: master && master.repository,
@@ -33,6 +50,7 @@ function collectState() {
     authorizationsCount: auth ? (auth.authorizations || []).length : 0,
     github,
     buildGraph: { total: nodes.length, byStatus, nodes },
+    autopilot,
     readAt: new Date().toISOString(),
   };
 }

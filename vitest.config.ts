@@ -27,7 +27,7 @@ export default defineConfig({
   test: {
     globals: false,
     environment: "node",
-    include: ["packages/**/test/**/*.test.ts", "tests/**/*.test.ts"],
+    include: ["packages/**/test/**/*.test.ts", "tests/**/*.test.ts", "services/**/test/**/*.test.mjs"],
     reporters: ["default"],
     coverage: {
       enabled: false,

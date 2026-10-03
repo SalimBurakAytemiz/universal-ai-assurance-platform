@@ -24,7 +24,9 @@ if ($LASTEXITCODE -ne 0) { Write-Host "VERIFY FAILED." -ForegroundColor Red; exi
 
 Write-Host ""
 Write-Host "Verification PASSED." -ForegroundColor Green
-& (Join-Path $PSScriptRoot "status-full-auto.ps1")
-Write-Host ""
-Write-Host "To launch the desktop control plane:  npm run desktop:dev" -ForegroundColor Cyan
+Write-Host "Desktop control plane:  npm run desktop:dev" -ForegroundColor Cyan
 Write-Host "Active security validation remains LOCKED_BY_DESIGN (no authorization on file)." -ForegroundColor DarkYellow
+Write-Host ""
+Write-Host "Starting session-independent autopilot (recover -> start). Ctrl+C detaches; state persists." -ForegroundColor Cyan
+node (Join-Path $root "services/autopilot/cli.mjs") recover
+node (Join-Path $root "services/autopilot/cli.mjs") start

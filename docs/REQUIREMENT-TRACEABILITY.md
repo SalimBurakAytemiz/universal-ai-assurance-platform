@@ -61,4 +61,14 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-DESKTOP-KNOWLEDGE-001 | Desktop Knowledge view | M2 §49 | NOT_STARTED | — | — |
 | REQ-DESKTOP-LEARNING-001 | Desktop Learning view | M2 §50 | NOT_STARTED | — | — |
 
+| REQ-AUTOPILOT-STATES-001 | Runtime states (WAITING_PROVIDER/RETRY_SCHEDULED/...) | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/states.mjs` | `autopilot.test.mjs` |
+| REQ-AUTOPILOT-STORE-001 | Durable job store (survives restart, atomic writes) | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/store.mjs` | `autopilot.test.mjs` |
+| REQ-AUTOPILOT-SERVICE-001 | Session-independent scheduler + lifecycle (no LLM for deterministic) | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/service.mjs` | `autopilot.test.mjs` |
+| REQ-AUTOPILOT-PROVIDER-001 | Provider availability -> WAITING_PROVIDER + bounded backoff; resume on return | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/provider.mjs`, `backoff.mjs` | `autopilot.test.mjs` |
+| REQ-AUTOPILOT-MONITOR-001 | Independent Git/GitHub/PR/CI monitor (deterministic) | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/monitor.mjs` | `monitor.test.mjs` |
+| REQ-AUTOPILOT-RECOVERY-001 | Crash/restart recovery, no duplicate commit/PR/merge | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/service.mjs` | `autopilot.test.mjs` |
+| REQ-AUTOPILOT-CLI-001 | Lifecycle CLI start/stop/pause/resume/status/recover + PS1 wiring | user 2026-10-04 | IMPLEMENTED | `services/autopilot/cli.mjs`, `scripts/*-full-auto.ps1` | smoke-tested |
+| REQ-AUTOPILOT-TESTS-001 | 5 restart/recovery proof tests | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/test/autopilot.test.mjs` | 5/5 pass |
+| REQ-AUTOPILOT-DESKTOP-001 | Desktop autopilot/provider/task/CI/recovery status | user 2026-10-04 | IMPLEMENTED (scaffold-connected) | `apps/desktop/*` | manual |
+
 Legacy agent roles are additionally traced in `docs/AGENT-ROLE-MIGRATION-MAP.md`.
