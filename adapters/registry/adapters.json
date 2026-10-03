@@ -1,0 +1,86 @@
+{
+  "version": "0.1.0",
+  "adapters": [
+    {
+      "id": "hash-adapter",
+      "version": "0.1.0",
+      "capability": "hash",
+      "actions": ["hash.sha256"],
+      "riskClass": "R0_PASSIVE",
+      "deterministic": true,
+      "health": "HEALTHY"
+    },
+    {
+      "id": "schema-adapter",
+      "version": "0.1.0",
+      "capability": "schema",
+      "actions": ["schema.validate"],
+      "riskClass": "R0_PASSIVE",
+      "deterministic": true,
+      "health": "HEALTHY"
+    },
+    {
+      "id": "playwright-adapter",
+      "version": "0.0.0",
+      "capability": "web",
+      "actions": ["web.automate"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": false,
+      "health": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "selenium-adapter",
+      "version": "0.0.0",
+      "capability": "web-legacy",
+      "actions": ["web.automate.legacy"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": false,
+      "health": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "appium-adapter",
+      "version": "0.0.0",
+      "capability": "mobile",
+      "actions": ["mobile.automate"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": false,
+      "health": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "k6-adapter",
+      "version": "0.0.0",
+      "capability": "performance",
+      "actions": ["perf.smoke"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": false,
+      "health": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "database-readonly-adapter",
+      "version": "0.0.0",
+      "capability": "db-readonly",
+      "actions": ["db.readonly.query"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": false,
+      "health": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "git-adapter",
+      "version": "0.0.0",
+      "capability": "git",
+      "actions": ["git.status", "git.diff"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": true,
+      "health": "NOT_IMPLEMENTED"
+    },
+    {
+      "id": "github-adapter",
+      "version": "0.0.0",
+      "capability": "github",
+      "actions": ["github.pr"],
+      "riskClass": "R1_LOW_IMPACT",
+      "deterministic": false,
+      "health": "NOT_IMPLEMENTED"
+    }
+  ]
+}

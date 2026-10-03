@@ -48,7 +48,10 @@
           ],
           "properties": {
             "canDetect": { "type": "boolean" },
-            "canVerifyOwnFinding": { "type": "boolean" },
+            "canVerifyOwnFinding": {
+              "description": "Separation of duties: an agent can never verify its own finding.",
+              "const": false
+            },
             "canCloseOwnFinding": {
               "description": "Separation of duties: a detector can never close its own finding.",
               "const": false

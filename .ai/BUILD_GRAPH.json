@@ -1,6 +1,6 @@
 {
-  "version": "0.3.0",
-  "updatedAt": "2026-10-03T00:00:00.000Z",
+  "version": "0.4.0",
+  "updatedAt": "2026-10-03T01:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -9,8 +9,19 @@
       "family": "foundation",
       "dependencies": [],
       "status": "DONE",
-      "requirements": ["REQ-REPO-001", "REQ-GOV-001"],
-      "files": ["package.json", "tsconfig.base.json", "README.md", "SECURITY.md", "CLAUDE.md", "LICENSE", ".gitignore"],
+      "requirements": [
+        "REQ-REPO-001",
+        "REQ-GOV-001"
+      ],
+      "files": [
+        "package.json",
+        "tsconfig.base.json",
+        "README.md",
+        "SECURITY.md",
+        "CLAUDE.md",
+        "LICENSE",
+        ".gitignore"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -19,10 +30,18 @@
       "id": "core-types",
       "name": "Shared core domain types (@uaap/core)",
       "family": "core",
-      "dependencies": ["repo-foundation"],
+      "dependencies": [
+        "repo-foundation"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-CORE-001"],
-      "files": ["packages/core/src/enums.ts", "packages/core/src/types.ts", "packages/core/src/ids.ts"],
+      "requirements": [
+        "REQ-CORE-001"
+      ],
+      "files": [
+        "packages/core/src/enums.ts",
+        "packages/core/src/types.ts",
+        "packages/core/src/ids.ts"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -31,11 +50,20 @@
       "id": "trust-kernel",
       "name": "Fail-closed Authorization / Trust Kernel",
       "family": "trust-kernel",
-      "dependencies": ["core-types"],
+      "dependencies": [
+        "core-types"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-SEC-TRUSTKERNEL-001", "REQ-SEC-FAILCLOSED-001"],
-      "files": ["packages/authorization-kernel/src/index.ts"],
-      "tests": ["packages/authorization-kernel/test/kernel.test.ts"],
+      "requirements": [
+        "REQ-SEC-TRUSTKERNEL-001",
+        "REQ-SEC-FAILCLOSED-001"
+      ],
+      "files": [
+        "packages/authorization-kernel/src/index.ts"
+      ],
+      "tests": [
+        "packages/authorization-kernel/test/kernel.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -43,11 +71,21 @@
       "id": "policy-engine",
       "name": "Policy-as-code engine (schema-validated, fail-closed)",
       "family": "policy",
-      "dependencies": ["core-types"],
+      "dependencies": [
+        "core-types"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-SEC-POLICY-001"],
-      "files": ["packages/policy-engine/src/index.ts", "policies/baseline.policy.json", "schemas/policy.schema.json"],
-      "tests": ["packages/policy-engine/test/policy.test.ts"],
+      "requirements": [
+        "REQ-SEC-POLICY-001"
+      ],
+      "files": [
+        "packages/policy-engine/src/index.ts",
+        "policies/baseline.policy.json",
+        "schemas/policy.schema.json"
+      ],
+      "tests": [
+        "packages/policy-engine/test/policy.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -55,11 +93,20 @@
       "id": "audit-ledger",
       "name": "Immutable decision ledger + chain of custody",
       "family": "audit",
-      "dependencies": ["core-types"],
+      "dependencies": [
+        "core-types"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-AUDIT-001", "REQ-EVIDENCE-CUSTODY-001"],
-      "files": ["packages/audit/src/index.ts"],
-      "tests": ["packages/audit/test/audit.test.ts"],
+      "requirements": [
+        "REQ-AUDIT-001",
+        "REQ-EVIDENCE-CUSTODY-001"
+      ],
+      "files": [
+        "packages/audit/src/index.ts"
+      ],
+      "tests": [
+        "packages/audit/test/audit.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -67,11 +114,21 @@
       "id": "tool-broker",
       "name": "Lease-based Tool Broker (boundary enforcement)",
       "family": "tool-broker",
-      "dependencies": ["trust-kernel", "audit-ledger"],
+      "dependencies": [
+        "trust-kernel",
+        "audit-ledger"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-SEC-BOUNDARY-001", "REQ-AGENT-LEASE-001"],
-      "files": ["packages/tool-broker/src/index.ts"],
-      "tests": ["tests/safety/boundary.test.ts"],
+      "requirements": [
+        "REQ-SEC-BOUNDARY-001",
+        "REQ-AGENT-LEASE-001"
+      ],
+      "files": [
+        "packages/tool-broker/src/index.ts"
+      ],
+      "tests": [
+        "tests/safety/boundary.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -79,11 +136,21 @@
       "id": "orchestrator",
       "name": "Unified Orchestrator (no direct agent to target)",
       "family": "orchestrator",
-      "dependencies": ["tool-broker", "policy-engine"],
+      "dependencies": [
+        "tool-broker",
+        "policy-engine"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-SEC-BOUNDARY-001", "REQ-ORCH-001"],
-      "files": ["packages/orchestrator/src/index.ts"],
-      "tests": ["tests/safety/boundary.test.ts"],
+      "requirements": [
+        "REQ-SEC-BOUNDARY-001",
+        "REQ-ORCH-001"
+      ],
+      "files": [
+        "packages/orchestrator/src/index.ts"
+      ],
+      "tests": [
+        "tests/safety/boundary.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -91,10 +158,18 @@
       "id": "ai-state",
       "name": "Persistent .ai state model",
       "family": "state",
-      "dependencies": ["repo-foundation"],
+      "dependencies": [
+        "repo-foundation"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-STATE-001"],
-      "files": [".ai/MASTER_STATE.json", ".ai/BUILD_GRAPH.json", ".ai/NEXT_ACTIONS.md"],
+      "requirements": [
+        "REQ-STATE-001"
+      ],
+      "files": [
+        ".ai/MASTER_STATE.json",
+        ".ai/BUILD_GRAPH.json",
+        ".ai/NEXT_ACTIONS.md"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -103,10 +178,19 @@
       "id": "validation-scripts",
       "name": "Policy / build-graph / state validators",
       "family": "ci",
-      "dependencies": ["policy-engine", "ai-state"],
+      "dependencies": [
+        "policy-engine",
+        "ai-state"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-CI-VALIDATE-001"],
-      "files": ["scripts/validate-policies.mjs", "scripts/validate-build-graph.mjs", "scripts/validate-state.mjs"],
+      "requirements": [
+        "REQ-CI-VALIDATE-001"
+      ],
+      "files": [
+        "scripts/validate-policies.mjs",
+        "scripts/validate-build-graph.mjs",
+        "scripts/validate-state.mjs"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -115,11 +199,20 @@
       "id": "agent-registry-schema",
       "name": "Agent registry schema + validator",
       "family": "agent-org",
-      "dependencies": ["core-types"],
+      "dependencies": [
+        "core-types"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-AGENT-REGISTRY-001"],
-      "files": ["schemas/agent.schema.json", "scripts/validate-agent-registry.mjs"],
-      "tests": ["tests/integration/agent-registry.test.ts"],
+      "requirements": [
+        "REQ-AGENT-REGISTRY-001"
+      ],
+      "files": [
+        "schemas/agent.schema.json",
+        "scripts/validate-agent-registry.mjs"
+      ],
+      "tests": [
+        "tests/integration/agent-registry.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -127,11 +220,19 @@
       "id": "agent-definitions-72",
       "name": "72 canonical agent role definitions (9 guilds x 8)",
       "family": "agent-org",
-      "dependencies": ["agent-registry-schema"],
+      "dependencies": [
+        "agent-registry-schema"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-AGENT-72-001"],
-      "files": ["agents/registry/agents.json"],
-      "tests": ["tests/integration/agent-registry.test.ts"],
+      "requirements": [
+        "REQ-AGENT-72-001"
+      ],
+      "files": [
+        "agents/registry/agents.json"
+      ],
+      "tests": [
+        "tests/integration/agent-registry.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -139,10 +240,16 @@
       "id": "agent-role-migration-map",
       "name": "Old QA/Security roles mapped to 72 canonical agents",
       "family": "agent-org",
-      "dependencies": ["agent-definitions-72"],
+      "dependencies": [
+        "agent-definitions-72"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-AGENT-MIGRATION-001"],
-      "files": ["docs/AGENT-ROLE-MIGRATION-MAP.md"],
+      "requirements": [
+        "REQ-AGENT-MIGRATION-001"
+      ],
+      "files": [
+        "docs/AGENT-ROLE-MIGRATION-MAP.md"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -151,10 +258,18 @@
       "id": "knowledge-provenance-schema",
       "name": "Knowledge provenance + lifecycle schema",
       "family": "knowledge",
-      "dependencies": ["core-types"],
+      "dependencies": [
+        "core-types"
+      ],
       "status": "DONE",
-      "requirements": ["REQ-KNOWLEDGE-PROV-001", "REQ-KNOWLEDGE-LIFECYCLE-001"],
-      "files": ["schemas/knowledge-item.schema.json", "scripts/validate-knowledge.mjs"],
+      "requirements": [
+        "REQ-KNOWLEDGE-PROV-001",
+        "REQ-KNOWLEDGE-LIFECYCLE-001"
+      ],
+      "files": [
+        "schemas/knowledge-item.schema.json",
+        "scripts/validate-knowledge.mjs"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -163,10 +278,17 @@
       "id": "ci-workflow",
       "name": "CI workflow (validate + typecheck + test)",
       "family": "ci",
-      "dependencies": ["validation-scripts", "agent-registry-schema"],
+      "dependencies": [
+        "validation-scripts",
+        "agent-registry-schema"
+      ],
       "status": "READY",
-      "requirements": ["REQ-CI-001"],
-      "files": [".github/workflows/ci.yml"],
+      "requirements": [
+        "REQ-CI-001"
+      ],
+      "files": [
+        ".github/workflows/ci.yml"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -175,10 +297,19 @@
       "id": "desktop-shell",
       "name": "Desktop application shell (honest live state)",
       "family": "desktop",
-      "dependencies": ["orchestrator", "ai-state"],
+      "dependencies": [
+        "orchestrator",
+        "ai-state"
+      ],
       "status": "READY",
-      "requirements": ["REQ-DESKTOP-001"],
-      "files": ["apps/desktop/package.json", "apps/desktop/src/main.ts", "apps/desktop/renderer/index.html"],
+      "requirements": [
+        "REQ-DESKTOP-001"
+      ],
+      "files": [
+        "apps/desktop/package.json",
+        "apps/desktop/src/main.ts",
+        "apps/desktop/renderer/index.html"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
@@ -187,43 +318,533 @@
       "id": "github-automation",
       "name": "GitHub lifecycle automation (PR/CI/merge)",
       "family": "automation",
-      "dependencies": ["ci-workflow"],
+      "dependencies": [
+        "ci-workflow"
+      ],
       "status": "READY",
-      "requirements": ["REQ-GITHUB-001"],
+      "requirements": [
+        "REQ-GITHUB-001"
+      ],
       "files": [],
       "tests": [],
       "commits": [],
       "review": {}
     },
-    { "id": "agent-permission-graph", "name": "Machine-readable least-privilege permission graph", "family": "agent-org", "dependencies": ["agent-definitions-72"], "status": "NOT_STARTED", "requirements": ["REQ-AGENT-PERM-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "skill-registry", "name": "Versioned skill registry", "family": "agent-org", "dependencies": ["agent-registry-schema"], "status": "NOT_STARTED", "requirements": ["REQ-SKILL-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "tool-adapter-registry", "name": "Deterministic tool adapter registry", "family": "agent-org", "dependencies": ["tool-broker"], "status": "NOT_STARTED", "requirements": ["REQ-TOOL-ADAPTER-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "structured-agent-events", "name": "Schema-validated structured agent events", "family": "agent-org", "dependencies": ["core-types"], "status": "NOT_STARTED", "requirements": ["REQ-AGENT-EVENTS-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "agent-activation-planner", "name": "Assurance planner selects the run agent team", "family": "agent-org", "dependencies": ["agent-definitions-72", "digital-twin"], "status": "NOT_STARTED", "requirements": ["REQ-AGENT-ACTIVATION-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "agent-evaluation", "name": "Agent evaluation / benchmark harness", "family": "agent-org", "dependencies": ["agent-definitions-72"], "status": "NOT_STARTED", "requirements": ["REQ-EVALUATION-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "agent-certification", "name": "Agent certification lifecycle", "family": "agent-org", "dependencies": ["agent-evaluation"], "status": "NOT_STARTED", "requirements": ["REQ-EVALUATION-002"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "knowledge-store", "name": "Scoped knowledge store (global/org/project/run)", "family": "knowledge", "dependencies": ["knowledge-provenance-schema"], "status": "NOT_STARTED", "requirements": ["REQ-KNOWLEDGE-ISOLATION-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "knowledge-lifecycle", "name": "Candidate to certified knowledge lifecycle", "family": "knowledge", "dependencies": ["knowledge-store"], "status": "NOT_STARTED", "requirements": ["REQ-KNOWLEDGE-LIFECYCLE-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "knowledge-decay", "name": "Knowledge freshness / decay detection", "family": "knowledge", "dependencies": ["knowledge-store"], "status": "NOT_STARTED", "requirements": ["REQ-KNOWLEDGE-DECAY-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "technology-scout", "name": "Technology scout research pipeline", "family": "knowledge", "dependencies": ["knowledge-lifecycle"], "status": "NOT_STARTED", "requirements": ["REQ-RESEARCH-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "standards-intelligence", "name": "Version-aware standards intelligence", "family": "knowledge", "dependencies": ["knowledge-lifecycle"], "status": "NOT_STARTED", "requirements": ["REQ-RESEARCH-002"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "advisory-intelligence", "name": "Advisory/CVE correlation (hypothesis only)", "family": "knowledge", "dependencies": ["knowledge-lifecycle"], "status": "NOT_STARTED", "requirements": ["REQ-RESEARCH-003"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "sandbox-learning", "name": "Sandbox experiment + evaluation path", "family": "knowledge", "dependencies": ["knowledge-lifecycle", "agent-evaluation"], "status": "NOT_STARTED", "requirements": ["REQ-LEARNING-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "project-model", "name": "Project + target model persistence", "family": "project-intel", "dependencies": ["core-types"], "status": "NOT_STARTED", "requirements": ["REQ-PROJECT-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "digital-twin", "name": "Project Digital Twin", "family": "project-intel", "dependencies": ["project-model"], "status": "NOT_STARTED", "requirements": ["REQ-TWIN-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "knowledge-graph", "name": "Assurance knowledge graph", "family": "project-intel", "dependencies": ["digital-twin"], "status": "NOT_STARTED", "requirements": ["REQ-GRAPH-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "domain-capability-model", "name": "Domain-aware + capability-based model + domain packs", "family": "project-intel", "dependencies": ["digital-twin"], "status": "NOT_STARTED", "requirements": ["REQ-DOMAIN-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "quality-api-engine", "name": "Quality: strict API contract engine", "family": "quality", "dependencies": ["orchestrator", "tool-adapter-registry"], "status": "NOT_STARTED", "requirements": ["REQ-QA-API-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "quality-web-engine", "name": "Quality: web automation engine", "family": "quality", "dependencies": ["orchestrator", "tool-adapter-registry"], "status": "NOT_STARTED", "requirements": ["REQ-QA-WEB-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "security-appsec-engine", "name": "Security: application security engine", "family": "security", "dependencies": ["orchestrator", "tool-adapter-registry"], "status": "NOT_STARTED", "requirements": ["REQ-SEC-APPSEC-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "security-active-validation-gate", "name": "Authorized active security validation (locked)", "family": "security", "dependencies": ["trust-kernel", "policy-engine", "audit-ledger", "agent-permission-graph"], "status": "BLOCKED", "requirements": ["REQ-SEC-ACTIVE-001"], "files": [], "tests": [], "commits": [], "review": { "blockedReason": "HUMAN_ACTION_REQUIRED: active validation needs explicit external target authorization + scope; remains locked by design." } },
-    { "id": "evidence-engine", "name": "Evidence engine (execution-backed)", "family": "assurance", "dependencies": ["orchestrator"], "status": "NOT_STARTED", "requirements": ["REQ-EVIDENCE-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "verification-engine", "name": "Independent finding verification", "family": "assurance", "dependencies": ["evidence-engine"], "status": "NOT_STARTED", "requirements": ["REQ-VERIFY-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "remediation-engine", "name": "Remediation lifecycle (where authorized)", "family": "assurance", "dependencies": ["verification-engine"], "status": "NOT_STARTED", "requirements": ["REQ-REMEDIATION-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "release-gate", "name": "Release gate consuming real results", "family": "assurance", "dependencies": ["verification-engine"], "status": "NOT_STARTED", "requirements": ["REQ-RELEASE-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "desktop-agents-view", "name": "Desktop Agents center (connected)", "family": "desktop", "dependencies": ["desktop-shell", "agent-definitions-72"], "status": "NOT_STARTED", "requirements": ["REQ-DESKTOP-AGENTS-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "desktop-knowledge-view", "name": "Desktop Knowledge center (connected)", "family": "desktop", "dependencies": ["desktop-shell", "knowledge-store"], "status": "NOT_STARTED", "requirements": ["REQ-DESKTOP-KNOWLEDGE-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "desktop-learning-view", "name": "Desktop Learning center (connected)", "family": "desktop", "dependencies": ["desktop-shell", "knowledge-lifecycle"], "status": "NOT_STARTED", "requirements": ["REQ-DESKTOP-LEARNING-001"], "files": [], "tests": [], "commits": [], "review": {} },
-    { "id": "desktop-packaging", "name": "Windows desktop packaging + update/rollback", "family": "packaging", "dependencies": ["desktop-shell"], "status": "NOT_STARTED", "requirements": ["REQ-PACKAGING-001"], "files": [], "tests": [], "commits": [], "review": {} }
+    {
+      "id": "agent-permission-graph",
+      "name": "Machine-readable least-privilege permission graph",
+      "family": "agent-org",
+      "dependencies": [
+        "agent-definitions-72"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AGENT-PERM-001"
+      ],
+      "files": [
+        "packages/agent-permissions/src/index.ts",
+        "schemas/agent.schema.json"
+      ],
+      "tests": [
+        "packages/agent-permissions/test/permissions.test.ts"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "skill-registry",
+      "name": "Versioned skill registry",
+      "family": "agent-org",
+      "dependencies": [
+        "agent-registry-schema"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-SKILL-001"
+      ],
+      "files": [
+        "schemas/skill.schema.json",
+        "skills/registry/skills.json",
+        "scripts/gen-skills.mjs",
+        "scripts/validate-skill-registry.mjs"
+      ],
+      "tests": [
+        "tests/integration/skill-registry.test.ts"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "tool-adapter-registry",
+      "name": "Deterministic tool adapter registry",
+      "family": "agent-org",
+      "dependencies": [
+        "tool-broker"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-TOOL-ADAPTER-001"
+      ],
+      "files": [
+        "schemas/tool-adapter.schema.json",
+        "adapters/registry/adapters.json",
+        "packages/tool-adapter-registry/src/index.ts"
+      ],
+      "tests": [
+        "packages/tool-adapter-registry/test/adapters.test.ts"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "structured-agent-events",
+      "name": "Schema-validated structured agent events",
+      "family": "agent-org",
+      "dependencies": [
+        "core-types"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AGENT-EVENTS-001"
+      ],
+      "files": [
+        "schemas/agent-event.schema.json",
+        "packages/agent-events/src/index.ts"
+      ],
+      "tests": [
+        "packages/agent-events/test/agent-events.test.ts"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "agent-activation-planner",
+      "name": "Assurance planner selects the run agent team",
+      "family": "agent-org",
+      "dependencies": [
+        "agent-definitions-72",
+        "digital-twin"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-AGENT-ACTIVATION-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "agent-evaluation",
+      "name": "Agent evaluation / benchmark harness",
+      "family": "agent-org",
+      "dependencies": [
+        "agent-definitions-72"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-EVALUATION-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "agent-certification",
+      "name": "Agent certification lifecycle",
+      "family": "agent-org",
+      "dependencies": [
+        "agent-evaluation"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-EVALUATION-002"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "knowledge-store",
+      "name": "Scoped knowledge store (global/org/project/run)",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-provenance-schema"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-KNOWLEDGE-ISOLATION-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "knowledge-lifecycle",
+      "name": "Candidate to certified knowledge lifecycle",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-store"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-KNOWLEDGE-LIFECYCLE-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "knowledge-decay",
+      "name": "Knowledge freshness / decay detection",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-store"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-KNOWLEDGE-DECAY-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "technology-scout",
+      "name": "Technology scout research pipeline",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-lifecycle"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-RESEARCH-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "standards-intelligence",
+      "name": "Version-aware standards intelligence",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-lifecycle"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-RESEARCH-002"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "advisory-intelligence",
+      "name": "Advisory/CVE correlation (hypothesis only)",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-lifecycle"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-RESEARCH-003"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "sandbox-learning",
+      "name": "Sandbox experiment + evaluation path",
+      "family": "knowledge",
+      "dependencies": [
+        "knowledge-lifecycle",
+        "agent-evaluation"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-LEARNING-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "project-model",
+      "name": "Project + target model persistence",
+      "family": "project-intel",
+      "dependencies": [
+        "core-types"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-PROJECT-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "digital-twin",
+      "name": "Project Digital Twin",
+      "family": "project-intel",
+      "dependencies": [
+        "project-model"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-TWIN-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "knowledge-graph",
+      "name": "Assurance knowledge graph",
+      "family": "project-intel",
+      "dependencies": [
+        "digital-twin"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-GRAPH-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "domain-capability-model",
+      "name": "Domain-aware + capability-based model + domain packs",
+      "family": "project-intel",
+      "dependencies": [
+        "digital-twin"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-DOMAIN-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "quality-api-engine",
+      "name": "Quality: strict API contract engine",
+      "family": "quality",
+      "dependencies": [
+        "orchestrator",
+        "tool-adapter-registry"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-QA-API-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "quality-web-engine",
+      "name": "Quality: web automation engine",
+      "family": "quality",
+      "dependencies": [
+        "orchestrator",
+        "tool-adapter-registry"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-QA-WEB-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "security-appsec-engine",
+      "name": "Security: application security engine",
+      "family": "security",
+      "dependencies": [
+        "orchestrator",
+        "tool-adapter-registry"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-SEC-APPSEC-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "security-active-validation-gate",
+      "name": "Authorized active security validation (locked)",
+      "family": "security",
+      "dependencies": [
+        "trust-kernel",
+        "policy-engine",
+        "audit-ledger",
+        "agent-permission-graph"
+      ],
+      "status": "BLOCKED",
+      "requirements": [
+        "REQ-SEC-ACTIVE-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {
+        "blockedReason": "HUMAN_ACTION_REQUIRED: active validation needs explicit external target authorization + scope; remains locked by design."
+      }
+    },
+    {
+      "id": "evidence-engine",
+      "name": "Evidence engine (execution-backed)",
+      "family": "assurance",
+      "dependencies": [
+        "orchestrator"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-EVIDENCE-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "verification-engine",
+      "name": "Independent finding verification",
+      "family": "assurance",
+      "dependencies": [
+        "evidence-engine"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-VERIFY-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "remediation-engine",
+      "name": "Remediation lifecycle (where authorized)",
+      "family": "assurance",
+      "dependencies": [
+        "verification-engine"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-REMEDIATION-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "release-gate",
+      "name": "Release gate consuming real results",
+      "family": "assurance",
+      "dependencies": [
+        "verification-engine"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-RELEASE-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "desktop-agents-view",
+      "name": "Desktop Agents center (connected)",
+      "family": "desktop",
+      "dependencies": [
+        "desktop-shell",
+        "agent-definitions-72"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-DESKTOP-AGENTS-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "desktop-knowledge-view",
+      "name": "Desktop Knowledge center (connected)",
+      "family": "desktop",
+      "dependencies": [
+        "desktop-shell",
+        "knowledge-store"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-DESKTOP-KNOWLEDGE-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "desktop-learning-view",
+      "name": "Desktop Learning center (connected)",
+      "family": "desktop",
+      "dependencies": [
+        "desktop-shell",
+        "knowledge-lifecycle"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-DESKTOP-LEARNING-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "desktop-packaging",
+      "name": "Windows desktop packaging + update/rollback",
+      "family": "packaging",
+      "dependencies": [
+        "desktop-shell"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-PACKAGING-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    }
   ]
 }
