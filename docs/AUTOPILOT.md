@@ -11,8 +11,14 @@ service itself keeps running without one.
 - Runs deterministic jobs with **no LLM**; AI-dependent jobs are delegated to an injected executor.
 - Detects provider unavailability and parks AI work in `WAITING_PROVIDER` instead of losing it;
   resumes it when the provider returns. Retries AI tasks with **bounded exponential backoff**.
-- Survives process restart; recovers from the durable store; **never re-runs DONE work**, so no
-  commit/PR/merge is duplicated after a crash.
+- Survives process restart; recovers from the durable store; **never re-runs DONE work**. A
+  side-effecting job that crashed mid-run (left `RUNNING`) is **not** auto-rerun — it goes to
+  `WAITING_APPROVAL` and is resolved by an injected `reconcile` hook (which checks "did the
+  commit/PR/merge already happen?") or by an operator, so no commit/PR/merge is duplicated.
+- Durable store is crash-safe (atomic write + fsync + `.bak`); a **corrupt store is never
+  silently emptied or overwritten** — it is renamed to `.corrupt.<ts>` and the service refuses to
+  start. Control (pause/resume/stop) lives in a separate file so it never races the jobs document.
+- Single-instance lock (`autopilot.pid`): a second `start` refuses rather than double-executing.
 - **Never fakes model execution** and **never bypasses provider limits or safety systems**.
 
 ## Runtime states

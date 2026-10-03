@@ -35,6 +35,9 @@ test-results/
 
 # autopilot runtime artifacts (machine-local durable state)
 .ai/autopilot/jobs.json
+.ai/autopilot/jobs.json.bak
+.ai/autopilot/control.json
+.ai/autopilot/monitor.json
 .ai/autopilot/provider.json
 .ai/autopilot/*.pid
 .ai/autopilot/.jobs.*.tmp

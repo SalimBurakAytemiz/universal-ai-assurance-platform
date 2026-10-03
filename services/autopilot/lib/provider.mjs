@@ -33,7 +33,8 @@ export function defaultProbe(controlPath = ".ai/autopilot/provider.json") {
   if (env === "0" || env === "false") return false;
   if (existsSync(controlPath)) {
     try {
-      return readFileSync(controlPath, "utf8").includes('"available": true') || JSON.parse(readFileSync(controlPath, "utf8")).available === true;
+      // Strict parse only — no substring matching. Malformed/missing field => unavailable (fail-closed).
+      return JSON.parse(readFileSync(controlPath, "utf8")).available === true;
     } catch {
       return false;
     }

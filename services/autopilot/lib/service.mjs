@@ -1,11 +1,15 @@
 // Session-independent autopilot service.
 //
-// Deterministic by construction: the service itself runs deterministic job handlers WITHOUT any
-// LLM. AI-dependent jobs are parked (WAITING_PROVIDER) when no provider is available and resumed
-// when it returns; they are executed only by an injected aiExecutor (e.g. an AI-capable session),
-// never faked here. All state is persisted to the durable JobStore so the service survives process
-// restart and UI closure, and recovery never re-runs completed (DONE) work — so no commit/PR/merge
-// is duplicated after a crash.
+// Deterministic by construction: deterministic job handlers run WITHOUT any LLM. AI-dependent jobs
+// are parked (WAITING_PROVIDER) when no provider is available and executed only by an injected
+// aiExecutor, never faked. State is persisted to the durable JobStore so the service survives
+// process restart and UI closure.
+//
+// Exactly-once for side effects: a job may be marked `sideEffecting`. Such a job is NEVER blindly
+// re-run after a crash or a throw — on recovery an interrupted (RUNNING) side-effecting job, and on
+// failure a side-effecting job, go to WAITING_APPROVAL and are resolved by an injected `reconcile`
+// (which checks "did the commit/PR/merge already happen?"). This makes the "no duplicate
+// commit/PR/merge after recovery" guarantee real, not asserted.
 import { RuntimeState, TERMINAL } from "./states.mjs";
 import { nextRetryAt } from "./backoff.mjs";
 
@@ -17,6 +21,7 @@ export class AutopilotService {
    *   clock: { now: () => string },
    *   handlers?: Record<string, (job:any)=>Promise<any>>,
    *   aiExecutor?: (job:any)=>Promise<{status:"ok"|"unavailable"|"error", result?:any, error?:string}>,
+   *   reconcile?: (job:any)=>Promise<"done"|"not_done"|"unknown">,
    *   backoff?: {baseMs?:number,maxMs?:number,factor?:number},
    *   logger?: (msg:string)=>void,
    * }} deps
@@ -27,20 +32,19 @@ export class AutopilotService {
     this.clock = deps.clock;
     this.handlers = deps.handlers ?? {};
     this.aiExecutor = deps.aiExecutor ?? null;
+    this.reconcile = deps.reconcile ?? null;
     this.backoff = deps.backoff ?? {};
     this.log = deps.logger ?? (() => {});
   }
 
-  get control() {
-    return this.store.meta.control ?? "run";
-  }
+  get control() { return this.store.readControl(); }
 
-  addJob({ id, name, kind = "deterministic", dependsOn = [], maxAttempts = 5 }) {
+  addJob({ id, name, kind = "deterministic", dependsOn = [], maxAttempts = 5, sideEffecting = false }) {
     if (!id || !name) throw new Error("addJob requires id and name.");
     if (this.store.get(id)) return this.store.get(id); // idempotent: never duplicate a job
     const now = this.clock.now();
     return this.store.upsert({
-      id, name, kind, dependsOn: [...dependsOn], state: RuntimeState.READY,
+      id, name, kind, dependsOn: [...dependsOn], sideEffecting: !!sideEffecting, state: RuntimeState.READY,
       attempts: 0, maxAttempts, nextRetryAt: null, error: null, createdAt: now, updatedAt: now,
     });
   }
@@ -55,22 +59,23 @@ export class AutopilotService {
     let blocked = false;
     for (const dep of job.dependsOn) {
       const d = this.store.get(dep);
-      if (!d || d.state === RuntimeState.FAILED) blocked = true;
+      // A missing, FAILED, or BLOCKED dependency blocks this job (BLOCKED propagates down the DAG).
+      if (!d || d.state === RuntimeState.FAILED || d.state === RuntimeState.BLOCKED) blocked = true;
       else if (d.state !== RuntimeState.DONE) return "pending";
     }
     return blocked ? "blocked" : "ready";
   }
 
-  pause() { this.store.setMeta("control", "paused"); }
-  resume() { this.store.setMeta("control", "run"); }
-  stop() { this.store.setMeta("control", "stopped"); }
+  pause() { this.store.writeControl("paused"); }
+  resume() { this.store.writeControl("run"); }
+  stop() { this.store.writeControl("stopped"); }
 
-  /** One deterministic scheduling pass. Returns a summary of transitions. */
+  /** One deterministic scheduling pass. */
   async tick() {
     if (this.control !== "run") return { skipped: true, control: this.control };
     const transitions = [];
     for (const job of this.store.list()) {
-      if (TERMINAL.has(job.state)) continue;
+      if (TERMINAL.has(job.state) || job.state === RuntimeState.WAITING_APPROVAL) continue; // approval is human/reconcile-gated
       const deps = this._depsStatus(job);
       if (deps === "blocked") {
         if (job.state !== RuntimeState.BLOCKED) { this._set(job, RuntimeState.BLOCKED); transitions.push([job.id, RuntimeState.BLOCKED]); }
@@ -79,8 +84,9 @@ export class AutopilotService {
       if (deps === "pending") continue;
 
       let cur = this.store.get(job.id);
+      // Deps became satisfiable: a previously BLOCKED job can return to READY.
+      if (cur.state === RuntimeState.BLOCKED) { cur = this._set(cur, RuntimeState.READY); transitions.push([cur.id, "UNBLOCK_READY"]); }
 
-      // Resume parked work when its gate reopens.
       if (cur.state === RuntimeState.WAITING_PROVIDER && (cur.kind !== "ai" || this.providerGate.isAvailable())) {
         cur = this._set(cur, RuntimeState.READY); transitions.push([cur.id, "RESUME_READY"]);
       }
@@ -94,7 +100,7 @@ export class AutopilotService {
 
       if (cur.kind === "ai") {
         if (!this.providerGate.isAvailable()) { this._set(cur, RuntimeState.WAITING_PROVIDER); transitions.push([cur.id, RuntimeState.WAITING_PROVIDER]); continue; }
-        if (!this.aiExecutor) continue; // provider up but no executor in THIS process: leave READY for an AI session
+        if (!this.aiExecutor) continue; // provider up, no executor in THIS process: leave READY for an AI session
         await this._runAi(cur, transitions);
       } else {
         await this._runDeterministic(cur, transitions);
@@ -121,43 +127,63 @@ export class AutopilotService {
     try {
       const out = await this.aiExecutor(running);
       if (out?.status === "ok") { this._set(running, RuntimeState.DONE, { result: out.result ?? null, error: null }); transitions.push([job.id, RuntimeState.DONE]); }
-      else if (out?.status === "unavailable") { this._set(running, RuntimeState.WAITING_PROVIDER); transitions.push([job.id, RuntimeState.WAITING_PROVIDER]); }
-      else { this._afterFailure(running, out?.error ?? "ai executor error", transitions); }
+      else if (out?.status === "unavailable") {
+        // provider dropped mid-flight: back off instead of oscillating READY<->RUNNING every tick
+        const attempts = (running.attempts ?? 0) + 1;
+        this._set(running, RuntimeState.RETRY_SCHEDULED, { attempts, nextRetryAt: nextRetryAt(this.clock.now(), attempts, this.backoff) });
+        transitions.push([job.id, "UNAVAILABLE_BACKOFF"]);
+      } else { this._afterFailure(running, out?.error ?? "ai executor error", transitions); }
     } catch (e) {
       this._afterFailure(running, e instanceof Error ? e.message : String(e), transitions);
     }
   }
 
   _afterFailure(job, error, transitions) {
-    const attempts = (job.attempts ?? 0) + 1;
-    if (attempts >= job.maxAttempts) {
-      this._set(job, RuntimeState.FAILED, { attempts, error });
-      transitions.push([job.id, RuntimeState.FAILED]);
-    } else {
-      this._set(job, RuntimeState.RETRY_SCHEDULED, { attempts, error, nextRetryAt: nextRetryAt(this.clock.now(), attempts, this.backoff) });
-      transitions.push([job.id, RuntimeState.RETRY_SCHEDULED]);
+    // A side-effecting job that threw may have already performed its effect: do NOT blindly retry.
+    if (job.sideEffecting) {
+      this._set(job, RuntimeState.WAITING_APPROVAL, { attempts: (job.attempts ?? 0) + 1, error });
+      transitions.push([job.id, "NEEDS_RECONCILIATION"]);
+      return;
     }
+    const attempts = (job.attempts ?? 0) + 1;
+    if (attempts >= job.maxAttempts) { this._set(job, RuntimeState.FAILED, { attempts, error }); transitions.push([job.id, RuntimeState.FAILED]); }
+    else { this._set(job, RuntimeState.RETRY_SCHEDULED, { attempts, error, nextRetryAt: nextRetryAt(this.clock.now(), attempts, this.backoff) }); transitions.push([job.id, RuntimeState.RETRY_SCHEDULED]); }
   }
 
   /**
-   * Recover after a crash/restart: reload durable state, and reset only jobs that were mid-flight
-   * (RUNNING) back to READY. DONE/FAILED and all WAITING_* and RETRY_SCHEDULED jobs are preserved, so
-   * completed side effects are never repeated and parked work is never lost.
+   * Recover after a crash/restart. DONE/FAILED and all WAITING_* / RETRY_SCHEDULED jobs are
+   * preserved. An interrupted (RUNNING) job is resolved WITHOUT duplicating side effects:
+   *  - with a `reconcile` hook: done -> DONE, not_done -> READY, unknown -> WAITING_APPROVAL;
+   *  - without it: a side-effecting job -> WAITING_APPROVAL (await an operator), a pure job -> READY.
    */
-  recover() {
+  async recover() {
     this.store.load();
-    const reset = [];
+    const resolved = [];
     for (const job of this.store.list()) {
-      if (job.state === RuntimeState.RUNNING) { this._set(job, RuntimeState.READY); reset.push(job.id); }
+      if (job.state !== RuntimeState.RUNNING) continue;
+      if (this.reconcile) {
+        const r = await this.reconcile(job);
+        if (r === "done") { this._set(job, RuntimeState.DONE); resolved.push([job.id, "RECONCILED_DONE"]); }
+        else if (r === "not_done") { this._set(job, RuntimeState.READY); resolved.push([job.id, "RECONCILED_READY"]); }
+        else { this._set(job, RuntimeState.WAITING_APPROVAL); resolved.push([job.id, "RECONCILE_UNKNOWN"]); }
+      } else if (job.sideEffecting) {
+        this._set(job, RuntimeState.WAITING_APPROVAL); resolved.push([job.id, "AWAIT_RECONCILE"]);
+      } else {
+        this._set(job, RuntimeState.READY); resolved.push([job.id, "RESET_READY"]);
+      }
     }
-    return { reset, counts: this.counts() };
+    return { resolved, counts: this.counts() };
   }
 
-  counts() {
-    const c = {};
-    for (const j of this.store.list()) c[j.state] = (c[j.state] ?? 0) + 1;
-    return c;
+  /** Operator decision for a WAITING_APPROVAL job: mark the (already-performed) effect DONE or (safe to redo) READY. */
+  approve(jobId, outcome /* "done" | "redo" */) {
+    const job = this.store.get(jobId);
+    if (!job || job.state !== RuntimeState.WAITING_APPROVAL) return { ok: false, reason: "Job is not awaiting approval." };
+    this._set(job, outcome === "done" ? RuntimeState.DONE : RuntimeState.READY);
+    return { ok: true };
   }
+
+  counts() { const c = {}; for (const j of this.store.list()) c[j.state] = (c[j.state] ?? 0) + 1; return c; }
 
   status() {
     return {
@@ -170,10 +196,11 @@ export class AutopilotService {
   }
 
   /** Run tick() on an interval until control becomes "stopped" (used by the CLI `start`). */
-  async startLoop(intervalMs = 5000, sleep = (ms) => new Promise((r) => setTimeout(r, ms))) {
+  async startLoop(intervalMs = 5000, { sleep = (ms) => new Promise((r) => setTimeout(r, ms)), beforeTick } = {}) {
     this.resume();
     while (this.control !== "stopped") {
-      this.store.load(); // pick up external control changes (pause/stop/resume) across processes
+      this.store.load(); // pick up external job changes
+      if (beforeTick) { try { await beforeTick(); } catch (e) { this.log(`beforeTick error: ${e}`); } }
       await this.tick();
       await sleep(intervalMs);
     }

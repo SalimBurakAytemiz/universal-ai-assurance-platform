@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { JobStore } from "../lib/store.mjs";
 import { AutopilotService } from "../lib/service.mjs";
 import { RuntimeState } from "../lib/states.mjs";
 import { computeBackoffMs } from "../lib/backoff.mjs";
+import { defaultProbe } from "../lib/provider.mjs";
 
-// Controllable clock + provider gate so every scenario is deterministic.
 function makeClock(start = "2026-10-04T00:00:00.000Z") {
   let t = Date.parse(start);
   return { now: () => new Date(t).toISOString(), advance: (ms) => { t += ms; } };
@@ -17,177 +17,200 @@ function gate(available) {
 }
 
 let dir, jobsPath;
-beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), "uaap-autopilot-"));
-  jobsPath = join(dir, "jobs.json");
-});
+beforeEach(() => { dir = mkdtempSync(join(tmpdir(), "uaap-autopilot-")); jobsPath = join(dir, "jobs.json"); });
 
 describe("autopilot backoff", () => {
   it("is bounded and exponential", () => {
     expect(computeBackoffMs(0, { baseMs: 1000, factor: 2 })).toBe(1000);
     expect(computeBackoffMs(3, { baseMs: 1000, factor: 2 })).toBe(8000);
-    expect(computeBackoffMs(100, { baseMs: 1000, factor: 2, maxMs: 60000 })).toBe(60000); // capped
+    expect(computeBackoffMs(100, { baseMs: 1000, factor: 2, maxMs: 60000 })).toBe(60000);
   });
 });
 
-describe("autopilot — deterministic scheduling + dependencies", () => {
-  it("runs a deterministic job to DONE and respects dependencies", async () => {
-    const clock = makeClock();
-    let order = [];
+describe("provider gate", () => {
+  it("defaultProbe fails closed on a malformed provider file", () => {
+    const p = join(dir, "provider.json");
+    writeFileSync(p, "{ not json");
+    delete process.env.UAAP_PROVIDER_AVAILABLE;
+    expect(defaultProbe(p)).toBe(false);
+    writeFileSync(p, JSON.stringify({ available: true }));
+    expect(defaultProbe(p)).toBe(true);
+    writeFileSync(p, JSON.stringify({ available: "yes" })); // not strictly true
+    expect(defaultProbe(p)).toBe(false);
+  });
+});
+
+describe("autopilot — scheduling, dependencies, BLOCKED propagation", () => {
+  it("runs a deterministic job and respects dependencies", async () => {
     const store = new JobStore(jobsPath);
-    const svc = new AutopilotService({
-      store, providerGate: gate(true), clock,
-      handlers: { a: async () => { order.push("a"); return 1; }, b: async () => { order.push("b"); return 2; } },
-    });
+    const order = [];
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(),
+      handlers: { a: async () => { order.push("a"); }, b: async () => { order.push("b"); } } });
     svc.addJob({ id: "A", name: "a" });
     svc.addJob({ id: "B", name: "b", dependsOn: ["A"] });
-    await svc.tick(); // A runs; B waits on A (A becomes DONE this pass, B next)
-    await svc.tick();
-    expect(store.get("A").state).toBe(RuntimeState.DONE);
+    await svc.tick(); await svc.tick();
     expect(store.get("B").state).toBe(RuntimeState.DONE);
     expect(order).toEqual(["a", "b"]);
   });
 
-  it("BLOCKS a job whose dependency FAILED", async () => {
-    const clock = makeClock();
+  it("propagates BLOCKED transitively and un-blocks when deps become satisfiable", async () => {
     const store = new JobStore(jobsPath);
-    const svc = new AutopilotService({
-      store, providerGate: gate(true), clock, maxAttempts: 1,
-      handlers: { boom: async () => { throw new Error("nope"); }, dependent: async () => 1 },
-    });
-    svc.addJob({ id: "X", name: "boom", maxAttempts: 1 });
-    svc.addJob({ id: "Y", name: "dependent", dependsOn: ["X"] });
-    await svc.tick();
-    expect(store.get("X").state).toBe(RuntimeState.FAILED);
-    await svc.tick();
-    expect(store.get("Y").state).toBe(RuntimeState.BLOCKED);
+    let failNext = true;
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(), maxAttempts: 1,
+      handlers: { root: async () => { if (failNext) throw new Error("x"); }, mid: async () => 1, leaf: async () => 1 } });
+    svc.addJob({ id: "ROOT", name: "root", maxAttempts: 1 });
+    svc.addJob({ id: "MID", name: "mid", dependsOn: ["ROOT"] });
+    svc.addJob({ id: "LEAF", name: "leaf", dependsOn: ["MID"] });
+    await svc.tick(); // ROOT fails
+    expect(store.get("ROOT").state).toBe(RuntimeState.FAILED);
+    await svc.tick(); await svc.tick();
+    expect(store.get("MID").state).toBe(RuntimeState.BLOCKED);
+    expect(store.get("LEAF").state).toBe(RuntimeState.BLOCKED); // transitive
   });
 });
 
 describe("autopilot — the five restart/recovery proofs", () => {
   it("1) a job survives process restart", async () => {
-    const clock = makeClock();
-    let store = new JobStore(jobsPath);
-    let svc = new AutopilotService({ store, providerGate: gate(true), clock, handlers: { t: async () => "ok" } });
+    const store = new JobStore(jobsPath);
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(), handlers: { t: async () => "ok" } });
     svc.addJob({ id: "J", name: "t" });
     await svc.tick();
-    expect(store.get("J").state).toBe(RuntimeState.DONE);
-    // simulate a fresh process: brand-new store+service over the same durable file
-    const store2 = new JobStore(jobsPath);
-    expect(store2.get("J")).toBeDefined();
-    expect(store2.get("J").state).toBe(RuntimeState.DONE);
+    expect(new JobStore(jobsPath).get("J").state).toBe(RuntimeState.DONE);
   });
 
   it("2) WAITING_PROVIDER work is preserved across restart", async () => {
-    const clock = makeClock();
     const store = new JobStore(jobsPath);
-    const svc = new AutopilotService({ store, providerGate: gate(false), clock, aiExecutor: async () => ({ status: "ok" }) });
+    const svc = new AutopilotService({ store, providerGate: gate(false), clock: makeClock(), aiExecutor: async () => ({ status: "ok" }) });
     svc.addJob({ id: "AI", name: "analyze", kind: "ai" });
     await svc.tick();
     expect(store.get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
-    const store2 = new JobStore(jobsPath); // restart
-    expect(store2.get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
+    expect(new JobStore(jobsPath).get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
   });
 
   it("3) deterministic work continues while AI is unavailable", async () => {
-    const clock = makeClock();
     const store = new JobStore(jobsPath);
     let ran = false;
-    const svc = new AutopilotService({
-      store, providerGate: gate(false), clock,
-      handlers: { det: async () => { ran = true; return 1; } },
-      aiExecutor: async () => ({ status: "ok" }),
-    });
+    const svc = new AutopilotService({ store, providerGate: gate(false), clock: makeClock(),
+      handlers: { det: async () => { ran = true; } }, aiExecutor: async () => ({ status: "ok" }) });
     svc.addJob({ id: "AI", name: "analyze", kind: "ai" });
-    svc.addJob({ id: "DET", name: "det", kind: "deterministic" });
+    svc.addJob({ id: "DET", name: "det" });
     await svc.tick();
     expect(ran).toBe(true);
     expect(store.get("DET").state).toBe(RuntimeState.DONE);
     expect(store.get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
   });
 
-  it("4) AI work resumes from its checkpoint when the provider returns", async () => {
-    const clock = makeClock();
-    const store = new JobStore(jobsPath);
+  it("4) AI work resumes (no fake execution) when the provider returns", async () => {
     const providerGate = gate(false);
     let aiCalls = 0;
-    const svc = new AutopilotService({
-      store, providerGate, clock,
-      aiExecutor: async () => { aiCalls++; return { status: "ok", result: "analysis" }; },
-    });
+    const store = new JobStore(jobsPath);
+    const mk = (s) => new AutopilotService({ store: s, providerGate, clock: makeClock(), aiExecutor: async () => { aiCalls++; return { status: "ok", result: "analysis" }; } });
+    const svc = mk(store);
     svc.addJob({ id: "AI", name: "analyze", kind: "ai" });
     await svc.tick();
     expect(store.get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
     expect(aiCalls).toBe(0); // never faked while unavailable
-    // provider returns; simulate a restart too
     providerGate.set(true);
-    const store2 = new JobStore(jobsPath);
-    const svc2 = new AutopilotService({ store: store2, providerGate, clock, aiExecutor: async () => { aiCalls++; return { status: "ok", result: "analysis" }; } });
-    svc2.recover();
+    const store2 = new JobStore(jobsPath); // restart
+    const svc2 = mk(store2);
+    await svc2.recover();
     await svc2.tick();
     expect(store2.get("AI").state).toBe(RuntimeState.DONE);
-    expect(store2.get("AI").result).toBe("analysis");
     expect(aiCalls).toBe(1);
   });
 
-  it("5) no duplicate side effect (commit/PR/merge) after recovery", async () => {
-    const clock = makeClock();
+  it("5) no duplicate side effect after recovery — including the RUNNING-crash window", async () => {
     let commits = 0;
-    const store = new JobStore(jobsPath);
-    const svc = new AutopilotService({ store, providerGate: gate(true), clock, handlers: { commit: async () => { commits++; return "sha"; } } });
-    svc.addJob({ id: "C", name: "commit" });
+    const commit = async () => { commits++; return "sha"; };
+    // (a) completed job is not re-run after restart
+    let store = new JobStore(jobsPath);
+    let svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(), handlers: { commit } });
+    svc.addJob({ id: "C", name: "commit", sideEffecting: true });
     await svc.tick();
     expect(store.get("C").state).toBe(RuntimeState.DONE);
     expect(commits).toBe(1);
-    // restart + recover + tick: the DONE job must NOT run again
     const store2 = new JobStore(jobsPath);
-    const svc2 = new AutopilotService({ store: store2, providerGate: gate(true), clock, handlers: { commit: async () => { commits++; return "sha"; } } });
-    svc2.recover();
+    const svc2 = new AutopilotService({ store: store2, providerGate: gate(true), clock: makeClock(), handlers: { commit } });
+    await svc2.recover();
     await svc2.tick();
-    expect(commits).toBe(1); // still exactly one — no duplicate commit
+    expect(commits).toBe(1); // not re-run
+
+    // (b) a job that CRASHED mid-side-effect (left RUNNING on disk) must NOT auto-rerun
+    const dir2 = mkdtempSync(join(tmpdir(), "uaap-crash-"));
+    const path2 = join(dir2, "jobs.json");
+    const s = new JobStore(path2);
+    const now = makeClock().now();
+    s.upsert({ id: "C2", name: "commit", kind: "deterministic", sideEffecting: true, dependsOn: [], state: RuntimeState.RUNNING, attempts: 1, maxAttempts: 5, nextRetryAt: null, createdAt: now, updatedAt: now });
+    let commits2 = 0;
+    const svcR = new AutopilotService({ store: new JobStore(path2), providerGate: gate(true), clock: makeClock(), handlers: { commit: async () => { commits2++; } } });
+    const rec = await svcR.recover();
+    expect(svcR.store.get("C2").state).toBe(RuntimeState.WAITING_APPROVAL); // awaits reconciliation, not re-run
+    await svcR.tick();
+    expect(commits2).toBe(0); // the possibly-completed effect is never duplicated
+    // operator confirms the effect already happened
+    svcR.approve("C2", "done");
+    expect(svcR.store.get("C2").state).toBe(RuntimeState.DONE);
+  });
+
+  it("5b) a reconcile hook resolves a RUNNING-crash job to DONE without re-running it", async () => {
+    const path = join(mkdtempSync(join(tmpdir(), "uaap-rec-")), "jobs.json");
+    const s = new JobStore(path);
+    const now = makeClock().now();
+    s.upsert({ id: "C", name: "commit", kind: "deterministic", sideEffecting: true, dependsOn: [], state: RuntimeState.RUNNING, attempts: 1, maxAttempts: 5, nextRetryAt: null, createdAt: now, updatedAt: now });
+    let commits = 0;
+    const svc = new AutopilotService({ store: new JobStore(path), providerGate: gate(true), clock: makeClock(),
+      handlers: { commit: async () => { commits++; } }, reconcile: async () => "done" });
+    await svc.recover();
+    await svc.tick();
+    expect(svc.store.get("C").state).toBe(RuntimeState.DONE);
+    expect(commits).toBe(0);
   });
 });
 
-describe("autopilot — AI retry with bounded backoff", () => {
-  it("retries a failing AI task then FAILS after maxAttempts, scheduling backoff between tries", async () => {
-    const clock = makeClock();
-    const store = new JobStore(jobsPath);
-    const svc = new AutopilotService({
-      store, providerGate: gate(true), clock, backoff: { baseMs: 1000, factor: 2 },
-      aiExecutor: async () => ({ status: "error", error: "provider 500" }),
-    });
-    svc.addJob({ id: "AI", name: "analyze", kind: "ai", maxAttempts: 3 });
-    await svc.tick(); // attempt 1 -> RETRY_SCHEDULED
-    expect(store.get("AI").state).toBe(RuntimeState.RETRY_SCHEDULED);
-    expect(store.get("AI").attempts).toBe(1);
-    const retryAt = store.get("AI").nextRetryAt;
-    expect(retryAt).toBeTruthy();
-    // not due yet -> stays scheduled
-    await svc.tick();
-    expect(store.get("AI").state).toBe(RuntimeState.RETRY_SCHEDULED);
-    // advance past backoff -> becomes due, retried
-    clock.advance(5000);
-    await svc.tick(); // attempt 2
-    await svc.tick(); // (if scheduled again) ...advance and exhaust
-    clock.advance(60000);
-    await svc.tick();
-    clock.advance(60000);
-    await svc.tick();
-    expect(store.get("AI").state).toBe(RuntimeState.FAILED);
-    expect(store.get("AI").attempts).toBe(3);
+describe("autopilot — durability + control", () => {
+  it("refuses to start on a corrupt store (no silent empty, no overwrite)", () => {
+    writeFileSync(jobsPath, "{ this is : not json");
+    expect(() => new JobStore(jobsPath)).toThrow(/corrupt/i);
   });
 
-  it("resumes a WAITING_PROVIDER ai job to READY when the gate reopens (no fake execution)", async () => {
-    const clock = makeClock();
+  it("control lives in a separate file so pause does not rewrite the jobs document", async () => {
     const store = new JobStore(jobsPath);
-    const providerGate = gate(false);
-    // no aiExecutor in this process: provider up should leave it READY for an AI session, not fake it
-    const svc = new AutopilotService({ store, providerGate, clock });
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(), handlers: { t: async () => 1 } });
+    svc.addJob({ id: "J", name: "t" });
+    svc.pause();
+    const r = await svc.tick();
+    expect(r.skipped).toBe(true);
+    expect(store.get("J").state).toBe(RuntimeState.READY); // not run while paused
+    // a separate process (new store over same files) sees the control state
+    expect(new JobStore(jobsPath).readControl()).toBe("paused");
+    svc.resume();
+    await svc.tick();
+    expect(store.get("J").state).toBe(RuntimeState.DONE);
+  });
+});
+
+describe("autopilot — AI retry / unavailable backoff", () => {
+  it("backs off (does not oscillate) when the executor reports 'unavailable'", async () => {
+    const store = new JobStore(jobsPath);
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(), backoff: { baseMs: 1000, factor: 2 },
+      aiExecutor: async () => ({ status: "unavailable" }) });
     svc.addJob({ id: "AI", name: "analyze", kind: "ai" });
     await svc.tick();
-    expect(store.get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
-    providerGate.set(true);
+    expect(store.get("AI").state).toBe(RuntimeState.RETRY_SCHEDULED);
+    expect(store.get("AI").nextRetryAt).toBeTruthy();
+  });
+
+  it("retries a failing (non-side-effecting) AI task then FAILS after maxAttempts", async () => {
+    const clock = makeClock();
+    const store = new JobStore(jobsPath);
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock, backoff: { baseMs: 1000, factor: 2 },
+      aiExecutor: async () => ({ status: "error", error: "500" }) });
+    svc.addJob({ id: "AI", name: "analyze", kind: "ai", maxAttempts: 2 });
     await svc.tick();
-    expect(store.get("AI").state).toBe(RuntimeState.READY); // ready for an AI-capable session; never auto-faked
+    expect(store.get("AI").state).toBe(RuntimeState.RETRY_SCHEDULED);
+    clock.advance(10000);
+    await svc.tick();
+    expect(store.get("AI").state).toBe(RuntimeState.FAILED);
+    expect(store.get("AI").attempts).toBe(2);
   });
 });

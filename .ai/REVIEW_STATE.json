@@ -147,5 +147,18 @@
         "conflict status + recency tiebreaker tests"
       ]
     }
+  },
+  "pr6": {
+    "loop1": {
+      "at": "2026-10-04T02:00:00.000Z",
+      "agents": 42,
+      "reported": 19,
+      "confirmed": 19,
+      "fixed": "P1 crash-window duplicate side effect (sideEffecting->WAITING_APPROVAL/reconcile, never auto-rerun); P1 corrupt-store now refuses+renames+.bak (no silent empty/overwrite); P1 control moved to separate file (no jobs-doc race); P1 BLOCKED propagates transitively + un-blocks; P2 single-instance pid lock; P2 fsync; P2 provider probe fail-closed (no substring); P2 AI unavailable backoff (no oscillation); P2 CLI monitor-on-tick (real deterministic work); P3 reserved-states documented, test renamed."
+    },
+    "boundedLoop": {
+      "count": 1,
+      "max": 3
+    }
   }
 }

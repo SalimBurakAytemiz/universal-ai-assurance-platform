@@ -1,34 +1,38 @@
-// Durable, crash-safe job store for the autopilot. One JSON document, written atomically
-// (temp file + rename) so a crash never leaves a torn file. State survives process restart:
-// a new JobStore over the same path reloads every persisted job.
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+// Durable, crash-safe job store for the autopilot.
+//
+// Durability:
+//  - writes are atomic (temp file, fsync, rename) with a best-effort directory fsync;
+//  - the previous good document is kept as `<file>.bak` before each replace;
+//  - a corrupt/torn store is NEVER silently treated as empty and NEVER overwritten: load() tries
+//    the backup, and if neither parses it renames the bad file to `<file>.corrupt.<ts>` and THROWS
+//    so the service fails loudly instead of forgetting every completed job.
+//
+// Control (pause/resume/stop) lives in a SEPARATE tiny file so a control command never rewrites
+// the jobs document (avoids a lost-update race with the running loop).
+import {
+  closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 
 const VERSION = "1";
 
-/**
- * @typedef {Object} Job
- * @property {string} id
- * @property {string} name          handler/task name
- * @property {"deterministic"|"ai"} kind
- * @property {string} state         RuntimeState
- * @property {string[]} dependsOn
- * @property {number} attempts
- * @property {number} maxAttempts
- * @property {string|null} nextRetryAt
- * @property {unknown} [result]
- * @property {string|null} [error]
- * @property {string} createdAt
- * @property {string} updatedAt
- */
+function atomicWrite(file, data) {
+  const dir = dirname(file);
+  mkdirSync(dir, { recursive: true });
+  const tmp = join(dir, `.${process.pid}.${Math.floor(performance.now())}.tmp`);
+  const fd = openSync(tmp, "w");
+  try { writeSync(fd, data); fsyncSync(fd); } finally { closeSync(fd); }
+  try { if (existsSync(file)) copyFileSync(file, `${file}.bak`); } catch { /* best effort backup */ }
+  renameSync(tmp, file); // atomic on same filesystem
+  try { const dfd = openSync(dir, "r"); try { fsyncSync(dfd); } finally { closeSync(dfd); } } catch { /* dir fsync unsupported on some FS */ }
+}
 
 export class JobStore {
   /** @param {string} filePath */
   constructor(filePath) {
     this.filePath = filePath;
-    /** @type {Map<string, Job>} */
+    this.controlPath = join(dirname(filePath), "control.json");
     this.jobs = new Map();
-    /** @type {Record<string, unknown>} */
     this.meta = {};
     this.load();
   }
@@ -36,49 +40,39 @@ export class JobStore {
   load() {
     this.jobs = new Map();
     this.meta = {};
-    if (!existsSync(this.filePath)) return;
+    if (!existsSync(this.filePath)) return; // fresh start
+    let doc = null;
     try {
-      const doc = JSON.parse(readFileSync(this.filePath, "utf8"));
-      for (const j of doc.jobs ?? []) {
-        if (j && typeof j.id === "string") this.jobs.set(j.id, j);
-      }
-      this.meta = doc.meta ?? {};
+      doc = JSON.parse(readFileSync(this.filePath, "utf8"));
     } catch {
-      // A corrupt store is treated as empty rather than crashing the service (fail-safe load).
-      this.jobs = new Map();
+      if (existsSync(`${this.filePath}.bak`)) {
+        try { doc = JSON.parse(readFileSync(`${this.filePath}.bak`, "utf8")); } catch { doc = null; }
+      }
+      if (!doc) {
+        const corrupt = `${this.filePath}.corrupt.${new Date().toISOString().replace(/[:.]/g, "-")}`;
+        try { renameSync(this.filePath, corrupt); } catch { /* ignore */ }
+        throw new Error(`Autopilot job store is corrupt and no valid backup exists; refusing to start (moved to ${corrupt}).`);
+      }
     }
+    for (const j of doc.jobs ?? []) if (j && typeof j.id === "string") this.jobs.set(j.id, j);
+    this.meta = doc.meta ?? {};
   }
 
   save() {
-    mkdirSync(dirname(this.filePath), { recursive: true });
-    const doc = { version: VERSION, jobs: [...this.jobs.values()], meta: this.meta };
-    const tmp = join(dirname(this.filePath), `.jobs.${process.pid}.${Math.floor(performance.now())}.tmp`);
-    try {
-      writeFileSync(tmp, JSON.stringify(doc, null, 2) + "\n");
-      renameSync(tmp, this.filePath); // atomic on same filesystem
-    } catch (e) {
-      try { rmSync(tmp, { force: true }); } catch { /* best effort */ }
-      throw e;
-    }
+    atomicWrite(this.filePath, JSON.stringify({ version: VERSION, jobs: [...this.jobs.values()], meta: this.meta }, null, 2) + "\n");
   }
 
-  /** @param {Job} job */
-  upsert(job) {
-    this.jobs.set(job.id, job);
-    this.save();
-    return job;
-  }
+  upsert(job) { this.jobs.set(job.id, job); this.save(); return job; }
+  get(id) { return this.jobs.get(id); }
+  list() { return [...this.jobs.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); }
+  setMeta(key, value) { this.meta[key] = value; this.save(); }
 
-  get(id) {
-    return this.jobs.get(id);
+  // --- control (separate file; never rewrites the jobs document) ---
+  readControl() {
+    try { if (existsSync(this.controlPath)) return JSON.parse(readFileSync(this.controlPath, "utf8")).control ?? "run"; } catch { /* fall through */ }
+    return "run";
   }
+  writeControl(v) { atomicWrite(this.controlPath, JSON.stringify({ control: v }) + "\n"); }
 
-  list() {
-    return [...this.jobs.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  }
-
-  setMeta(key, value) {
-    this.meta[key] = value;
-    this.save();
-  }
+  removeBackup() { try { rmSync(`${this.filePath}.bak`, { force: true }); } catch { /* ignore */ } }
 }

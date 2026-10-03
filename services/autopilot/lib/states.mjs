@@ -1,16 +1,20 @@
 // Canonical autopilot runtime states (shared by the service, store, and CLI).
 // Plain Node ESM so the service runs with zero build step, independently of any Claude session.
 
+// Active states are set by the scheduler today: READY, RUNNING, WAITING_PROVIDER, WAITING_APPROVAL
+// (recovery/reconciliation of side-effecting jobs), BLOCKED, RETRY_SCHEDULED, DONE, FAILED.
+// Reserved for the review/release pipeline integration (declared for forward-compat, not yet
+// emitted by the scheduler): WAITING_CI, VALIDATING, REVIEWING.
 export const RuntimeState = Object.freeze({
   READY: "READY",
   RUNNING: "RUNNING",
   WAITING_PROVIDER: "WAITING_PROVIDER",
-  WAITING_CI: "WAITING_CI",
+  WAITING_CI: "WAITING_CI", // reserved
   WAITING_APPROVAL: "WAITING_APPROVAL",
   BLOCKED: "BLOCKED",
   RETRY_SCHEDULED: "RETRY_SCHEDULED",
-  VALIDATING: "VALIDATING",
-  REVIEWING: "REVIEWING",
+  VALIDATING: "VALIDATING", // reserved
+  REVIEWING: "REVIEWING", // reserved
   DONE: "DONE",
   FAILED: "FAILED",
 });
