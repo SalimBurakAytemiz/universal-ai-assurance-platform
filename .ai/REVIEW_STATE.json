@@ -46,5 +46,38 @@
       "P3 no broker throw-branch coverage: covered by broker-throw test.",
       "P3 hash string/object collision: ACCEPTED BY DESIGN (keeps standard SHA-256 contract / known-answer vector); documented in HashAdapter."
     ]
+  },
+  "pr2": {
+    "loop1": {
+      "at": "2026-10-03T03:30:00.000Z",
+      "agents": 34,
+      "reported": 15,
+      "confirmed": 15,
+      "fixed": 15,
+      "note": "P1 path traversal + P2 atomic-write/snapshot-validation/blank-provenance/spread-id/corrupt-file + P3s; concurrency P3 documented as accepted."
+    },
+    "loop2": {
+      "at": "2026-10-03T04:00:00.000Z",
+      "agents": 8,
+      "found": {
+        "P2": 3,
+        "P3": 6
+      },
+      "fixed": "list() createdAt guard; twin restore timestamp+freshness validation; write-side value clone (ref leak); save tmp cleanup; markStale predicate isolation; +regression tests",
+      "note": "3 my-fix-introduced/incomplete P2s closed with deterministic regression tests."
+    },
+    "boundedLoop": {
+      "count": 3,
+      "max": 3,
+      "outcome": "CONVERGED"
+    },
+    "loop3": {
+      "at": "2026-10-03T04:30:00.000Z",
+      "agents": 4,
+      "found": {
+        "P1": 1
+      },
+      "fixed": "invalidFactReason now validates fact.id (last unvalidated operand in getFacts() sort tiebreaker). +regression test. Restore gate now covers every dereferenced field; class closed."
+    }
   }
 }

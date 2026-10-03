@@ -44,8 +44,8 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-KNOWLEDGE-ISOLATION-001 | Global/org/project/run scopes | M2 §40 | IMPLEMENTED (scope field) + NOT_STARTED (enforce) | schema | — |
 | REQ-RESEARCH-001/002/003 | Technology/standards/advisory intel | M2 §21,§29,§28 | NOT_STARTED | — | — |
 | REQ-LEARNING-001 | Sandbox + evaluation + certification | M2 §20,§31 | NOT_STARTED | — | — |
-| REQ-PROJECT-001 | Project + target model | M1 §8 | NOT_STARTED | — | — |
-| REQ-TWIN-001 | Digital twin | M1 §10 | NOT_STARTED | — | — |
+| REQ-PROJECT-001 | Project + target model | M1 §8 | IMPLEMENTED+TESTED | `packages/project-model` (file-backed store) | `project-model.test.ts` (6) |
+| REQ-TWIN-001 | Digital twin | M1 §10 | IMPLEMENTED+TESTED | `packages/digital-twin` (steward, provenance, staleness) | `digital-twin.test.ts` (7) |
 | REQ-GRAPH-001 | Assurance knowledge graph | M1 §11 | NOT_STARTED | — | — |
 | REQ-DOMAIN-001 | Domain-aware + capability-based + packs | M1 §12,§13 | NOT_STARTED | — | — |
 | REQ-QA-API-001 | Strict API contract (AJV) engine | QA §11, M1 §14 | NOT_STARTED | — | — |

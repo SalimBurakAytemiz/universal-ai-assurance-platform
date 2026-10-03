@@ -13,7 +13,9 @@
       "@uaap/orchestrator": ["packages/orchestrator/src/index.ts"],
       "@uaap/agent-events": ["packages/agent-events/src/index.ts"],
       "@uaap/agent-permissions": ["packages/agent-permissions/src/index.ts"],
-      "@uaap/tool-adapter-registry": ["packages/tool-adapter-registry/src/index.ts"]
+      "@uaap/tool-adapter-registry": ["packages/tool-adapter-registry/src/index.ts"],
+      "@uaap/project-model": ["packages/project-model/src/index.ts"],
+      "@uaap/digital-twin": ["packages/digital-twin/src/index.ts"]
     }
   },
   "include": [

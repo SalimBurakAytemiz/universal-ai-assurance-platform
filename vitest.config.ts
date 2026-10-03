@@ -15,6 +15,8 @@ export default defineConfig({
       "@uaap/agent-events": r("./packages/agent-events/src/index.ts"),
       "@uaap/agent-permissions": r("./packages/agent-permissions/src/index.ts"),
       "@uaap/tool-adapter-registry": r("./packages/tool-adapter-registry/src/index.ts"),
+      "@uaap/project-model": r("./packages/project-model/src/index.ts"),
+      "@uaap/digital-twin": r("./packages/digital-twin/src/index.ts"),
     },
   },
   test: {
