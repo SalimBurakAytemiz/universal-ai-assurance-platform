@@ -65,6 +65,8 @@ export interface ActionRequest {
   readonly now: string;
   /** Optional explicit human approval token for R2 actions. */
   readonly approvalToken?: string;
+  /** Optional action parameters passed to the executing adapter (no secrets). */
+  readonly input?: unknown;
 }
 
 /** The immutable result of evaluating an ActionRequest. */

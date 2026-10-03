@@ -32,10 +32,10 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-AGENT-72-001 | 72 canonical agents (9×8) | M2 §2 | IMPLEMENTED+TESTED | `agents/registry/agents.json` | `agent-registry.test.ts` (4) |
 | REQ-AGENT-REGISTRY-001 | Versioned, schema-validated registry | M2 §6 | IMPLEMENTED+TESTED | `schemas/agent.schema.json`, validator | `agent-registry.test.ts` |
 | REQ-AGENT-MIGRATION-001 | Old roles mapped, none dropped | M2 §3 | DOCUMENTED | `docs/AGENT-ROLE-MIGRATION-MAP.md` | `agent-registry.test.ts` (sample) |
-| REQ-AGENT-PERM-001 | Least-privilege permission graph | M2 §7 | IMPLEMENTED (invariants in schema) + NOT_STARTED (runtime enforce) | `agent.schema.json` | `agent-registry.test.ts` |
-| REQ-SKILL-001 | Versioned skill registry | M2 §35 | NOT_STARTED | — | — |
-| REQ-TOOL-ADAPTER-001 | Tool adapter registry | M2 §36 | NOT_STARTED | interface in `tool-broker` | — |
-| REQ-AGENT-EVENTS-001 | Structured agent events (schema) | M2 §9 | NOT_STARTED | — | — |
+| REQ-AGENT-PERM-001 | Least-privilege permission graph | M2 §7 | IMPLEMENTED+TESTED | `agent.schema.json` + `packages/agent-permissions` | `permissions.test.ts` (6) |
+| REQ-SKILL-001 | Versioned skill registry | M2 §35 | IMPLEMENTED+TESTED | `schemas/skill.schema.json`, `skills/registry/skills.json`, validator | `skill-registry.test.ts` (3) |
+| REQ-TOOL-ADAPTER-001 | Tool adapter registry | M2 §36 | IMPLEMENTED+TESTED | `packages/tool-adapter-registry`, `adapters/registry/adapters.json` | `adapters.test.ts` (5) |
+| REQ-AGENT-EVENTS-001 | Structured agent events (schema) | M2 §9 | IMPLEMENTED+TESTED | `packages/agent-events`, `schemas/agent-event.schema.json` | `agent-events.test.ts` (7) |
 | REQ-AGENT-ACTIVATION-001 | Assurance planner selects team | M2 §8 | NOT_STARTED | — | — |
 | REQ-EVALUATION-001/002 | Agent evaluation + certification | M2 §32,§33 | NOT_STARTED | — | — |
 | REQ-KNOWLEDGE-PROV-001 | Knowledge provenance schema | M2 §23 | IMPLEMENTED | `schemas/knowledge-item.schema.json` | `validate-knowledge.mjs` |

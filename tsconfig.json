@@ -10,7 +10,10 @@
       "@uaap/policy-engine": ["packages/policy-engine/src/index.ts"],
       "@uaap/audit": ["packages/audit/src/index.ts"],
       "@uaap/tool-broker": ["packages/tool-broker/src/index.ts"],
-      "@uaap/orchestrator": ["packages/orchestrator/src/index.ts"]
+      "@uaap/orchestrator": ["packages/orchestrator/src/index.ts"],
+      "@uaap/agent-events": ["packages/agent-events/src/index.ts"],
+      "@uaap/agent-permissions": ["packages/agent-permissions/src/index.ts"],
+      "@uaap/tool-adapter-registry": ["packages/tool-adapter-registry/src/index.ts"]
     }
   },
   "include": [

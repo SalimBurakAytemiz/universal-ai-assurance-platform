@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/skill.schema.json",
+  "title": "UAAP Skill Registry",
+  "description": "Versioned skills. New technology is added as a new SKILL, not a new agent. Skills are referenced by agents in the agent registry.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "skills"],
+  "properties": {
+    "version": { "type": "string" },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "capabilities", "riskClass"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "capabilities": { "type": "array", "items": { "type": "string" } },
+          "requiredTools": { "type": "array", "items": { "type": "string" } },
+          "knowledgeRefs": { "type": "array", "items": { "type": "string" } },
+          "supportedVersions": { "type": "array", "items": { "type": "string" } },
+          "riskClass": { "enum": ["R0_PASSIVE", "R1_LOW_IMPACT", "R2_ELEVATED"] },
+          "evaluation": { "type": "string" }
+        }
+      }
+    }
+  }
+}

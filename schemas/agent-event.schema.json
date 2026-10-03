@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/agent-event.schema.json",
+  "title": "UAAP Structured Agent Event",
+  "description": "Agents communicate via structured events, not free-form chat. A claim is never a fact: it carries source, evidence, confidence and verification status.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "sourceAgent", "at"],
+  "properties": {
+    "type": {
+      "enum": [
+        "OBSERVATION", "HYPOTHESIS", "TEST_PLAN", "EXECUTION_RESULT",
+        "FINDING_CANDIDATE", "FINDING_VERIFIED", "FINDING_REJECTED",
+        "REMEDIATION_PROPOSED", "RETEST_RESULT",
+        "KNOWLEDGE_CANDIDATE", "KNOWLEDGE_CERTIFIED",
+        "POLICY_DECISION", "APPROVAL_REQUIRED"
+      ]
+    },
+    "sourceAgent": { "type": "string", "minLength": 1 },
+    "at": { "type": "string", "minLength": 1 },
+    "projectId": { "type": "string" },
+    "targetId": { "type": "string" },
+    "runId": { "type": "string" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+    "requiresVerification": { "type": "boolean" },
+    "verificationStatus": {
+      "enum": ["UNVERIFIED", "VALIDATION_PENDING", "CONFIRMED", "REJECTED"]
+    },
+    "payload": {}
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "FINDING_CANDIDATE" } } },
+      "then": { "required": ["evidenceRefs", "requiresVerification"] }
+    },
+    {
+      "if": { "properties": { "type": { "const": "FINDING_VERIFIED" } } },
+      "then": {
+        "required": ["evidenceRefs", "verificationStatus"],
+        "properties": { "verificationStatus": { "const": "CONFIRMED" } }
+      }
+    }
+  ]
+}

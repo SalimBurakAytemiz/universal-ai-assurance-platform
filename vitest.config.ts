@@ -12,6 +12,9 @@ export default defineConfig({
       "@uaap/audit": r("./packages/audit/src/index.ts"),
       "@uaap/tool-broker": r("./packages/tool-broker/src/index.ts"),
       "@uaap/orchestrator": r("./packages/orchestrator/src/index.ts"),
+      "@uaap/agent-events": r("./packages/agent-events/src/index.ts"),
+      "@uaap/agent-permissions": r("./packages/agent-permissions/src/index.ts"),
+      "@uaap/tool-adapter-registry": r("./packages/tool-adapter-registry/src/index.ts"),
     },
   },
   test: {

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/tool-adapter.schema.json",
+  "title": "UAAP Tool Adapter Registry",
+  "description": "Deterministic/external execution adapters. Deterministic-first: work that can be done reliably by code is NOT delegated to an LLM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "adapters"],
+  "properties": {
+    "version": { "type": "string" },
+    "adapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "capability", "actions", "riskClass", "health"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+          "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+          "capability": { "type": "string", "minLength": 1 },
+          "actions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+          "riskClass": { "enum": ["R0_PASSIVE", "R1_LOW_IMPACT", "R2_ELEVATED"] },
+          "deterministic": { "type": "boolean" },
+          "health": { "enum": ["HEALTHY", "DEGRADED", "NOT_IMPLEMENTED"] }
+        }
+      }
+    }
+  }
+}

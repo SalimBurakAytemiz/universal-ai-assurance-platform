@@ -1,0 +1,1600 @@
+{
+  "version": "0.1.0",
+  "skills": [
+    {
+      "id": "a11y-selectors",
+      "version": "0.1.0",
+      "capabilities": [
+        "a11y-selectors"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "accessibility",
+      "version": "0.1.0",
+      "capabilities": [
+        "accessibility"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "adversarial-review",
+      "version": "0.1.0",
+      "capabilities": [
+        "adversarial-review"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "advisory",
+      "version": "0.1.0",
+      "capabilities": [
+        "advisory"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "agent-benchmark",
+      "version": "0.1.0",
+      "capabilities": [
+        "agent-benchmark"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "ajv",
+      "version": "0.1.0",
+      "capabilities": [
+        "ajv"
+      ],
+      "requiredTools": [
+        "ajv-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "android",
+      "version": "0.1.0",
+      "capabilities": [
+        "android"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "api-security",
+      "version": "0.1.0",
+      "capabilities": [
+        "api-security"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "appium",
+      "version": "0.1.0",
+      "capabilities": [
+        "appium"
+      ],
+      "requiredTools": [
+        "appium-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "approval-workflow",
+      "version": "0.1.0",
+      "capabilities": [
+        "approval-workflow"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "architecture-mapping",
+      "version": "0.1.0",
+      "capabilities": [
+        "architecture-mapping"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "artifact-capture",
+      "version": "0.1.0",
+      "capabilities": [
+        "artifact-capture"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "attack",
+      "version": "0.1.0",
+      "capabilities": [
+        "attack"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "audit",
+      "version": "0.1.0",
+      "capabilities": [
+        "audit"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "authorization",
+      "version": "0.1.0",
+      "capabilities": [
+        "authorization"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "authorized-appsec",
+      "version": "0.1.0",
+      "capabilities": [
+        "authorized-appsec"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R2_ELEVATED",
+      "evaluation": "default"
+    },
+    {
+      "id": "authz-testing",
+      "version": "0.1.0",
+      "capabilities": [
+        "authz-testing"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R2_ELEVATED",
+      "evaluation": "default"
+    },
+    {
+      "id": "backup-verification",
+      "version": "0.1.0",
+      "capabilities": [
+        "backup-verification"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "blast-radius",
+      "version": "0.1.0",
+      "capabilities": [
+        "blast-radius"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "budget-guard",
+      "version": "0.1.0",
+      "capabilities": [
+        "budget-guard"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "build",
+      "version": "0.1.0",
+      "capabilities": [
+        "build"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "business-invariants",
+      "version": "0.1.0",
+      "capabilities": [
+        "business-invariants"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "business-logic",
+      "version": "0.1.0",
+      "capabilities": [
+        "business-logic"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "capability-mapping",
+      "version": "0.1.0",
+      "capabilities": [
+        "capability-mapping"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "certificate-metadata",
+      "version": "0.1.0",
+      "capabilities": [
+        "certificate-metadata"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "certification",
+      "version": "0.1.0",
+      "capabilities": [
+        "certification"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "chain-of-custody",
+      "version": "0.1.0",
+      "capabilities": [
+        "chain-of-custody"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "change-impact",
+      "version": "0.1.0",
+      "capabilities": [
+        "change-impact"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "checkpoint",
+      "version": "0.1.0",
+      "capabilities": [
+        "checkpoint"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "ci",
+      "version": "0.1.0",
+      "capabilities": [
+        "ci"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "circuit-breaker",
+      "version": "0.1.0",
+      "capabilities": [
+        "circuit-breaker"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "cloud-config",
+      "version": "0.1.0",
+      "capabilities": [
+        "cloud-config"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "concurrency",
+      "version": "0.1.0",
+      "capabilities": [
+        "concurrency"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "container",
+      "version": "0.1.0",
+      "capabilities": [
+        "container"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "control-mapping",
+      "version": "0.1.0",
+      "capabilities": [
+        "control-mapping"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "critical-journey-modeling",
+      "version": "0.1.0",
+      "capabilities": [
+        "critical-journey-modeling"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "cross-system-reconciliation",
+      "version": "0.1.0",
+      "capabilities": [
+        "cross-system-reconciliation"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "cve-correlation",
+      "version": "0.1.0",
+      "capabilities": [
+        "cve-correlation"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "cwe",
+      "version": "0.1.0",
+      "capabilities": [
+        "cwe"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "db-readonly-validation",
+      "version": "0.1.0",
+      "capabilities": [
+        "db-readonly-validation"
+      ],
+      "requiredTools": [
+        "database-readonly-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "deep-link",
+      "version": "0.1.0",
+      "capabilities": [
+        "deep-link"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "dependency-audit",
+      "version": "0.1.0",
+      "capabilities": [
+        "dependency-audit"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "dependency-graph",
+      "version": "0.1.0",
+      "capabilities": [
+        "dependency-graph"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "dependency-planning",
+      "version": "0.1.0",
+      "capabilities": [
+        "dependency-planning"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "device-matrix",
+      "version": "0.1.0",
+      "capabilities": [
+        "device-matrix"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "dns-metadata",
+      "version": "0.1.0",
+      "capabilities": [
+        "dns-metadata"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "doc-research",
+      "version": "0.1.0",
+      "capabilities": [
+        "doc-research"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "domain-detection",
+      "version": "0.1.0",
+      "capabilities": [
+        "domain-detection"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "domain-pack-binding",
+      "version": "0.1.0",
+      "capabilities": [
+        "domain-pack-binding"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "drift-detection",
+      "version": "0.1.0",
+      "capabilities": [
+        "drift-detection"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "emulator",
+      "version": "0.1.0",
+      "capabilities": [
+        "emulator"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "encryption-at-rest",
+      "version": "0.1.0",
+      "capabilities": [
+        "encryption-at-rest"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "encryption-in-transit",
+      "version": "0.1.0",
+      "capabilities": [
+        "encryption-in-transit"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "environment",
+      "version": "0.1.0",
+      "capabilities": [
+        "environment"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "evidence-chaining",
+      "version": "0.1.0",
+      "capabilities": [
+        "evidence-chaining"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "executive-reporting",
+      "version": "0.1.0",
+      "capabilities": [
+        "executive-reporting"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "exposure-review",
+      "version": "0.1.0",
+      "capabilities": [
+        "exposure-review"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "fail-closed",
+      "version": "0.1.0",
+      "capabilities": [
+        "fail-closed"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "flaky-analysis",
+      "version": "0.1.0",
+      "capabilities": [
+        "flaky-analysis"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "flow-discovery",
+      "version": "0.1.0",
+      "capabilities": [
+        "flow-discovery"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "git",
+      "version": "0.1.0",
+      "capabilities": [
+        "git"
+      ],
+      "requiredTools": [
+        "git-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "github-pr",
+      "version": "0.1.0",
+      "capabilities": [
+        "github-pr"
+      ],
+      "requiredTools": [
+        "github-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "hashing",
+      "version": "0.1.0",
+      "capabilities": [
+        "hashing"
+      ],
+      "requiredTools": [
+        "hash-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "iac",
+      "version": "0.1.0",
+      "capabilities": [
+        "iac"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "iam-review",
+      "version": "0.1.0",
+      "capabilities": [
+        "iam-review"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "idempotency",
+      "version": "0.1.0",
+      "capabilities": [
+        "idempotency"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "identity",
+      "version": "0.1.0",
+      "capabilities": [
+        "identity"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "incident-replay",
+      "version": "0.1.0",
+      "capabilities": [
+        "incident-replay"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "independent-verification",
+      "version": "0.1.0",
+      "capabilities": [
+        "independent-verification"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "integration-dry-run",
+      "version": "0.1.0",
+      "capabilities": [
+        "integration-dry-run"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "json-schema",
+      "version": "0.1.0",
+      "capabilities": [
+        "json-schema"
+      ],
+      "requiredTools": [
+        "ajv-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "k6-smoke",
+      "version": "0.1.0",
+      "capabilities": [
+        "k6-smoke"
+      ],
+      "requiredTools": [
+        "k6-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "kafka",
+      "version": "0.1.0",
+      "capabilities": [
+        "kafka"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "key-management",
+      "version": "0.1.0",
+      "capabilities": [
+        "key-management"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "knowledge-curation",
+      "version": "0.1.0",
+      "capabilities": [
+        "knowledge-curation"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "ledger-consistency",
+      "version": "0.1.0",
+      "capabilities": [
+        "ledger-consistency"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "license-review",
+      "version": "0.1.0",
+      "capabilities": [
+        "license-review"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "localization",
+      "version": "0.1.0",
+      "capabilities": [
+        "localization"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "masking",
+      "version": "0.1.0",
+      "capabilities": [
+        "masking"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "metrics",
+      "version": "0.1.0",
+      "capabilities": [
+        "metrics"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "migrations",
+      "version": "0.1.0",
+      "capabilities": [
+        "migrations"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "mutation-testing",
+      "version": "0.1.0",
+      "capabilities": [
+        "mutation-testing"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "negative-testing",
+      "version": "0.1.0",
+      "capabilities": [
+        "negative-testing"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "nist",
+      "version": "0.1.0",
+      "capabilities": [
+        "nist"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "openapi",
+      "version": "0.1.0",
+      "capabilities": [
+        "openapi"
+      ],
+      "requiredTools": [
+        "ajv-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "orchestration",
+      "version": "0.1.0",
+      "capabilities": [
+        "orchestration"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "owasp",
+      "version": "0.1.0",
+      "capabilities": [
+        "owasp"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "packaging",
+      "version": "0.1.0",
+      "capabilities": [
+        "packaging"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "passive-osint",
+      "version": "0.1.0",
+      "capabilities": [
+        "passive-osint"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "patch-strategy",
+      "version": "0.1.0",
+      "capabilities": [
+        "patch-strategy"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "pii-detection",
+      "version": "0.1.0",
+      "capabilities": [
+        "pii-detection"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "playwright",
+      "version": "0.1.0",
+      "capabilities": [
+        "playwright"
+      ],
+      "requiredTools": [
+        "playwright-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "policy-as-code",
+      "version": "0.1.0",
+      "capabilities": [
+        "policy-as-code"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "pr-authoring",
+      "version": "0.1.0",
+      "capabilities": [
+        "pr-authoring"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "property-based",
+      "version": "0.1.0",
+      "capabilities": [
+        "property-based"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "provenance",
+      "version": "0.1.0",
+      "capabilities": [
+        "provenance"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "public-exposure",
+      "version": "0.1.0",
+      "capabilities": [
+        "public-exposure"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "push-notification",
+      "version": "0.1.0",
+      "capabilities": [
+        "push-notification"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "queue-patterns",
+      "version": "0.1.0",
+      "capabilities": [
+        "queue-patterns"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "rca",
+      "version": "0.1.0",
+      "capabilities": [
+        "rca"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "recovery",
+      "version": "0.1.0",
+      "capabilities": [
+        "recovery"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "regression-retest",
+      "version": "0.1.0",
+      "capabilities": [
+        "regression-retest"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "regression-selection",
+      "version": "0.1.0",
+      "capabilities": [
+        "regression-selection"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "release-decision",
+      "version": "0.1.0",
+      "capabilities": [
+        "release-decision"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "repo-research",
+      "version": "0.1.0",
+      "capabilities": [
+        "repo-research"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "repo-scan",
+      "version": "0.1.0",
+      "capabilities": [
+        "repo-scan"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "restore",
+      "version": "0.1.0",
+      "capabilities": [
+        "restore"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "retention",
+      "version": "0.1.0",
+      "capabilities": [
+        "retention"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "retry",
+      "version": "0.1.0",
+      "capabilities": [
+        "retry"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "risk-acceptance",
+      "version": "0.1.0",
+      "capabilities": [
+        "risk-acceptance"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "rollback",
+      "version": "0.1.0",
+      "capabilities": [
+        "rollback"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "run-planning",
+      "version": "0.1.0",
+      "capabilities": [
+        "run-planning"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "safe-merge",
+      "version": "0.1.0",
+      "capabilities": [
+        "safe-merge"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "sandbox-benchmark",
+      "version": "0.1.0",
+      "capabilities": [
+        "sandbox-benchmark"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "sandbox-fault-injection",
+      "version": "0.1.0",
+      "capabilities": [
+        "sandbox-fault-injection"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R2_ELEVATED",
+      "evaluation": "default"
+    },
+    {
+      "id": "sast-patterns",
+      "version": "0.1.0",
+      "capabilities": [
+        "sast-patterns"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "sbom",
+      "version": "0.1.0",
+      "capabilities": [
+        "sbom"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "scheduling",
+      "version": "0.1.0",
+      "capabilities": [
+        "scheduling"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "schema-drift",
+      "version": "0.1.0",
+      "capabilities": [
+        "schema-drift"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "scope-matching",
+      "version": "0.1.0",
+      "capabilities": [
+        "scope-matching"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "secret-scan",
+      "version": "0.1.0",
+      "capabilities": [
+        "secret-scan"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "security-txt",
+      "version": "0.1.0",
+      "capabilities": [
+        "security-txt"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "selenium-compat",
+      "version": "0.1.0",
+      "capabilities": [
+        "selenium-compat"
+      ],
+      "requiredTools": [
+        "selenium-adapter"
+      ],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "session",
+      "version": "0.1.0",
+      "capabilities": [
+        "session"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "sla",
+      "version": "0.1.0",
+      "capabilities": [
+        "sla"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "slo",
+      "version": "0.1.0",
+      "capabilities": [
+        "slo"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "state-machine",
+      "version": "0.1.0",
+      "capabilities": [
+        "state-machine"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "supply-chain",
+      "version": "0.1.0",
+      "capabilities": [
+        "supply-chain"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "synthetic-data",
+      "version": "0.1.0",
+      "capabilities": [
+        "synthetic-data"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "tech-detection",
+      "version": "0.1.0",
+      "capabilities": [
+        "tech-detection"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "technical-reporting",
+      "version": "0.1.0",
+      "capabilities": [
+        "technical-reporting"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "technology-research",
+      "version": "0.1.0",
+      "capabilities": [
+        "technology-research"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R0_PASSIVE",
+      "evaluation": "default"
+    },
+    {
+      "id": "threshold-based",
+      "version": "0.1.0",
+      "capabilities": [
+        "threshold-based"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "timeout",
+      "version": "0.1.0",
+      "capabilities": [
+        "timeout"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "tls-config",
+      "version": "0.1.0",
+      "capabilities": [
+        "tls-config"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "trace-capture",
+      "version": "0.1.0",
+      "capabilities": [
+        "trace-capture"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "trace-correlation",
+      "version": "0.1.0",
+      "capabilities": [
+        "trace-correlation"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "twin-stewardship",
+      "version": "0.1.0",
+      "capabilities": [
+        "twin-stewardship"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "update-rollback",
+      "version": "0.1.0",
+      "capabilities": [
+        "update-rollback"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "visual-regression",
+      "version": "0.1.0",
+      "capabilities": [
+        "visual-regression"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "web-security",
+      "version": "0.1.0",
+      "capabilities": [
+        "web-security"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "websocket",
+      "version": "0.1.0",
+      "capabilities": [
+        "websocket"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    },
+    {
+      "id": "worker-orchestration",
+      "version": "0.1.0",
+      "capabilities": [
+        "worker-orchestration"
+      ],
+      "requiredTools": [],
+      "knowledgeRefs": [],
+      "riskClass": "R1_LOW_IMPACT",
+      "evaluation": "default"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "version": "0.1.0",
+  "adapters": [
+    {
+      "id": "hash-adapter",
+      "version": "0.1.0",
+      "capability": "hash",
+      "actions": ["hash.sha256"],
+      "riskClass": "R0_PASSIVE",
+      "deterministic": true,
+      "health": "HEALTHY"
+    },
+    {
+      "id": "schema-adapter",
+      "version": "0.1.0",
+      "capability": "schema",
+      "actions": ["schema.validate"],
+      "riskClass": "R0_PASSIVE",
+      "deterministic": true,
+      "health": "HEALTHY"
+    }
+  ]
+}
