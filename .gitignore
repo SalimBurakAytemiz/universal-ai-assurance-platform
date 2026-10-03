@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+.pnp.*
+# build output
+dist/
+build/
+out/
+*.tsbuildinfo
+apps/desktop/release/
+# logs
+*.log
+npm-debug.log*
+# runtime evidence/reports (keep dirs via .gitkeep, ignore contents)
+evidence/*
+!evidence/.gitkeep
+reports/*
+!reports/.gitkeep
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+# test artifacts
+coverage/
+playwright-report/
+test-results/

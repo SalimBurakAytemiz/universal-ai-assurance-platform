@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "types": ["node"],
+    "paths": {
+      "@uaap/core": ["packages/core/src/index.ts"],
+      "@uaap/core/*": ["packages/core/src/*"],
+      "@uaap/authorization-kernel": ["packages/authorization-kernel/src/index.ts"],
+      "@uaap/policy-engine": ["packages/policy-engine/src/index.ts"],
+      "@uaap/audit": ["packages/audit/src/index.ts"],
+      "@uaap/tool-broker": ["packages/tool-broker/src/index.ts"],
+      "@uaap/orchestrator": ["packages/orchestrator/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/test/**/*.ts",
+    "tests/**/*.ts",
+    "scripts/**/*.mjs"
+  ],
+  "exclude": ["node_modules", "**/dist/**", "apps/desktop/renderer/**"]
+}

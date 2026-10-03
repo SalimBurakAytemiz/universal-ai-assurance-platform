@@ -1,0 +1,6 @@
+{
+  "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
+  "maxBoundedReviewLoops": 3,
+  "lastReview": null,
+  "unresolved": { "P0": 0, "P1": 0, "P2": 0, "P3": 0 }
+}

@@ -1,0 +1,2241 @@
+{
+  "version": "0.1.0",
+  "guilds": [
+    "COMMAND_AND_GOVERNANCE",
+    "PROJECT_INTELLIGENCE",
+    "QUALITY_ENGINEERING",
+    "SECURITY_ASSURANCE",
+    "DATA_PERF_RELIABILITY_PRIVACY",
+    "EVIDENCE_VERIFICATION_REMEDIATION",
+    "KNOWLEDGE_AND_LEARNING",
+    "AUTOMATION_AND_INFRASTRUCTURE",
+    "BUSINESS_DOMAIN_REPORTING"
+  ],
+  "agents": [
+    {
+      "id": "gov.master-orchestrator",
+      "name": "Master Orchestrator Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Master Orchestrator Agent — canonical command and governance role.",
+      "capabilities": [
+        "orchestration",
+        "run-planning"
+      ],
+      "skills": [
+        "orchestration",
+        "run-planning"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.build-graph-planner",
+      "name": "Build Graph Planner Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Build Graph Planner Agent — canonical command and governance role.",
+      "capabilities": [
+        "dependency-planning"
+      ],
+      "skills": [
+        "dependency-planning"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.authorization-gate",
+      "name": "Authorization Gate Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Authorization Gate Agent — canonical command and governance role.",
+      "capabilities": [
+        "authorization",
+        "fail-closed"
+      ],
+      "skills": [
+        "authorization",
+        "fail-closed"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.scope-resolver",
+      "name": "Scope Resolver Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Scope Resolver Agent — canonical command and governance role.",
+      "capabilities": [
+        "scope-matching"
+      ],
+      "skills": [
+        "scope-matching"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.policy-decision",
+      "name": "Policy Decision Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Policy Decision Agent — canonical command and governance role.",
+      "capabilities": [
+        "policy-as-code"
+      ],
+      "skills": [
+        "policy-as-code"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.human-approval-coordinator",
+      "name": "Human Approval Coordinator Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Human Approval Coordinator Agent — canonical command and governance role.",
+      "capabilities": [
+        "approval-workflow"
+      ],
+      "skills": [
+        "approval-workflow"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.audit-and-provenance",
+      "name": "Audit And Provenance Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Audit And Provenance Agent — canonical command and governance role.",
+      "capabilities": [
+        "audit",
+        "chain-of-custody"
+      ],
+      "skills": [
+        "audit",
+        "chain-of-custody"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "gov.runtime-scheduler",
+      "name": "Runtime Scheduler Agent",
+      "version": "0.1.0",
+      "guild": "COMMAND_AND_GOVERNANCE",
+      "description": "Runtime Scheduler Agent — canonical command and governance role.",
+      "capabilities": [
+        "scheduling",
+        "budget-guard"
+      ],
+      "skills": [
+        "scheduling",
+        "budget-guard"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "gov-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.repository-intelligence",
+      "name": "Repository Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Repository Intelligence Agent — canonical project intelligence role.",
+      "capabilities": [
+        "repo-scan",
+        "sbom"
+      ],
+      "skills": [
+        "repo-scan",
+        "sbom"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.architecture-discovery",
+      "name": "Architecture Discovery Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Architecture Discovery Agent — canonical project intelligence role.",
+      "capabilities": [
+        "architecture-mapping"
+      ],
+      "skills": [
+        "architecture-mapping"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.technology-stack-intelligence",
+      "name": "Technology Stack Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Technology Stack Intelligence Agent — canonical project intelligence role.",
+      "capabilities": [
+        "tech-detection"
+      ],
+      "skills": [
+        "tech-detection"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.dependency-graph",
+      "name": "Dependency Graph Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Dependency Graph Agent — canonical project intelligence role.",
+      "capabilities": [
+        "dependency-graph"
+      ],
+      "skills": [
+        "dependency-graph"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.domain-discovery",
+      "name": "Domain Discovery Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Domain Discovery Agent — canonical project intelligence role.",
+      "capabilities": [
+        "domain-detection"
+      ],
+      "skills": [
+        "domain-detection"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.capability-mapping",
+      "name": "Capability Mapping Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Capability Mapping Agent — canonical project intelligence role.",
+      "capabilities": [
+        "capability-mapping"
+      ],
+      "skills": [
+        "capability-mapping"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.business-flow-discovery",
+      "name": "Business Flow Discovery Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Business Flow Discovery Agent — canonical project intelligence role.",
+      "capabilities": [
+        "flow-discovery"
+      ],
+      "skills": [
+        "flow-discovery"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "proj.digital-twin-steward",
+      "name": "Digital Twin Steward Agent",
+      "version": "0.1.0",
+      "guild": "PROJECT_INTELLIGENCE",
+      "description": "Digital Twin Steward Agent — canonical project intelligence role.",
+      "capabilities": [
+        "twin-stewardship",
+        "provenance"
+      ],
+      "skills": [
+        "twin-stewardship",
+        "provenance"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "proj-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.api-contract",
+      "name": "API Contract Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "API Contract Agent — canonical quality engineering role.",
+      "capabilities": [
+        "ajv",
+        "json-schema",
+        "openapi"
+      ],
+      "skills": [
+        "ajv",
+        "json-schema",
+        "openapi",
+        "negative-testing",
+        "schema-drift"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.web-ui-automation",
+      "name": "Web UI Automation Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Web UI Automation Agent — canonical quality engineering role.",
+      "capabilities": [
+        "playwright",
+        "selenium-compat",
+        "a11y-selectors"
+      ],
+      "skills": [
+        "playwright",
+        "selenium-compat",
+        "a11y-selectors"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.mobile-quality",
+      "name": "Mobile Quality Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Mobile Quality Agent — canonical quality engineering role.",
+      "capabilities": [
+        "appium",
+        "android",
+        "deep-link"
+      ],
+      "skills": [
+        "appium",
+        "android",
+        "deep-link",
+        "push-notification"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.database-and-migration-quality",
+      "name": "Database And Migration Quality Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Database And Migration Quality Agent — canonical quality engineering role.",
+      "capabilities": [
+        "db-readonly-validation",
+        "migrations"
+      ],
+      "skills": [
+        "db-readonly-validation",
+        "migrations"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.realtime-event-queue-quality",
+      "name": "Realtime Event Queue Quality Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Realtime Event Queue Quality Agent — canonical quality engineering role.",
+      "capabilities": [
+        "websocket",
+        "kafka",
+        "queue-patterns"
+      ],
+      "skills": [
+        "websocket",
+        "kafka",
+        "queue-patterns"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.visual-and-accessibility-quality",
+      "name": "Visual And Accessibility Quality Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Visual And Accessibility Quality Agent — canonical quality engineering role.",
+      "capabilities": [
+        "visual-regression",
+        "accessibility",
+        "localization"
+      ],
+      "skills": [
+        "visual-regression",
+        "accessibility",
+        "localization"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.test-generation-and-property",
+      "name": "Test Generation And Property Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Test Generation And Property Agent — canonical quality engineering role.",
+      "capabilities": [
+        "property-based",
+        "mutation-testing",
+        "state-machine"
+      ],
+      "skills": [
+        "property-based",
+        "mutation-testing",
+        "state-machine"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "qa.regression-and-flaky-test",
+      "name": "Regression And Flaky Test Agent",
+      "version": "0.1.0",
+      "guild": "QUALITY_ENGINEERING",
+      "description": "Regression And Flaky Test Agent — canonical quality engineering role.",
+      "capabilities": [
+        "regression-selection",
+        "flaky-analysis",
+        "concurrency"
+      ],
+      "skills": [
+        "regression-selection",
+        "flaky-analysis",
+        "concurrency",
+        "idempotency"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "qa-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.prospect-intelligence",
+      "name": "Prospect Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Prospect Intelligence Agent — canonical security assurance role.",
+      "capabilities": [
+        "passive-osint",
+        "security-txt",
+        "public-exposure"
+      ],
+      "skills": [
+        "passive-osint",
+        "security-txt",
+        "public-exposure"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.public-asset-and-technology-intelligence",
+      "name": "Public Asset And Technology Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Public Asset And Technology Intelligence Agent — canonical security assurance role.",
+      "capabilities": [
+        "dns-metadata",
+        "certificate-metadata"
+      ],
+      "skills": [
+        "dns-metadata",
+        "certificate-metadata"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.application-security",
+      "name": "Application Security Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Application Security Agent — canonical security assurance role.",
+      "capabilities": [
+        "web-security",
+        "authorized-appsec"
+      ],
+      "skills": [
+        "web-security",
+        "authorized-appsec"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R2_ELEVATED",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.api-security",
+      "name": "API Security Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "API Security Agent — canonical security assurance role.",
+      "capabilities": [
+        "api-security",
+        "authz-testing"
+      ],
+      "skills": [
+        "api-security",
+        "authz-testing"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R2_ELEVATED",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.identity-access-and-session-security",
+      "name": "Identity Access And Session Security Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Identity Access And Session Security Agent — canonical security assurance role.",
+      "capabilities": [
+        "identity",
+        "session",
+        "business-logic"
+      ],
+      "skills": [
+        "identity",
+        "session",
+        "business-logic"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R2_ELEVATED",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.source-dependency-secrets-supply-chain-security",
+      "name": "Source Dependency Secrets Supply Chain Security Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Source Dependency Secrets Supply Chain Security Agent — canonical security assurance role.",
+      "capabilities": [
+        "sast-patterns",
+        "dependency-audit",
+        "secret-scan"
+      ],
+      "skills": [
+        "sast-patterns",
+        "dependency-audit",
+        "secret-scan",
+        "supply-chain"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.cloud-infra-iam-container-iac-tls-security",
+      "name": "Cloud Infra IAM Container IaC TLS Security Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Cloud Infra IAM Container IaC TLS Security Agent — canonical security assurance role.",
+      "capabilities": [
+        "cloud-config",
+        "iam-review",
+        "container"
+      ],
+      "skills": [
+        "cloud-config",
+        "iam-review",
+        "container",
+        "iac",
+        "tls-config"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "sec.data-protection-cryptography-exposure-security",
+      "name": "Data Protection Cryptography Exposure Security Agent",
+      "version": "0.1.0",
+      "guild": "SECURITY_ASSURANCE",
+      "description": "Data Protection Cryptography Exposure Security Agent — canonical security assurance role.",
+      "capabilities": [
+        "encryption-at-rest",
+        "encryption-in-transit",
+        "key-management"
+      ],
+      "skills": [
+        "encryption-at-rest",
+        "encryption-in-transit",
+        "key-management",
+        "exposure-review"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "sec-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.data-integrity-and-reconciliation",
+      "name": "Data Integrity And Reconciliation Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Data Integrity And Reconciliation Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "cross-system-reconciliation",
+        "ledger-consistency"
+      ],
+      "skills": [
+        "cross-system-reconciliation",
+        "ledger-consistency"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.performance-engineering",
+      "name": "Performance Engineering Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Performance Engineering Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "k6-smoke",
+        "threshold-based"
+      ],
+      "skills": [
+        "k6-smoke",
+        "threshold-based"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.reliability-engineering",
+      "name": "Reliability Engineering Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Reliability Engineering Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "retry",
+        "timeout",
+        "circuit-breaker"
+      ],
+      "skills": [
+        "retry",
+        "timeout",
+        "circuit-breaker"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.controlled-fault-injection",
+      "name": "Controlled Fault Injection Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Controlled Fault Injection Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "sandbox-fault-injection"
+      ],
+      "skills": [
+        "sandbox-fault-injection"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R2_ELEVATED",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.backup-restore-disaster-recovery",
+      "name": "Backup Restore Disaster Recovery Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Backup Restore Disaster Recovery Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "backup-verification",
+        "restore",
+        "rollback"
+      ],
+      "skills": [
+        "backup-verification",
+        "restore",
+        "rollback"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.privacy-and-pii-assurance",
+      "name": "Privacy And PII Assurance Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Privacy And PII Assurance Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "pii-detection",
+        "masking",
+        "retention"
+      ],
+      "skills": [
+        "pii-detection",
+        "masking",
+        "retention"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.observability-correlation",
+      "name": "Observability Correlation Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "Observability Correlation Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "trace-correlation",
+        "metrics"
+      ],
+      "skills": [
+        "trace-correlation",
+        "metrics"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "dprp.slo-sla-assurance",
+      "name": "SLO SLA Assurance Agent",
+      "version": "0.1.0",
+      "guild": "DATA_PERF_RELIABILITY_PRIVACY",
+      "description": "SLO SLA Assurance Agent — canonical data perf reliability privacy role.",
+      "capabilities": [
+        "slo",
+        "sla"
+      ],
+      "skills": [
+        "slo",
+        "sla"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "dprp-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.evidence-collector",
+      "name": "Evidence Collector Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Evidence Collector Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "artifact-capture",
+        "trace-capture"
+      ],
+      "skills": [
+        "artifact-capture",
+        "trace-capture"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.evidence-integrity",
+      "name": "Evidence Integrity Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Evidence Integrity Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "hashing",
+        "chain-of-custody"
+      ],
+      "skills": [
+        "hashing",
+        "chain-of-custody"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.finding-verifier",
+      "name": "Finding Verifier Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Finding Verifier Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "independent-verification"
+      ],
+      "skills": [
+        "independent-verification"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.false-positive-challenger",
+      "name": "False Positive Challenger Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "False Positive Challenger Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "adversarial-review"
+      ],
+      "skills": [
+        "adversarial-review"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.root-cause-analysis",
+      "name": "Root Cause Analysis Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Root Cause Analysis Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "rca",
+        "evidence-chaining"
+      ],
+      "skills": [
+        "rca",
+        "evidence-chaining"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.remediation",
+      "name": "Remediation Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Remediation Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "patch-strategy",
+        "pr-authoring"
+      ],
+      "skills": [
+        "patch-strategy",
+        "pr-authoring"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.independent-regression-validator",
+      "name": "Independent Regression Validator Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Independent Regression Validator Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "regression-retest"
+      ],
+      "skills": [
+        "regression-retest"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "evr.release-gate",
+      "name": "Release Gate Agent",
+      "version": "0.1.0",
+      "guild": "EVIDENCE_VERIFICATION_REMEDIATION",
+      "description": "Release Gate Agent — canonical evidence verification remediation role.",
+      "capabilities": [
+        "release-decision",
+        "risk-acceptance"
+      ],
+      "skills": [
+        "release-decision",
+        "risk-acceptance"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "evr-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.technology-scout",
+      "name": "Technology Scout Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Technology Scout Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "technology-research"
+      ],
+      "skills": [
+        "technology-research"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.standards-intelligence",
+      "name": "Standards Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Standards Intelligence Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "owasp",
+        "cwe",
+        "nist"
+      ],
+      "skills": [
+        "owasp",
+        "cwe",
+        "nist",
+        "attack"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.vulnerability-and-advisory-intelligence",
+      "name": "Vulnerability And Advisory Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Vulnerability And Advisory Intelligence Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "cve-correlation",
+        "advisory"
+      ],
+      "skills": [
+        "cve-correlation",
+        "advisory"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.documentation-research",
+      "name": "Documentation Research Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Documentation Research Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "doc-research"
+      ],
+      "skills": [
+        "doc-research"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.open-source-research",
+      "name": "Open Source Research Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Open Source Research Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "repo-research",
+        "license-review"
+      ],
+      "skills": [
+        "repo-research",
+        "license-review"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.knowledge-curator",
+      "name": "Knowledge Curator Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Knowledge Curator Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "knowledge-curation",
+        "provenance"
+      ],
+      "skills": [
+        "knowledge-curation",
+        "provenance"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.sandbox-experiment",
+      "name": "Sandbox Experiment Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Sandbox Experiment Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "sandbox-benchmark"
+      ],
+      "skills": [
+        "sandbox-benchmark"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "know.agent-evaluation-and-certification",
+      "name": "Agent Evaluation And Certification Agent",
+      "version": "0.1.0",
+      "guild": "KNOWLEDGE_AND_LEARNING",
+      "description": "Agent Evaluation And Certification Agent — canonical knowledge and learning role.",
+      "capabilities": [
+        "agent-benchmark",
+        "certification"
+      ],
+      "skills": [
+        "agent-benchmark",
+        "certification"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "know-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.git-and-github-lifecycle",
+      "name": "Git And GitHub Lifecycle Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Git And GitHub Lifecycle Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "git",
+        "github-pr",
+        "safe-merge"
+      ],
+      "skills": [
+        "git",
+        "github-pr",
+        "safe-merge"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.cicd-build",
+      "name": "CICD Build Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "CICD Build Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "ci",
+        "build"
+      ],
+      "skills": [
+        "ci",
+        "build"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.environment-manager",
+      "name": "Environment Manager Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Environment Manager Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "environment",
+        "drift-detection"
+      ],
+      "skills": [
+        "environment",
+        "drift-detection"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.worker-infrastructure",
+      "name": "Worker Infrastructure Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Worker Infrastructure Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "worker-orchestration"
+      ],
+      "skills": [
+        "worker-orchestration"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.device-lab",
+      "name": "Device Lab Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Device Lab Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "device-matrix",
+        "emulator"
+      ],
+      "skills": [
+        "device-matrix",
+        "emulator"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.integration-broker",
+      "name": "Integration Broker Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Integration Broker Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "integration-dry-run"
+      ],
+      "skills": [
+        "integration-dry-run"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.packaging-and-update",
+      "name": "Packaging And Update Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Packaging And Update Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "packaging",
+        "update-rollback"
+      ],
+      "skills": [
+        "packaging",
+        "update-rollback"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "auto.recovery-and-continuity",
+      "name": "Recovery And Continuity Agent",
+      "version": "0.1.0",
+      "guild": "AUTOMATION_AND_INFRASTRUCTURE",
+      "description": "Recovery And Continuity Agent — canonical automation and infrastructure role.",
+      "capabilities": [
+        "checkpoint",
+        "recovery"
+      ],
+      "skills": [
+        "checkpoint",
+        "recovery"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "auto-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.domain-specialist-coordinator",
+      "name": "Domain Specialist Coordinator Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Domain Specialist Coordinator Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "domain-pack-binding"
+      ],
+      "skills": [
+        "domain-pack-binding"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.business-rules-intelligence",
+      "name": "Business Rules Intelligence Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Business Rules Intelligence Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "business-invariants"
+      ],
+      "skills": [
+        "business-invariants"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.critical-journey",
+      "name": "Critical Journey Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Critical Journey Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "critical-journey-modeling"
+      ],
+      "skills": [
+        "critical-journey-modeling"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.synthetic-test-data",
+      "name": "Synthetic Test Data Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Synthetic Test Data Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "synthetic-data"
+      ],
+      "skills": [
+        "synthetic-data"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.risk-and-compliance-mapping",
+      "name": "Risk And Compliance Mapping Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Risk And Compliance Mapping Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "control-mapping"
+      ],
+      "skills": [
+        "control-mapping"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.technical-report",
+      "name": "Technical Report Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Technical Report Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "technical-reporting"
+      ],
+      "skills": [
+        "technical-reporting"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.executive-and-customer-assurance",
+      "name": "Executive And Customer Assurance Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Executive And Customer Assurance Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "executive-reporting"
+      ],
+      "skills": [
+        "executive-reporting"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": false,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R0_PASSIVE",
+      "evidenceRequired": false,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    },
+    {
+      "id": "biz.incident-replay-and-change-impact",
+      "name": "Incident Replay And Change Impact Agent",
+      "version": "0.1.0",
+      "guild": "BUSINESS_DOMAIN_REPORTING",
+      "description": "Incident Replay And Change Impact Agent — canonical business domain reporting role.",
+      "capabilities": [
+        "incident-replay",
+        "change-impact",
+        "blast-radius"
+      ],
+      "skills": [
+        "incident-replay",
+        "change-impact",
+        "blast-radius"
+      ],
+      "knowledgeRequirements": [],
+      "allowedTools": [],
+      "permissions": {
+        "canDetect": true,
+        "canVerifyOwnFinding": false,
+        "canCloseOwnFinding": false,
+        "canSelfAuthorize": false,
+        "canExpandScope": false,
+        "canModifyPolicy": false,
+        "canExportSecret": false
+      },
+      "riskCeiling": "R1_LOW_IMPACT",
+      "evidenceRequired": true,
+      "certificationRequired": true,
+      "evaluationProfile": "biz-default",
+      "status": "DRAFT"
+    }
+  ]
+}

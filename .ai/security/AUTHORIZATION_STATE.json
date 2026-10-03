@@ -1,0 +1,4 @@
+{
+  "authorizations": [],
+  "note": "Empty by design. No external target is authorized. Active validation stays DENIED until an explicit, signed, scoped authorization record is added here by a human."
+}

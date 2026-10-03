@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: validate + typecheck + test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Validate (policies, build graph, agents, knowledge, state)
+        run: npm run validate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+  secret-scan:
+    name: no committed secrets (baseline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Grep for obvious secret patterns in tracked files
+        run: |
+          set -e
+          # Fail if a likely real secret is committed. Allows env var NAMES and examples.
+          if git grep -nIE '(-----BEGIN (RSA|EC|OPENSSH|PGP) PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,})' -- . ':(exclude).github/workflows/ci.yml'; then
+            echo "Potential committed secret detected."; exit 1
+          fi
+          echo "No obvious committed secrets found."

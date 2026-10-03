@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/agent.schema.json",
+  "title": "UAAP Canonical Agent Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "guilds", "agents"],
+  "properties": {
+    "version": { "type": "string" },
+    "guilds": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "type": "string" }
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 72,
+      "maxItems": 72,
+      "items": { "$ref": "#/$defs/agent" }
+    }
+  },
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "version", "guild", "description",
+        "capabilities", "skills", "allowedTools", "permissions",
+        "riskCeiling", "evidenceRequired", "certificationRequired", "status"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "guild": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "skills": { "type": "array", "items": { "type": "string" } },
+        "knowledgeRequirements": { "type": "array", "items": { "type": "string" } },
+        "allowedTools": { "type": "array", "items": { "type": "string" } },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "canDetect", "canVerifyOwnFinding", "canCloseOwnFinding",
+            "canSelfAuthorize", "canExpandScope", "canModifyPolicy", "canExportSecret"
+          ],
+          "properties": {
+            "canDetect": { "type": "boolean" },
+            "canVerifyOwnFinding": { "type": "boolean" },
+            "canCloseOwnFinding": {
+              "description": "Separation of duties: a detector can never close its own finding.",
+              "const": false
+            },
+            "canSelfAuthorize": { "description": "An agent can never create its own authorization.", "const": false },
+            "canExpandScope": { "description": "An agent can never widen target scope.", "const": false },
+            "canModifyPolicy": { "description": "An agent can never modify protected policy.", "const": false },
+            "canExportSecret": { "description": "An agent can never export a secret value.", "const": false }
+          }
+        },
+        "riskCeiling": {
+          "description": "No agent may carry the prohibited (R3) class.",
+          "enum": ["R0_PASSIVE", "R1_LOW_IMPACT", "R2_ELEVATED"]
+        },
+        "evidenceRequired": { "type": "boolean" },
+        "certificationRequired": { "type": "boolean" },
+        "evaluationProfile": { "type": "string" },
+        "status": {
+          "enum": ["DRAFT", "SANDBOX", "EVALUATING", "CERTIFIED", "ACTIVE", "SUSPENDED", "DEPRECATED", "RETIRED", "FAILED_CERTIFICATION"]
+        }
+      }
+    }
+  }
+}

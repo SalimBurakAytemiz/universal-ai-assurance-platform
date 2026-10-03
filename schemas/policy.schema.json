@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/policy.schema.json",
+  "title": "UAAP Policy-as-Code Document",
+  "description": "Machine-readable, versioned, fail-closed policy. The document-level default MUST be DENY.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "name", "default", "rules"],
+  "properties": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "default": {
+      "description": "The decision when no rule matches. Fail-closed: must be DENY.",
+      "const": "DENY"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rule" }
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "effect", "description"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "effect": { "enum": ["ALLOW", "DENY"] },
+        "description": { "type": "string", "minLength": 1 },
+        "match": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "modes": { "type": "array", "items": { "enum": ["PROSPECT_PASSIVE", "CLIENT_AUTHORIZED", "INTERNAL_OWNED"] } },
+            "domains": { "type": "array", "items": { "enum": ["QUALITY", "SECURITY", "DATA", "PERFORMANCE", "RELIABILITY", "PRIVACY", "ACCESSIBILITY"] } },
+            "actionClasses": { "type": "array", "items": { "enum": ["R0_PASSIVE", "R1_LOW_IMPACT", "R2_ELEVATED", "R3_PROHIBITED"] } },
+            "environments": { "type": "array", "items": { "enum": ["LOCAL", "DEV", "QA", "STAGING", "PREPROD", "PRODUCTION"] } },
+            "actions": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "name": "uaap-baseline-policy",
+  "description": "Fail-closed baseline policy. Evaluated as an AND-gate AFTER the Authorization Kernel. First matching rule wins; if none match, the request is denied.",
+  "default": "DENY",
+  "rules": [
+    {
+      "id": "deny-prohibited-class",
+      "effect": "DENY",
+      "description": "The prohibited baseline action class is always denied.",
+      "match": { "actionClasses": ["R3_PROHIBITED"] }
+    },
+    {
+      "id": "deny-production-by-default",
+      "effect": "DENY",
+      "description": "Active and elevated work against PRODUCTION is denied by baseline policy; it requires a dedicated, approved production policy overlay.",
+      "match": { "environments": ["PRODUCTION"], "actionClasses": ["R1_LOW_IMPACT", "R2_ELEVATED"] }
+    },
+    {
+      "id": "allow-passive-anywhere",
+      "effect": "ALLOW",
+      "description": "Passive (R0) public/metadata analysis is permitted in any mode once the kernel has cleared it.",
+      "match": { "actionClasses": ["R0_PASSIVE"] }
+    },
+    {
+      "id": "allow-low-impact-assurance",
+      "effect": "ALLOW",
+      "description": "Low-impact (R1) assurance work is permitted for the core assurance domains in non-production environments.",
+      "match": {
+        "actionClasses": ["R1_LOW_IMPACT"],
+        "domains": ["QUALITY", "SECURITY", "DATA", "PERFORMANCE", "RELIABILITY", "PRIVACY", "ACCESSIBILITY"],
+        "environments": ["LOCAL", "DEV", "QA", "STAGING", "PREPROD"]
+      }
+    },
+    {
+      "id": "allow-elevated-nonprod-assurance",
+      "effect": "ALLOW",
+      "description": "Elevated (R2) assurance work is permitted in non-production environments. The kernel still requires a per-action human approval token for R2.",
+      "match": {
+        "actionClasses": ["R2_ELEVATED"],
+        "environments": ["LOCAL", "DEV", "QA", "STAGING", "PREPROD"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Universal AI Assurance Platform</title>
+    <style>
+      :root {
+        --bg: #0b0e14; --panel: #12161f; --panel2: #171c28; --line: #232a39;
+        --text: #e6e9ef; --muted: #8a93a6; --accent: #5aa2ff;
+        --ok: #3fb950; --warn: #d29922; --block: #f85149; --na: #6e7681;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; font: 14px/1.5 -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); }
+      .app { display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
+      nav { background: var(--panel); border-right: 1px solid var(--line); overflow-y: auto; padding: 12px 0; }
+      nav h1 { font-size: 13px; letter-spacing: .5px; color: var(--muted); padding: 10px 16px 4px; margin: 0; text-transform: uppercase; }
+      nav a { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 16px; color: var(--text); text-decoration: none; cursor: pointer; }
+      nav a:hover { background: var(--panel2); }
+      nav a.active { background: var(--panel2); border-left: 3px solid var(--accent); padding-left: 13px; }
+      .badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+      .badge.ok { color: var(--ok); border-color: var(--ok); }
+      .badge.na { color: var(--na); border-color: var(--na); }
+      .badge.block { color: var(--block); border-color: var(--block); }
+      main { padding: 24px 32px; overflow-y: auto; }
+      .title { font-size: 22px; font-weight: 650; margin: 0 0 2px; }
+      .sub { color: var(--muted); margin: 0 0 20px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+      .card .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+      .card .v { font-size: 20px; font-weight: 650; margin-top: 6px; }
+      .na-note { color: var(--na); border: 1px dashed var(--na); border-radius: 10px; padding: 18px; margin-top: 8px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
+      th { color: var(--muted); font-weight: 600; }
+      .pill { font-size: 11px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); }
+      .s-DONE { color: var(--ok); border-color: var(--ok); }
+      .s-READY { color: var(--accent); border-color: var(--accent); }
+      .s-BLOCKED { color: var(--block); border-color: var(--block); }
+      .s-NOT_STARTED { color: var(--na); border-color: var(--na); }
+      .foot { color: var(--muted); font-size: 12px; margin-top: 24px; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav id="nav"></nav>
+      <main id="main"></main>
+    </div>
+    <script src="./renderer.js"></script>
+  </body>
+</html>

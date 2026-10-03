@@ -1,0 +1,14 @@
+{
+  "name": "@uaap/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal AI Assurance Platform — desktop control plane (Electron shell).",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "node -e \"console.error('Desktop packaging (electron-builder) is not configured yet. See build-graph node desktop-packaging and .ai/KNOWN_ISSUES.md.'); process.exit(1)\""
+  },
+  "devDependencies": {
+    "electron": "^32.1.2"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "reason": "Autopilot launcher scaffolded. Runs must start from the desktop or scripts/start-full-auto.ps1 after review.",
+  "lastRun": null,
+  "safety": { "requireDryRunBeforeLive": true, "globalKillSwitch": "AVAILABLE" }
+}
