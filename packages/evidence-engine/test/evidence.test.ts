@@ -115,4 +115,19 @@ describe("EvidenceStore — chain of custody bundles", () => {
     const b = computeContentHash({ ...base, classification: DataClassification.RESTRICTED, data: { x: 1 } });
     expect(a).not.toBe(b);
   });
+
+  it("commits summary to the hash: rewriting a summary breaks the bundle", () => {
+    const s = new EvidenceStore();
+    s.record({ ...base, data: { a: 1 }, summary: "customer email leaked: a@b.com" });
+    const bundle = s.bundle("RUN_1");
+    const internal = (s as unknown as { records: EvidenceRecord[] }).records;
+    (internal[0] as { summary: string }).summary = "no issue found";
+    expect(s.verifyBundle(bundle)).toBe(false);
+  });
+
+  it("computeContentHash commits to summary (two records differing only by summary differ)", () => {
+    const a = computeContentHash({ ...base, data: { x: 1 }, summary: "a" });
+    const b = computeContentHash({ ...base, data: { x: 1 }, summary: "b" });
+    expect(a).not.toBe(b);
+  });
 });

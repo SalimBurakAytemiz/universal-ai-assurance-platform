@@ -90,8 +90,19 @@
       "note": "4 P1 (bundle verify recompute; contentHash commits all fields; SoD trim; release unknown-status fail-open) + P2/P3 (redaction, blank-detector, unknown-severity, non-ISO expiry, self-approval, ref/data required, verifier provenance, completeness)."
     },
     "boundedLoop": {
-      "count": 1,
-      "max": 3
+      "count": 2,
+      "max": 3,
+      "outcome": "CONVERGED"
+    },
+    "loop2": {
+      "at": "2026-10-03T06:30:00.000Z",
+      "agents": 5,
+      "found": {
+        "P2": 1,
+        "P3": 2
+      },
+      "fixed": "computeContentHash now includes summary (the last uncommitted EvidenceInput field) — every field is now in the integrity envelope; redactedList decides from the hash-committed classification, not the mutable sensitive flag. +regression tests.",
+      "note": "3/4 P1 fixes verified correct on first pass; summary was the one remaining gap. Class closed."
     }
   }
 }

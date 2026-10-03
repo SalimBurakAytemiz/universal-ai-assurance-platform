@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, 72 agents, 143 skills, 9 adapters, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **135 passed / 135** across 16 files (post-review)
+- vitest: **137 passed / 137** across 16 files (post re-review)
 
 | suite | tests | status |
 |-------|-------|--------|

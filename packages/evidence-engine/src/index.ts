@@ -64,6 +64,8 @@ function clone<T>(v: T): T {
  * and is detected by bundle verification. There is no delimiter-concatenation ambiguity.
  */
 function computeContentHash(f: EvidenceInput): string {
+  // Commits to EVERY EvidenceInput field, including summary — nothing a caller provides sits
+  // outside the integrity envelope.
   return hashObject({
     runId: f.runId,
     producedBy: f.producedBy,
@@ -73,7 +75,13 @@ function computeContentHash(f: EvidenceInput): string {
     classification: f.classification,
     ref: f.ref ?? null,
     data: f.data ?? null,
+    summary: f.summary ?? null,
   });
+}
+
+/** Sensitivity is a function of the (hash-committed) classification, not a mutable flag. */
+function isSensitive(c: DataClassification): boolean {
+  return c === DataClassification.CONFIDENTIAL || c === DataClassification.RESTRICTED;
 }
 
 /**
@@ -97,10 +105,12 @@ export class EvidenceStore {
     }
 
     const cleaned = clone(input);
-    const sensitive =
-      input.classification === DataClassification.CONFIDENTIAL ||
-      input.classification === DataClassification.RESTRICTED;
-    const record: EvidenceRecord = { ...cleaned, id: newId("EV"), contentHash: computeContentHash(cleaned), sensitive };
+    const record: EvidenceRecord = {
+      ...cleaned,
+      id: newId("EV"),
+      contentHash: computeContentHash(cleaned),
+      sensitive: isSensitive(input.classification),
+    };
     this.records.push(record);
     return clone(record);
   }
@@ -120,7 +130,8 @@ export class EvidenceStore {
   /** A view with sensitive inline content (data, summary, ref) withheld. Hashes + ids remain. */
   redactedList(runId?: string): EvidenceRecord[] {
     return this.list(runId).map((r) =>
-      r.sensitive
+      // Decide from the hash-committed classification, not the mutable `sensitive` flag.
+      isSensitive(r.classification)
         ? { ...r, data: undefined, summary: r.summary ? SENSITIVE : undefined, ref: r.ref ? SENSITIVE : undefined }
         : r,
     );
