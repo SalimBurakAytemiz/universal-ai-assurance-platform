@@ -126,5 +126,26 @@
       "blocking": 0,
       "p3Fixed": "verification-engine canonical (case-insensitive) SoD; submitRetest/close + verification fail-closed on malformed finding (missing evidenceIds)."
     }
+  },
+  "pr5": {
+    "loop1": {
+      "at": "2026-10-03T10:00:00.000Z",
+      "agents": 19,
+      "reported": 8,
+      "confirmed": 6,
+      "fixedNow": [
+        "P2 resolveKnowledgeConflict now excludes REVOKED/SUPERSEDED/DEPRECATED/STALE",
+        "P2 needsRevalidation surfaces all scopes",
+        "P3 markStale restricted to ACTIVE (lifecycle-consistent)"
+      ],
+      "remainingP3": [],
+      "merged": false,
+      "note": "fixes pushed to branch; CI + re-review + merge NOT done (usage limit reached).",
+      "p3Fixed": [
+        "code-point deterministic sort in query() + conflict recency",
+        "ORG/RUN isolation + query clone-isolation tests",
+        "conflict status + recency tiebreaker tests"
+      ]
+    }
   }
 }

@@ -19,7 +19,8 @@
       "@uaap/evidence-engine": ["packages/evidence-engine/src/index.ts"],
       "@uaap/verification-engine": ["packages/verification-engine/src/index.ts"],
       "@uaap/release-gate": ["packages/release-gate/src/index.ts"],
-      "@uaap/remediation-engine": ["packages/remediation-engine/src/index.ts"]
+      "@uaap/remediation-engine": ["packages/remediation-engine/src/index.ts"],
+      "@uaap/knowledge": ["packages/knowledge/src/index.ts"]
     }
   },
   "include": [

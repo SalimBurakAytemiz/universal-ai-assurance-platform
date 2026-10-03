@@ -1,6 +1,6 @@
 {
-  "version": "0.7.0",
-  "updatedAt": "2026-10-03T09:00:00.000Z",
+  "version": "0.8.0",
+  "updatedAt": "2026-10-03T09:30:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -513,12 +513,16 @@
       "dependencies": [
         "knowledge-provenance-schema"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-KNOWLEDGE-ISOLATION-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/knowledge/src/index.ts"
+      ],
+      "tests": [
+        "packages/knowledge/test/knowledge.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -529,12 +533,16 @@
       "dependencies": [
         "knowledge-store"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-KNOWLEDGE-LIFECYCLE-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/knowledge/src/index.ts"
+      ],
+      "tests": [
+        "packages/knowledge/test/knowledge.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -545,12 +553,16 @@
       "dependencies": [
         "knowledge-store"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-KNOWLEDGE-DECAY-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/knowledge/src/index.ts"
+      ],
+      "tests": [
+        "packages/knowledge/test/knowledge.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -561,7 +573,7 @@
       "dependencies": [
         "knowledge-lifecycle"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-RESEARCH-001"
       ],
@@ -577,7 +589,7 @@
       "dependencies": [
         "knowledge-lifecycle"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-RESEARCH-002"
       ],
@@ -593,7 +605,7 @@
       "dependencies": [
         "knowledge-lifecycle"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-RESEARCH-003"
       ],
