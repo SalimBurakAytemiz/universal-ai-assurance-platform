@@ -119,6 +119,16 @@ describe("DigitalTwinSteward", () => {
     expect(() => new DigitalTwinSteward("PRJ_1", { projectId: "PRJ_1", facts: [{ ...base, createdAt: 123 as unknown as string, freshness: Freshness.FRESH }] })).toThrow(/timestamp/i);
     // bogus freshness would make a fact permanently un-expirable -> must be rejected
     expect(() => new DigitalTwinSteward("PRJ_1", { projectId: "PRJ_1", facts: [{ ...base, freshness: "BOGUS" as unknown as typeof Freshness.FRESH }] })).toThrow(/freshness/i);
+    // a non-string id would crash the getFacts() sort tiebreaker on a createdAt collision -> must be rejected
+    expect(() =>
+      new DigitalTwinSteward("PRJ_1", {
+        projectId: "PRJ_1",
+        facts: [
+          { id: 7 as unknown as string, kind: TwinFactKind.COMPONENT, key: "a", value: 1, createdAt: T1, updatedAt: T1, freshness: Freshness.FRESH },
+          { id: 3 as unknown as string, kind: TwinFactKind.COMPONENT, key: "b", value: 1, createdAt: T1, updatedAt: T1, freshness: Freshness.FRESH },
+        ],
+      }),
+    ).toThrow(/id/i);
   });
 
   it("snapshot preserves STALE freshness and returned facts are copies (no internal mutation)", () => {

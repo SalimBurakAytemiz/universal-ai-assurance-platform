@@ -162,6 +162,7 @@ export class DigitalTwinSteward {
 /** Return the reason a fact is invalid, or null if it is valid (shared by restore + validation). */
 function invalidFactReason(f: TwinFact): string | null {
   if (!f || typeof f.kind !== "string" || typeof f.key !== "string") return "missing kind/key";
+  if (typeof f.id !== "string" || !f.id.trim()) return "missing/invalid id";
   if (!f.key.trim()) return "blank key";
   if (typeof f.createdAt !== "string" || typeof f.updatedAt !== "string") return "missing/invalid timestamps";
   if (f.freshness !== Freshness.FRESH && f.freshness !== Freshness.STALE) return "invalid freshness";

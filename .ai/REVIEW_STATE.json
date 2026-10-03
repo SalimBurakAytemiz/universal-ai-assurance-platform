@@ -67,8 +67,17 @@
       "note": "3 my-fix-introduced/incomplete P2s closed with deterministic regression tests."
     },
     "boundedLoop": {
-      "count": 2,
-      "max": 3
+      "count": 3,
+      "max": 3,
+      "outcome": "CONVERGED"
+    },
+    "loop3": {
+      "at": "2026-10-03T04:30:00.000Z",
+      "agents": 4,
+      "found": {
+        "P1": 1
+      },
+      "fixed": "invalidFactReason now validates fact.id (last unvalidated operand in getFacts() sort tiebreaker). +regression test. Restore gate now covers every dereferenced field; class closed."
     }
   }
 }
