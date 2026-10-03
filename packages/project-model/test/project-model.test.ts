@@ -89,12 +89,25 @@ describe("ProjectStore", () => {
     expect(reopened.targets[0]).toMatchObject({ name: "API", kind: TargetKind.API, environment: Environment.STAGING });
   });
 
-  it("skips a corrupt JSON file instead of breaking enumeration of the rest", () => {
+  it("skips corrupt AND foreign-but-valid JSON files instead of breaking enumeration", () => {
     const store = new ProjectStore(dir);
     store.createProject({ name: "Good", mode: Mode.INTERNAL_OWNED, now: T1 });
     writeFileSync(join(dir, "corrupt.json"), "{ this is not json");
+    // Foreign valid JSON with id+name but NO string createdAt — named to sort LAST so it would
+    // deterministically crash the comparator if the guard were incomplete.
+    writeFileSync(join(dir, "zzz.json"), JSON.stringify({ id: "zzz", name: "foreign" }));
+    writeFileSync(join(dir, "zzy.json"), JSON.stringify({ id: "zzy", name: "foreign2", createdAt: 12345 }));
     const listed = store.list();
     expect(listed.map((p) => p.name)).toEqual(["Good"]);
+  });
+
+  it("rejects crafted ids on addTarget/addRepository too (incl. backslash)", () => {
+    const store = new ProjectStore(dir);
+    expect(() =>
+      store.addTarget("../evil", { name: "x", kind: TargetKind.WEB, identifiers: ["x"], environment: Environment.DEV }, T2),
+    ).toThrow(/invalid project id/i);
+    expect(() => store.addRepository("a\\b", { kind: "local", path: "/x" }, T2)).toThrow(/invalid project id/i);
+    expect(() => store.get("a\\b")).toThrow(/invalid project id/i);
   });
 
   it("writes atomically (no leftover temp files after a save)", () => {

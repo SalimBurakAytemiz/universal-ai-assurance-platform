@@ -100,10 +100,13 @@ export class DigitalTwinSteward {
     }
     const mapKey = `${proposal.kind}::${proposal.key}`;
     const existing = this.facts.get(mapKey);
+    // Clone the value on the WRITE side too: a caller that mutates the object it passed in
+    // must not be able to reach through and corrupt the steward's stored state.
+    const storedValue = clone(proposal.value);
     const fact: TwinFact = existing
       ? {
           ...existing,
-          value: proposal.value,
+          value: storedValue,
           provenance: incomingProvenance ?? existing.provenance,
           freshness: Freshness.FRESH,
           updatedAt: proposal.now,
@@ -112,7 +115,7 @@ export class DigitalTwinSteward {
           id: newId("FACT"),
           kind: proposal.kind,
           key: proposal.key,
-          value: proposal.value,
+          value: storedValue,
           provenance: incomingProvenance,
           freshness: Freshness.FRESH,
           createdAt: proposal.now,
@@ -126,7 +129,8 @@ export class DigitalTwinSteward {
   markStale(predicate: (fact: TwinFact) => boolean, now: string): number {
     let count = 0;
     for (const [k, f] of this.facts) {
-      if (f.freshness === Freshness.FRESH && predicate(f)) {
+      // Pass a copy to the predicate so a caller cannot mutate internal state through it.
+      if (f.freshness === Freshness.FRESH && predicate(clone(f))) {
         this.facts.set(k, { ...f, freshness: Freshness.STALE, updatedAt: now });
         count++;
       }
@@ -159,6 +163,8 @@ export class DigitalTwinSteward {
 function invalidFactReason(f: TwinFact): string | null {
   if (!f || typeof f.kind !== "string" || typeof f.key !== "string") return "missing kind/key";
   if (!f.key.trim()) return "blank key";
+  if (typeof f.createdAt !== "string" || typeof f.updatedAt !== "string") return "missing/invalid timestamps";
+  if (f.freshness !== Freshness.FRESH && f.freshness !== Freshness.STALE) return "invalid freshness";
   if (CRITICAL_KINDS.has(f.kind) && !f.provenance?.trim()) return "critical fact without provenance";
   return null;
 }

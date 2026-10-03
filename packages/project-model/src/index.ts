@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { newId, type Environment, type Mode } from "@uaap/core";
 
@@ -81,8 +81,17 @@ export class ProjectStore {
   save(project: Project): void {
     const target = this.file(project.id); // validates id
     const tmp = join(this.baseDir, `.${project.id}.${newId("w")}.tmp`);
-    writeFileSync(tmp, JSON.stringify(project, null, 2) + "\n");
-    renameSync(tmp, target); // atomic on the same filesystem
+    try {
+      writeFileSync(tmp, JSON.stringify(project, null, 2) + "\n");
+      renameSync(tmp, target); // atomic on the same filesystem
+    } catch (e) {
+      try {
+        rmSync(tmp, { force: true });
+      } catch {
+        // best-effort cleanup; the orphan is an inert dotfile excluded by list()
+      }
+      throw e;
+    }
   }
 
   get(id: string): Project | undefined {
@@ -99,7 +108,11 @@ export class ProjectStore {
       if (!f.endsWith(".json") || f.startsWith(".")) continue;
       try {
         const p = JSON.parse(readFileSync(join(this.baseDir, f), "utf8")) as Project;
-        if (p && typeof p.id === "string" && typeof p.name === "string") out.push(p);
+        // Require the fields the comparator and consumers rely on, so a foreign/schema-drifted
+        // file can never slip past the guard and crash the sort below.
+        if (p && typeof p.id === "string" && typeof p.name === "string" && typeof p.createdAt === "string") {
+          out.push(p);
+        }
       } catch {
         // skip unparseable / partially written files; one bad file must not hide the rest.
       }

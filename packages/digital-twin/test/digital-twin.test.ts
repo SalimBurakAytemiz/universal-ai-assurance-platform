@@ -106,6 +106,21 @@ describe("DigitalTwinSteward", () => {
     expect(() => new DigitalTwinSteward("PRJ_1", tampered)).toThrow(/provenance/i);
   });
 
+  it("rejects a critical fact with a blank/whitespace provenance", () => {
+    const s = new DigitalTwinSteward("PRJ_1");
+    expect(
+      s.proposeUpdate({ kind: TwinFactKind.SERVICE, key: "svc", value: {}, provenance: "   ", proposedBy: "a", now: T1 }).applied,
+    ).toBe(false);
+  });
+
+  it("refuses to restore a snapshot fact with bad timestamps or an out-of-enum freshness", () => {
+    const base = { id: "FACT_x", kind: TwinFactKind.COMPONENT, key: "c", value: 1, createdAt: T1, updatedAt: T1 };
+    // numeric createdAt would crash the getFacts() sort later -> must be rejected on restore
+    expect(() => new DigitalTwinSteward("PRJ_1", { projectId: "PRJ_1", facts: [{ ...base, createdAt: 123 as unknown as string, freshness: Freshness.FRESH }] })).toThrow(/timestamp/i);
+    // bogus freshness would make a fact permanently un-expirable -> must be rejected
+    expect(() => new DigitalTwinSteward("PRJ_1", { projectId: "PRJ_1", facts: [{ ...base, freshness: "BOGUS" as unknown as typeof Freshness.FRESH }] })).toThrow(/freshness/i);
+  });
+
   it("snapshot preserves STALE freshness and returned facts are copies (no internal mutation)", () => {
     const s = new DigitalTwinSteward("PRJ_1");
     s.proposeUpdate({ kind: TwinFactKind.COMPONENT, key: "c", value: { n: 1 }, proposedBy: "a", now: T1 });
@@ -118,6 +133,14 @@ describe("DigitalTwinSteward", () => {
     // mutating a returned fact must not change the steward's internal state
     const got = s.getFact(TwinFactKind.COMPONENT, "c")!;
     (got.value as { n: number }).n = 999;
+    expect((s.getFact(TwinFactKind.COMPONENT, "c")!.value as { n: number }).n).toBe(1);
+  });
+
+  it("isolates the stored value from write-side mutation of the caller's object", () => {
+    const s = new DigitalTwinSteward("PRJ_1");
+    const value = { n: 1 };
+    s.proposeUpdate({ kind: TwinFactKind.COMPONENT, key: "c", value, proposedBy: "a", now: T1 });
+    value.n = 999; // caller mutates the object it passed in, AFTER proposing
     expect((s.getFact(TwinFactKind.COMPONENT, "c")!.value as { n: number }).n).toBe(1);
   });
 });
