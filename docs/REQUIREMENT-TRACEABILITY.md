@@ -52,10 +52,10 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-QA-WEB-001 | Web automation engine | QA §12 | NOT_STARTED | — | — |
 | REQ-SEC-APPSEC-001 | Application security engine | SEC §12 | NOT_STARTED | — | — |
 | REQ-SEC-ACTIVE-001 | Authorized active validation | SEC §4.2, M1 §17 | BLOCKED (needs external authorization + scope) | gate node | — |
-| REQ-EVIDENCE-001 | Execution-backed evidence | QA §16, M1 §29 | NOT_STARTED | — | — |
-| REQ-VERIFY-001 | Independent verification (SoD) | SEC §13, M1 §35 | NOT_STARTED | partial: SoD invariants in agent schema | — |
-| REQ-REMEDIATION-001 | Remediation lifecycle | SEC §5, M1 §45 | NOT_STARTED | — | — |
-| REQ-RELEASE-001 | Release gate on real results | M1 §46 | NOT_STARTED | — | — |
+| REQ-EVIDENCE-001 | Execution-backed evidence + chain of custody | QA §16, M1 §29,§31 | IMPLEMENTED+TESTED | `packages/evidence-engine` | `evidence.test.ts` (11) |
+| REQ-VERIFY-001 | Independent verification (SoD) | SEC §13, M1 §35 | IMPLEMENTED+TESTED | `packages/verification-engine` (+ agent schema invariants) | `verification.test.ts` (7) |
+| REQ-REMEDIATION-001 | Remediation lifecycle | SEC §5, M1 §45 | NOT_STARTED (now READY) | — | — |
+| REQ-RELEASE-001 | Release gate on real results | M1 §46 | IMPLEMENTED+TESTED | `packages/release-gate` (fail-closed, decision ledger) | `release-gate.test.ts` (10) |
 | REQ-PACKAGING-001 | Windows packaging + update/rollback | M1 §80,§81 | NOT_STARTED | build script stub | — |
 | REQ-DESKTOP-AGENTS-001 | Desktop Agents view | M2 §48 | SCAFFOLDED (counts) | `apps/desktop` | — |
 | REQ-DESKTOP-KNOWLEDGE-001 | Desktop Knowledge view | M2 §49 | NOT_STARTED | — | — |

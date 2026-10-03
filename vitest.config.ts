@@ -17,6 +17,9 @@ export default defineConfig({
       "@uaap/tool-adapter-registry": r("./packages/tool-adapter-registry/src/index.ts"),
       "@uaap/project-model": r("./packages/project-model/src/index.ts"),
       "@uaap/digital-twin": r("./packages/digital-twin/src/index.ts"),
+      "@uaap/evidence-engine": r("./packages/evidence-engine/src/index.ts"),
+      "@uaap/verification-engine": r("./packages/verification-engine/src/index.ts"),
+      "@uaap/release-gate": r("./packages/release-gate/src/index.ts"),
     },
   },
   test: {
