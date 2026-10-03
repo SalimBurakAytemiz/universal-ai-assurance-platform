@@ -39,9 +39,9 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-AGENT-ACTIVATION-001 | Assurance planner selects team | M2 §8 | NOT_STARTED | — | — |
 | REQ-EVALUATION-001/002 | Agent evaluation + certification | M2 §32,§33 | NOT_STARTED | — | — |
 | REQ-KNOWLEDGE-PROV-001 | Knowledge provenance schema | M2 §23 | IMPLEMENTED | `schemas/knowledge-item.schema.json` | `validate-knowledge.mjs` |
-| REQ-KNOWLEDGE-LIFECYCLE-001 | Candidate→certified lifecycle | M2 §24 | IMPLEMENTED (schema) + NOT_STARTED (engine) | schema | — |
-| REQ-KNOWLEDGE-DECAY-001 | Freshness/decay | M2 §25 | NOT_STARTED | — | — |
-| REQ-KNOWLEDGE-ISOLATION-001 | Global/org/project/run scopes | M2 §40 | IMPLEMENTED (scope field) + NOT_STARTED (enforce) | schema | — |
+| REQ-KNOWLEDGE-LIFECYCLE-001 | Candidate→certified lifecycle (external never directly ACTIVE) | M2 §24 | IMPLEMENTED+TESTED | `packages/knowledge` | `knowledge.test.ts` |
+| REQ-KNOWLEDGE-DECAY-001 | Freshness/decay + revalidation | M2 §25 | IMPLEMENTED+TESTED | `packages/knowledge` (markStale/needsRevalidation) | `knowledge.test.ts` |
+| REQ-KNOWLEDGE-ISOLATION-001 | Global/org/project/run scope isolation | M2 §40 | IMPLEMENTED+TESTED | `packages/knowledge` (query isolation) | `knowledge.test.ts` |
 | REQ-RESEARCH-001/002/003 | Technology/standards/advisory intel | M2 §21,§29,§28 | NOT_STARTED | — | — |
 | REQ-LEARNING-001 | Sandbox + evaluation + certification | M2 §20,§31 | NOT_STARTED | — | — |
 | REQ-PROJECT-001 | Project + target model | M1 §8 | IMPLEMENTED+TESTED | `packages/project-model` (file-backed store) | `project-model.test.ts` (6) |

@@ -26,6 +26,7 @@
     "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
     "trustTier": { "enum": ["TIER_0", "TIER_1", "TIER_2", "TIER_3", "TIER_4"] },
     "scope": { "enum": ["GLOBAL", "ORGANIZATION", "PROJECT", "RUN"] },
+    "scopeRef": { "type": "string", "description": "Owning id for non-GLOBAL scopes (organizationId / projectId / runId)." },
     "lifecycleStatus": {
       "enum": [
         "DISCOVERED", "CANDIDATE", "SOURCE_VERIFIED", "SANDBOXED", "EVALUATED",
