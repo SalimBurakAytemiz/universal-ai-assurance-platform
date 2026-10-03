@@ -64,4 +64,41 @@ describe("VerificationEngine — separation of duties + evidence", () => {
     engine.verify({ finding: f, verifierId: "v", verdict: Verdict.REJECT, now: "t" });
     expect(f.status).toBe(FindingStatus.HYPOTHESIS);
   });
+
+  it("blocks the SoD bypass via whitespace-padded verifierId", () => {
+    const r = engine.verify({
+      finding: finding({ detectedBy: "agent:sec.api-security" }),
+      verifierId: "  agent:sec.api-security  ",
+      verdict: Verdict.CONFIRM,
+      evidenceIds: ["EV-1"],
+      now: "t",
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects a finding with a blank detectedBy (SoD cannot be established)", () => {
+    const r = engine.verify({ finding: finding({ detectedBy: "  " }), verifierId: "v", verdict: Verdict.REJECT, now: "t" });
+    expect(r.ok).toBe(false);
+  });
+
+  it("records verifier provenance (verifiedBy trimmed, verifiedAt)", () => {
+    const r = engine.verify({ finding: finding(), verifierId: "  v  ", verdict: Verdict.REJECT, now: "2026-10-03T12:00:00.000Z" });
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.verifiedBy).toBe("v");
+      expect(r.verifiedAt).toBe("2026-10-03T12:00:00.000Z");
+    }
+  });
+
+  it("trims whitespace-padded evidence ids before storing/dedup", () => {
+    const r = engine.verify({
+      finding: finding(),
+      verifierId: "v",
+      verdict: Verdict.CONFIRM,
+      evidenceIds: [" EV-1 ", "EV-1"],
+      now: "t",
+    });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.finding.evidenceIds).toEqual(["EV-1"]);
+  });
 });

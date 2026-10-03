@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DataClassification } from "@uaap/core";
-import { EvidenceStore, EvidenceKind } from "@uaap/evidence-engine";
+import { EvidenceStore, EvidenceKind, computeContentHash, type EvidenceRecord } from "@uaap/evidence-engine";
 
 const AT = "2026-10-03T12:00:00.000Z";
 const base = {
@@ -33,14 +33,27 @@ describe("EvidenceStore — no evidence without execution", () => {
     expect(() => s.record({ ...base, classification: "TOP_SECRET" as unknown as DataClassification })).toThrow(/classification/i);
   });
 
-  it("flags CONFIDENTIAL/RESTRICTED as sensitive and redacts inline data in the redacted view", () => {
+  it("rejects evidence with neither a ref nor inline data (no concrete artifact)", () => {
     const s = new EvidenceStore();
-    s.record({ ...base, classification: DataClassification.RESTRICTED, data: { secretish: "ref-only" } });
+    expect(() => s.record({ ...base })).toThrow(/artifact|ref|inline data/i);
+  });
+
+  it("redacts data, summary AND ref for sensitive records", () => {
+    const s = new EvidenceStore();
+    s.record({
+      ...base,
+      classification: DataClassification.RESTRICTED,
+      data: { secretish: "x" },
+      summary: "customer email was leaked: a@b.com",
+      ref: "s3://tenant-42/dump.bin",
+    });
     const [red] = s.redactedList("RUN_1");
     expect(red!.sensitive).toBe(true);
     expect(red!.data).toBeUndefined();
-    // but the non-redacted get still has it (access-controlled elsewhere)
-    expect(s.list("RUN_1")[0]!.data).toBeDefined();
+    expect(red!.summary).toBe("[REDACTED]");
+    expect(red!.ref).toBe("[REDACTED]");
+    // the non-redacted list still has it (access-controlled elsewhere)
+    expect(s.list("RUN_1")[0]!.summary).toContain("leaked");
   });
 
   it("isolates stored records from caller mutation (clone on write and read)", () => {
@@ -76,5 +89,30 @@ describe("EvidenceStore — chain of custody bundles", () => {
     const b1 = s.bundle("RUN_1", { commit: "aaa" });
     const b2 = s.bundle("RUN_1", { commit: "bbb" });
     expect(b1.bundleHash).not.toBe(b2.bundleHash);
+  });
+
+  it("verifyBundle RECOMPUTES from content: mutating a record's data breaks verification", () => {
+    const s = new EvidenceStore();
+    s.record({ ...base, data: { a: 1 } });
+    const bundle = s.bundle("RUN_1", { commit: "abc" });
+    // reach into internal storage to simulate a content tamper that leaves add/remove unchanged
+    const internal = (s as unknown as { records: EvidenceRecord[] }).records;
+    (internal[0] as { data: unknown }).data = { a: 999 };
+    expect(s.verifyBundle(bundle)).toBe(false);
+  });
+
+  it("flipping classification RESTRICTED->PUBLIC changes the content hash (and breaks the bundle)", () => {
+    const s = new EvidenceStore();
+    s.record({ ...base, classification: DataClassification.RESTRICTED, data: { a: 1 } });
+    const bundle = s.bundle("RUN_1");
+    const internal = (s as unknown as { records: EvidenceRecord[] }).records;
+    (internal[0] as { classification: DataClassification }).classification = DataClassification.PUBLIC;
+    expect(s.verifyBundle(bundle)).toBe(false);
+  });
+
+  it("computeContentHash commits to classification (two records differing only by class differ)", () => {
+    const a = computeContentHash({ ...base, classification: DataClassification.PUBLIC, data: { x: 1 } });
+    const b = computeContentHash({ ...base, classification: DataClassification.RESTRICTED, data: { x: 1 } });
+    expect(a).not.toBe(b);
   });
 });

@@ -1,4 +1,4 @@
-import { DataClassification, hashObject, newId, sha256Hex } from "@uaap/core";
+import { DataClassification, hashObject, newId } from "@uaap/core";
 
 /** Kinds of evidence an execution can produce. */
 export const EvidenceKind = {
@@ -35,7 +35,7 @@ export interface EvidenceInput {
 
 export interface EvidenceRecord extends EvidenceInput {
   readonly id: string;
-  /** SHA-256 over the canonical content (data if present, else ref+action+at). */
+  /** SHA-256 over ALL integrity-relevant fields (see computeContentHash). */
   readonly contentHash: string;
   /** True for CONFIDENTIAL/RESTRICTED evidence (access-controlled, redacted in views). */
   readonly sensitive: boolean;
@@ -51,15 +51,37 @@ export interface EvidenceBundle {
 }
 
 const VALID_CLASS = new Set<string>(Object.values(DataClassification));
+const SENSITIVE = "[REDACTED]";
 
 function clone<T>(v: T): T {
   return structuredClone(v);
 }
 
 /**
+ * Content hash that commits to EVERY integrity-relevant field — including classification,
+ * producedBy, kind, timestamps, ref, and data — via a canonical (key-sorted) encoding. This
+ * means any mutation (e.g. flipping RESTRICTED->PUBLIC, or altering `data`) changes the hash
+ * and is detected by bundle verification. There is no delimiter-concatenation ambiguity.
+ */
+function computeContentHash(f: EvidenceInput): string {
+  return hashObject({
+    runId: f.runId,
+    producedBy: f.producedBy,
+    action: f.action,
+    kind: f.kind,
+    at: f.at,
+    classification: f.classification,
+    ref: f.ref ?? null,
+    data: f.data ?? null,
+  });
+}
+
+/**
  * Records evidence that originates from execution and produces tamper-evident bundles.
  * Invariant: there is no evidence without an execution reference — every record requires a
- * runId, a producedBy, and an executed `action`. Content is hashed for chain of custody.
+ * runId, a producedBy, an executed `action`, and a concrete artifact (`ref`) or inline `data`.
+ * Bundle verification RECOMPUTES each record's hash from its content, so content tampering
+ * (not just add/remove) is detected.
  */
 export class EvidenceStore {
   private readonly records: EvidenceRecord[] = [];
@@ -70,16 +92,15 @@ export class EvidenceStore {
     if (!input.action?.trim()) throw new Error("Evidence requires an executed action (no execution, no evidence).");
     if (!input.at?.trim()) throw new Error("Evidence requires a timestamp.");
     if (!VALID_CLASS.has(input.classification)) throw new Error(`Invalid data classification "${input.classification}".`);
+    if (!input.ref?.trim() && input.data === undefined) {
+      throw new Error("Evidence requires a concrete artifact reference (ref) or inline data.");
+    }
 
-    const contentHash =
-      input.data !== undefined
-        ? hashObject({ action: input.action, data: input.data })
-        : sha256Hex(`${input.action}|${input.ref ?? ""}|${input.at}|${input.runId}`);
+    const cleaned = clone(input);
     const sensitive =
       input.classification === DataClassification.CONFIDENTIAL ||
       input.classification === DataClassification.RESTRICTED;
-
-    const record: EvidenceRecord = { ...clone(input), id: newId("EV"), contentHash, sensitive };
+    const record: EvidenceRecord = { ...cleaned, id: newId("EV"), contentHash: computeContentHash(cleaned), sensitive };
     this.records.push(record);
     return clone(record);
   }
@@ -96,21 +117,27 @@ export class EvidenceStore {
       .map(clone);
   }
 
-  /** A view with inline data stripped from sensitive records (refs + hashes remain). */
+  /** A view with sensitive inline content (data, summary, ref) withheld. Hashes + ids remain. */
   redactedList(runId?: string): EvidenceRecord[] {
-    return this.list(runId).map((r) => (r.sensitive ? { ...r, data: undefined } : r));
+    return this.list(runId).map((r) =>
+      r.sensitive
+        ? { ...r, data: undefined, summary: r.summary ? SENSITIVE : undefined, ref: r.ref ? SENSITIVE : undefined }
+        : r,
+    );
   }
 
-  /** Build a tamper-evident bundle for a run. The hash commits to the records and the metadata. */
+  /** Build a tamper-evident bundle; per-record hashes are RECOMPUTED from content, not trusted. */
   bundle(runId: string, meta: Record<string, string> = {}): EvidenceBundle {
-    const recordHashes = this.list(runId).map((r) => r.contentHash).sort();
+    const recordHashes = this.list(runId).map((r) => computeContentHash(r)).sort();
     const bundleHash = hashObject({ runId, recordHashes, meta });
     return { runId, recordHashes, meta: { ...meta }, bundleHash, count: recordHashes.length };
   }
 
-  /** Recompute a bundle's hash from current records and confirm it matches a previously issued one. */
+  /** Recompute a bundle from current record CONTENT and confirm it matches a previously issued one. */
   verifyBundle(previous: EvidenceBundle): boolean {
     const current = this.bundle(previous.runId, previous.meta);
     return current.bundleHash === previous.bundleHash;
   }
 }
+
+export { computeContentHash };

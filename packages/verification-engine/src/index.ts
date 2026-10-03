@@ -14,7 +14,7 @@ export interface VerificationInput {
 }
 
 export type VerificationResult =
-  | { readonly ok: true; readonly finding: Finding }
+  | { readonly ok: true; readonly finding: Finding; readonly verifiedBy: string; readonly verifiedAt: string }
   | { readonly ok: false; readonly reason: string };
 
 /** Finding states that are eligible for verification (not already resolved). */
@@ -29,13 +29,20 @@ const VERIFIABLE: ReadonlySet<string> = new Set([
  * Independent verification engine. Enforces separation of duties (the detector cannot verify
  * its own finding) and evidence-backed confirmation (a finding is never CONFIRMED without
  * evidence). It never CLOSES a finding — closure is a separate authority (the release gate).
+ * SoD is compared on NORMALIZED (trimmed) identities so cosmetic variants cannot bypass it,
+ * and a finding whose detector is unknown is rejected because SoD cannot be established.
  */
 export class VerificationEngine {
   verify(input: VerificationInput): VerificationResult {
-    const { finding, verifierId, verdict } = input;
-    if (!verifierId?.trim()) return { ok: false, reason: "verifierId is required." };
+    const { finding, verdict } = input;
+    const verifierId = input.verifierId?.trim();
+    if (!verifierId) return { ok: false, reason: "verifierId is required." };
     if (!finding || !finding.id) return { ok: false, reason: "A finding is required." };
-    if (verifierId === finding.detectedBy) {
+    const detectedBy = finding.detectedBy?.trim();
+    if (!detectedBy) {
+      return { ok: false, reason: "Finding has no detectedBy; separation of duties cannot be established." };
+    }
+    if (verifierId === detectedBy) {
       return { ok: false, reason: "Separation of duties: the detector cannot verify its own finding." };
     }
     if (!VERIFIABLE.has(finding.status)) {
@@ -43,16 +50,26 @@ export class VerificationEngine {
     }
 
     if (verdict === Verdict.CONFIRM) {
-      const evidence = (input.evidenceIds ?? []).filter((e) => e?.trim());
+      const evidence = (input.evidenceIds ?? []).map((e) => e?.trim()).filter((e): e is string => !!e);
       if (evidence.length === 0) {
         return { ok: false, reason: "A finding cannot be CONFIRMED without at least one evidence reference." };
       }
-      const merged = [...new Set([...finding.evidenceIds, ...evidence])];
-      return { ok: true, finding: { ...finding, status: FindingStatus.CONFIRMED, evidenceIds: merged } };
+      const merged = [...new Set([...finding.evidenceIds.map((e) => e.trim()).filter(Boolean), ...evidence])];
+      return {
+        ok: true,
+        finding: { ...finding, status: FindingStatus.CONFIRMED, evidenceIds: merged },
+        verifiedBy: verifierId,
+        verifiedAt: input.now,
+      };
     }
 
     if (verdict === Verdict.REJECT) {
-      return { ok: true, finding: { ...finding, status: FindingStatus.REJECTED_FALSE_POSITIVE } };
+      return {
+        ok: true,
+        finding: { ...finding, status: FindingStatus.REJECTED_FALSE_POSITIVE },
+        verifiedBy: verifierId,
+        verifiedAt: input.now,
+      };
     }
 
     return { ok: false, reason: `Unknown verdict "${String(verdict)}".` };

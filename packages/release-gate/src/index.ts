@@ -31,6 +31,8 @@ export interface ReleaseGateInput {
   readonly domainResults: readonly GateDomainResult[];
   readonly findings: readonly Finding[];
   readonly acceptances?: readonly RiskAcceptance[];
+  /** Domains that MUST be reported with a result; any missing one requires human approval. */
+  readonly requiredDomains?: readonly AssuranceDomain[];
   /** Whether the run's evidence bundle verified (chain of custody intact). */
   readonly evidenceBundleValid: boolean;
   readonly now: string;
@@ -48,15 +50,20 @@ const OPEN_EXCLUDED: ReadonlySet<string> = new Set([
   FindingStatus.CLOSED,
   FindingStatus.REJECTED_FALSE_POSITIVE,
 ]);
+const KNOWN_SEVERITY: ReadonlySet<string> = new Set(Object.values(Severity));
+const ISO_8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
 function isOpen(f: Finding): boolean {
   return !OPEN_EXCLUDED.has(f.status);
 }
 
+/** A risk acceptance is valid only if complete, independently approved, strictly-ISO, and unexpired. */
 function acceptanceValidFor(f: Finding, acceptances: readonly RiskAcceptance[], now: string): boolean {
   const a = acceptances.find((x) => x.findingId === f.id);
   if (!a) return false;
   if (!a.reason?.trim() || !a.owner?.trim() || !a.approver?.trim()) return false;
+  if (a.owner.trim() === a.approver.trim()) return false; // no self-approval (SoD)
+  if (!ISO_8601.test(a.expiry) || !ISO_8601.test(now)) return false; // reject lenient/garbage dates
   const exp = Date.parse(a.expiry);
   const t = Date.parse(now);
   if (Number.isNaN(exp) || Number.isNaN(t)) return false;
@@ -66,7 +73,9 @@ function acceptanceValidFor(f: Finding, acceptances: readonly RiskAcceptance[], 
 /**
  * The Release Gate consumes REAL assurance results and returns a fail-closed decision with a
  * decision ledger. Precedence: BLOCKED > HUMAN_APPROVAL_REQUIRED > ALLOWED_WITH_ACCEPTED_RISK
- * > ALLOWED. P0 findings are never risk-acceptable; a broken evidence bundle always blocks.
+ * > ALLOWED. Only an exact PASS contributes nothing; any other/unknown domain status or finding
+ * severity is treated conservatively. P0 findings are never risk-acceptable; a broken evidence
+ * bundle always blocks; missing required domains / no results at all require human approval.
  */
 export function evaluateRelease(input: ReleaseGateInput): ReleaseGateResult {
   const acceptances = input.acceptances ?? [];
@@ -82,20 +91,43 @@ export function evaluateRelease(input: ReleaseGateInput): ReleaseGateResult {
     reasons.push("Evidence bundle failed integrity verification — release blocked.");
   }
 
-  // 2) Domain results.
+  // 2) Domain results — only an exact PASS is a clean pass; everything else is handled.
   for (const d of input.domainResults) {
+    if (d.status === GateStatus.PASS) continue;
     if (d.status === GateStatus.FAIL) {
       blockers.push(`domain:${d.domain}`);
       reasons.push(`Domain ${d.domain} FAILED.`);
     } else if (d.status === GateStatus.NOT_RUN) {
       approvals.push(`domain:${d.domain}`);
       reasons.push(`Domain ${d.domain} was NOT RUN — human approval required to release without it.`);
+    } else {
+      blockers.push(`domain:${d.domain}`);
+      reasons.push(`Domain ${d.domain} reported an unrecognized status "${String(d.status)}" — release blocked (fail-closed).`);
     }
   }
 
-  // 3) Open findings by severity.
+  // 3) Completeness — required domains must be reported; zero results means nothing ran.
+  const reported = new Set(input.domainResults.map((d) => d.domain));
+  for (const req of input.requiredDomains ?? []) {
+    if (!reported.has(req)) {
+      approvals.push(`missing-domain:${req}`);
+      reasons.push(`Required domain ${req} was not reported — human approval required.`);
+    }
+  }
+  if (input.domainResults.length === 0) {
+    approvals.push("no-results");
+    reasons.push("No assurance domains were reported — human approval required (nothing was run).");
+  }
+
+  // 4) Open findings by severity.
   for (const f of input.findings) {
     if (!isOpen(f)) continue;
+    if (!KNOWN_SEVERITY.has(f.severity)) {
+      blockers.push(`finding:${f.id}`);
+      blockingFindingIds.push(f.id);
+      reasons.push(`Open finding ${f.id} has an unrecognized severity "${String(f.severity)}" — release blocked.`);
+      continue;
+    }
     if (f.severity === Severity.P0) {
       blockers.push(`finding:${f.id}`);
       blockingFindingIds.push(f.id);

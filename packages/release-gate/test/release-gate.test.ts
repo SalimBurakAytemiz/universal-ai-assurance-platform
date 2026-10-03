@@ -102,4 +102,53 @@ describe("evaluateRelease", () => {
     });
     expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
   });
+
+  it("BLOCKS an unrecognized domain status (fail-closed, not fail-open to PASS)", () => {
+    const r = evaluateRelease({
+      domainResults: [pass(AssuranceDomain.QUALITY), { domain: AssuranceDomain.SECURITY, status: "ERROR" as unknown as GateStatus }],
+      findings: [],
+      evidenceBundleValid: true,
+      now: NOW,
+    });
+    expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
+  });
+
+  it("BLOCKS an open finding with an unrecognized severity", () => {
+    const r = evaluateRelease({
+      domainResults: okDomains,
+      findings: [finding("SEV9" as unknown as Severity, { id: "weird" })],
+      evidenceBundleValid: true,
+      now: NOW,
+    });
+    expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
+    expect(r.blockingFindingIds).toContain("weird");
+  });
+
+  it("rejects a non-ISO acceptance expiry (no lenient date parsing)", () => {
+    const acc: RiskAcceptance = { findingId: "F_P1", reason: "x", owner: "o", approver: "a", expiry: "soon" };
+    const r = evaluateRelease({ domainResults: okDomains, findings: [finding(Severity.P1)], acceptances: [acc], evidenceBundleValid: true, now: NOW });
+    expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
+  });
+
+  it("rejects a self-approved acceptance (owner == approver)", () => {
+    const acc: RiskAcceptance = { findingId: "F_P1", reason: "x", owner: "same", approver: "same", expiry: FUTURE };
+    const r = evaluateRelease({ domainResults: okDomains, findings: [finding(Severity.P1)], acceptances: [acc], evidenceBundleValid: true, now: NOW });
+    expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
+  });
+
+  it("requires approval when no domains were reported at all", () => {
+    const r = evaluateRelease({ domainResults: [], findings: [], evidenceBundleValid: true, now: NOW });
+    expect(r.decision).toBe(ReleaseDecision.HUMAN_APPROVAL_REQUIRED);
+  });
+
+  it("requires approval when a required domain is missing from the results", () => {
+    const r = evaluateRelease({
+      domainResults: [pass(AssuranceDomain.QUALITY)],
+      requiredDomains: [AssuranceDomain.QUALITY, AssuranceDomain.SECURITY],
+      findings: [],
+      evidenceBundleValid: true,
+      now: NOW,
+    });
+    expect(r.decision).toBe(ReleaseDecision.HUMAN_APPROVAL_REQUIRED);
+  });
 });
