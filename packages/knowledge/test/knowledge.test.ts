@@ -102,6 +102,7 @@ describe("KnowledgeStore — scope isolation", () => {
     expect(s.query({}).map((i) => i.knowledgeId)).not.toContain("KO"); // missing context => not visible
     expect(s.query({ runId: "RUN_1" }).map((i) => i.knowledgeId)).toContain("KR");
     expect(s.query({ runId: "RUN_2" }).map((i) => i.knowledgeId)).not.toContain("KR");
+    expect(s.query({}).map((i) => i.knowledgeId)).not.toContain("KR"); // RUN missing context => not visible
   });
 
   it("query() returns independent copies (mutating a result does not change the store)", () => {

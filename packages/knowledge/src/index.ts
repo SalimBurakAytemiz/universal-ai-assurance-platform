@@ -145,7 +145,7 @@ export class KnowledgeStore {
   query(context: ScopeContext = {}): KnowledgeItem[] {
     return [...this.items.values()]
       .filter((i) => this.visible(i, context))
-      // Code-point ordering (not localeCompare) so query output is reproducible across machines/ICU.
+      // Deterministic UTF-16 code-unit ordering (not localeCompare) so output is reproducible across machines/ICU.
       .sort((a, b) => (a.knowledgeId < b.knowledgeId ? -1 : a.knowledgeId > b.knowledgeId ? 1 : 0))
       .map(clone);
   }
@@ -220,7 +220,7 @@ export function resolveKnowledgeConflict(items: readonly KnowledgeItem[]): { win
   const sorted = [...items].sort((a, b) => {
     const [ta, sa, va] = score(a);
     const [tb, sb, vb] = score(b);
-    // recency: more-recent (larger ISO) first, by code point for determinism.
+    // recency: more-recent (larger ISO) first, by UTF-16 code unit for determinism.
     return ta - tb || sa - sb || (vb < va ? -1 : vb > va ? 1 : 0);
   });
   const [first, second] = sorted;
