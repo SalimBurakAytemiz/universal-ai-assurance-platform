@@ -119,6 +119,7 @@ export class RemediationEngine {
     const { finding } = input;
     const c = this.cases.get(finding?.id ?? "");
     if (!c) return { ok: false, reason: "No remediation case for this finding." };
+    if (!Array.isArray(finding.evidenceIds)) return { ok: false, reason: "Finding is malformed (missing evidenceIds)." };
     if (c.status !== CaseStatus.REMEDIATION_IN_PROGRESS) {
       return { ok: false, reason: `Retest requires a case in REMEDIATION_IN_PROGRESS (was ${c.status}).` };
     }
@@ -166,6 +167,7 @@ export class RemediationEngine {
     const { finding } = input;
     const c = this.cases.get(finding?.id ?? "");
     if (!c) return { ok: false, reason: "No remediation case for this finding." };
+    if (!Array.isArray(finding.evidenceIds)) return { ok: false, reason: "Finding is malformed (missing evidenceIds)." };
     if (c.status !== CaseStatus.RETEST_PENDING || c.retestPassed !== true) {
       return { ok: false, reason: "Closure requires a RETEST_PENDING case with a passing retest." };
     }

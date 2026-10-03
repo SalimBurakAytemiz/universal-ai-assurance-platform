@@ -115,8 +115,16 @@
       "note": "P2 startRemediation case-overwrite custody bypass; P2 close evidence-binding; P2 evidence untested; P3 case-fold SoD, cross-cycle drift, retest dedup, deep-clone, timestamps/generic. All fixed with cross-cycle role-swap prevention + regression tests."
     },
     "boundedLoop": {
-      "count": 1,
-      "max": 3
+      "count": 2,
+      "max": 3,
+      "outcome": "CONVERGED"
+    },
+    "loop2": {
+      "at": "2026-10-03T08:30:00.000Z",
+      "agents": 4,
+      "allResolved": true,
+      "blocking": 0,
+      "p3Fixed": "verification-engine canonical (case-insensitive) SoD; submitRetest/close + verification fail-closed on malformed finding (missing evidenceIds)."
     }
   }
 }

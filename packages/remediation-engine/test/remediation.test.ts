@@ -140,6 +140,14 @@ describe("RemediationEngine — lifecycle + separation of duties", () => {
     expect(e.startRemediation({ finding: confirmed({ detectedBy: "agent:Det" }), ...startArgs, remediatorId: "AGENT:det" }).ok).toBe(false);
   });
 
+  it("fails closed (returns, not throws) when submitRetest gets a finding missing evidenceIds", () => {
+    const e = new RemediationEngine();
+    const f1 = (e.startRemediation({ finding: confirmed(), ...startArgs }) as { finding: Finding }).finding;
+    const bad = { ...f1, evidenceIds: undefined as unknown as string[] };
+    const r = e.submitRetest({ finding: bad, validatorId: "agent:validator", passed: true, evidenceIds: ["EV-1"], now: NOW });
+    expect(r.ok).toBe(false);
+  });
+
   it("getCase returns an independent deep clone (mutating it does not affect engine state)", () => {
     const e = new RemediationEngine();
     e.startRemediation({ finding: confirmed(), ...startArgs });

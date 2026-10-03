@@ -38,11 +38,15 @@ export class VerificationEngine {
     const verifierId = input.verifierId?.trim();
     if (!verifierId) return { ok: false, reason: "verifierId is required." };
     if (!finding || !finding.id) return { ok: false, reason: "A finding is required." };
+    if (!Array.isArray(finding.evidenceIds)) {
+      return { ok: false, reason: "Finding is malformed (missing evidenceIds)." };
+    }
     const detectedBy = finding.detectedBy?.trim();
     if (!detectedBy) {
       return { ok: false, reason: "Finding has no detectedBy; separation of duties cannot be established." };
     }
-    if (verifierId === detectedBy) {
+    // Canonical (case-insensitive) identity comparison so a case variant cannot bypass SoD.
+    if (verifierId.toLowerCase() === detectedBy.toLowerCase()) {
       return { ok: false, reason: "Separation of duties: the detector cannot verify its own finding." };
     }
     if (!VERIFIABLE.has(finding.status)) {
