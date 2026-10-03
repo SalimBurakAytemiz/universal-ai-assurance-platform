@@ -15,7 +15,10 @@
       "@uaap/agent-permissions": ["packages/agent-permissions/src/index.ts"],
       "@uaap/tool-adapter-registry": ["packages/tool-adapter-registry/src/index.ts"],
       "@uaap/project-model": ["packages/project-model/src/index.ts"],
-      "@uaap/digital-twin": ["packages/digital-twin/src/index.ts"]
+      "@uaap/digital-twin": ["packages/digital-twin/src/index.ts"],
+      "@uaap/evidence-engine": ["packages/evidence-engine/src/index.ts"],
+      "@uaap/verification-engine": ["packages/verification-engine/src/index.ts"],
+      "@uaap/release-gate": ["packages/release-gate/src/index.ts"]
     }
   },
   "include": [
