@@ -1,6 +1,6 @@
 {
-  "version": "0.4.0",
-  "updatedAt": "2026-10-03T02:30:00.000Z",
+  "version": "0.5.0",
+  "updatedAt": "2026-10-03T03:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -465,7 +465,7 @@
         "agent-definitions-72",
         "digital-twin"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-AGENT-ACTIVATION-001"
       ],
@@ -626,12 +626,16 @@
       "dependencies": [
         "core-types"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-PROJECT-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/project-model/src/index.ts"
+      ],
+      "tests": [
+        "packages/project-model/test/project-model.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -642,12 +646,16 @@
       "dependencies": [
         "project-model"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-TWIN-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/digital-twin/src/index.ts"
+      ],
+      "tests": [
+        "packages/digital-twin/test/digital-twin.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -658,7 +666,7 @@
       "dependencies": [
         "digital-twin"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-GRAPH-001"
       ],
@@ -674,7 +682,7 @@
       "dependencies": [
         "digital-twin"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-DOMAIN-001"
       ],

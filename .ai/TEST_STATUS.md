@@ -2,13 +2,13 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-03 (branch auto/agent-and-tooling-layer)
+## Last local run — 2026-10-03 (branch auto/project-intelligence)
 
 Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (1 policy, build graph 46 nodes, 72 agents/9 guilds, 143 skills, 2 adapters, knowledge schema, .ai state)
 - typecheck (`tsc --noEmit`): **OK** (exit 0)
-- vitest: **71 passed / 71** across 11 files (post re-review loop 2)
+- vitest: **84 passed / 84** across 13 files
 
 | suite | tests | status |
 |-------|-------|--------|
@@ -23,3 +23,6 @@ Command: `npm run verify` (validate → typecheck → test)
 | tool-adapter-registry (deterministic adapters) | 5 | PASS |
 
 Security/safety tests: PASS. P0/P1/P2/P3 open: 0 / 0 / 0 / 0.
+
+| project-model (file-backed store) | 6 | PASS |
+| digital-twin (steward/provenance/staleness) | 7 | PASS |
