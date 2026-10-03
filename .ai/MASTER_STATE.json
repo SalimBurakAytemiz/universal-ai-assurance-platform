@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "updatedAt": "2026-10-03T00:00:00.000Z",
+  "updatedAt": "2026-10-03T00:16:04.071Z",
   "product": "Universal AI Assurance Platform",
   "model": "ONE_PRODUCT_ONE_REPOSITORY_ONE_DESKTOP",
   "executionModel": "DEPENDENCY_AWARE_CONTINUOUS_BUILD_GRAPH",
@@ -9,9 +9,13 @@
     "visibility": "PRIVATE",
     "primaryBranch": "main",
     "localPath": "C:/Users/PRO/Desktop/universal-ai-assurance-platform",
-    "github": "PENDING_CREATE"
+    "github": "https://github.com/SalimBurakAytemiz/universal-ai-assurance-platform"
   },
-  "securityModes": ["PROSPECT_PASSIVE", "CLIENT_AUTHORIZED", "INTERNAL_OWNED"],
+  "securityModes": [
+    "PROSPECT_PASSIVE",
+    "CLIENT_AUTHORIZED",
+    "INTERNAL_OWNED"
+  ],
   "activeSecurityValidation": {
     "state": "LOCKED_BY_DESIGN",
     "reason": "No external target authorization exists. Trust Kernel + Policy + Audit are implemented and tested; active validation still requires explicit, per-target human authorization and scope.",
@@ -29,11 +33,24 @@
     "NO_DIRECT_AGENT_TO_TARGET",
     "DETECTOR_IS_NOT_CLOSURE_AUTHORITY"
   ],
-  "canonicalAgents": { "defined": 72, "implementedDefinitions": 72, "certified": 0 },
+  "canonicalAgents": {
+    "defined": 72,
+    "implementedDefinitions": 72,
+    "certified": 0
+  },
   "currentFocus": "Foundation + fail-closed trust kernel vertical slice (core, kernel, policy, audit, broker, orchestrator) with tests; agent registry (72 roles) + knowledge schema; desktop shell; CI.",
   "humanActionRequired": [
-    { "id": "HAR-LICENSE", "reason": "Final product licensing is a business/legal decision; a conservative 'all rights reserved' default is in place." },
-    { "id": "HAR-SEC-AUTH", "reason": "Any active security validation against a real target requires explicit written authorization + scope. None exists; feature stays locked." }
+    {
+      "id": "HAR-LICENSE",
+      "reason": "Final product licensing is a business/legal decision; a conservative 'all rights reserved' default is in place."
+    },
+    {
+      "id": "HAR-SEC-AUTH",
+      "reason": "Any active security validation against a real target requires explicit written authorization + scope. None exists; feature stays locked."
+    }
   ],
-  "lastCheckpoint": { "commit": "PENDING_FIRST_COMMIT", "verifiedAt": "2026-10-03T00:00:00.000Z" }
+  "lastCheckpoint": {
+    "commit": "2b329a2a883ad37b63aa0af260fc00b001e814a6",
+    "verifiedAt": "2026-10-03T00:16:04.071Z"
+  }
 }

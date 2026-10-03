@@ -2,10 +2,10 @@
   "repository": "universal-ai-assurance-platform",
   "owner": "SalimBurakAytemiz",
   "visibility": "PRIVATE",
-  "created": false,
-  "origin": null,
-  "lastPushedCommit": null,
+  "created": true,
+  "origin": "https://github.com/SalimBurakAytemiz/universal-ai-assurance-platform.git",
+  "lastPushedCommit": "2b329a2a883ad37b63aa0af260fc00b001e814a6",
   "openPR": null,
-  "ci": "UNKNOWN",
+  "ci": "PENDING_FIRST_RUN",
   "authStatus": "AUTHENTICATED"
 }
