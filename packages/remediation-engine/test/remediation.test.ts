@@ -97,4 +97,54 @@ describe("RemediationEngine — lifecycle + separation of duties", () => {
     e.startRemediation({ finding: f, ...startArgs });
     expect(f.status).toBe(FindingStatus.CONFIRMED);
   });
+
+  it("refuses to restart a case that is RETEST_PENDING or CLOSED (replay/stale-finding SoD custody)", () => {
+    const e = new RemediationEngine();
+    const f0 = confirmed();
+    const f1 = (e.startRemediation({ finding: f0, ...startArgs }) as { finding: Finding }).finding;
+    const f2 = (e.submitRetest({ finding: f1, validatorId: "agent:validator", passed: true, evidenceIds: ["EV-1"], now: NOW }) as { finding: Finding }).finding;
+    // replay the ORIGINAL confirmed finding (status still CONFIRMED) — must NOT reset the validated case
+    expect(e.startRemediation({ finding: f0, ...startArgs }).ok).toBe(false);
+    expect(e.getCase("F1")!.status).toBe(CaseStatus.RETEST_PENDING);
+    // after close, also cannot restart
+    e.close({ finding: f2, closerId: "agent:closer", now: NOW });
+    expect(e.startRemediation({ finding: f0, ...startArgs }).ok).toBe(false);
+    expect(e.getCase("F1")!.status).toBe(CaseStatus.CLOSED);
+  });
+
+  it("binds the independent-retest evidence into the CLOSED finding, trimmed and deduped", () => {
+    const e = new RemediationEngine();
+    const f1 = (e.startRemediation({ finding: confirmed({ evidenceIds: ["EV-0"] }), ...startArgs }) as { finding: Finding }).finding;
+    const f2 = (e.submitRetest({ finding: f1, validatorId: "agent:validator", passed: true, evidenceIds: [" EV-1 ", "EV-1"], now: NOW }) as { finding: Finding }).finding;
+    expect(f2.evidenceIds).toEqual(["EV-0", "EV-1"]);
+    // close with a finding that LACKS the retest evidence — the engine must re-bind it from the case
+    const r3 = e.close({ finding: { ...f2, evidenceIds: ["EV-0"] }, closerId: "agent:closer", now: NOW });
+    expect(r3.ok).toBe(true);
+    if (r3.ok) expect(r3.finding.evidenceIds).toEqual(["EV-0", "EV-1"]);
+  });
+
+  it("prevents cross-cycle role swapping (a cycle-1 validator cannot remediate after REOPEN)", () => {
+    const e = new RemediationEngine();
+    const f1 = (e.startRemediation({ finding: confirmed(), ...startArgs }) as { finding: Finding }).finding;
+    const reopened = (e.submitRetest({ finding: f1, validatorId: "agent:validator", passed: false, now: NOW }) as { finding: Finding }).finding;
+    expect(reopened.status).toBe(FindingStatus.REOPENED);
+    // the prior validator now tries to be the remediator -> SoD reject
+    const bad = e.startRemediation({ finding: reopened, remediatorId: "agent:validator", rootCause: "x", fixStrategy: "y", now: NOW });
+    expect(bad.ok).toBe(false);
+    // a fresh remediator can restart
+    expect(e.startRemediation({ finding: reopened, remediatorId: "agent:remediator2", rootCause: "x", fixStrategy: "y", now: NOW }).ok).toBe(true);
+  });
+
+  it("blocks SoD bypass via case-variant ids", () => {
+    const e = new RemediationEngine();
+    expect(e.startRemediation({ finding: confirmed({ detectedBy: "agent:Det" }), ...startArgs, remediatorId: "AGENT:det" }).ok).toBe(false);
+  });
+
+  it("getCase returns an independent deep clone (mutating it does not affect engine state)", () => {
+    const e = new RemediationEngine();
+    e.startRemediation({ finding: confirmed(), ...startArgs });
+    const c = e.getCase("F1")!;
+    (c.history.remediators as string[]).push("intruder");
+    expect(e.getCase("F1")!.history.remediators).toEqual(["agent:remediator"]);
+  });
 });
