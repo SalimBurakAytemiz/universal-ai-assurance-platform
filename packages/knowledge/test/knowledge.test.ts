@@ -93,6 +93,25 @@ describe("KnowledgeStore — scope isolation", () => {
     expect(forA).toContain("KA");
   });
 
+  it("isolates ORGANIZATION and RUN scopes (match, mismatch, and missing context)", () => {
+    const s = new KnowledgeStore();
+    s.add(item({ knowledgeId: "KO", scope: KnowledgeScope.ORGANIZATION, scopeRef: "ORG_1" }));
+    s.add(item({ knowledgeId: "KR", scope: KnowledgeScope.RUN, scopeRef: "RUN_1" }));
+    expect(s.query({ organizationId: "ORG_1" }).map((i) => i.knowledgeId)).toContain("KO");
+    expect(s.query({ organizationId: "ORG_2" }).map((i) => i.knowledgeId)).not.toContain("KO");
+    expect(s.query({}).map((i) => i.knowledgeId)).not.toContain("KO"); // missing context => not visible
+    expect(s.query({ runId: "RUN_1" }).map((i) => i.knowledgeId)).toContain("KR");
+    expect(s.query({ runId: "RUN_2" }).map((i) => i.knowledgeId)).not.toContain("KR");
+  });
+
+  it("query() returns independent copies (mutating a result does not change the store)", () => {
+    const s = new KnowledgeStore();
+    s.add(item({ knowledgeId: "KG" }));
+    const got = s.query()[0]!;
+    (got as { title: string }).title = "tampered";
+    expect(s.query()[0]!.title).toBe("Playwright v2 locator guidance");
+  });
+
   it("activeKnowledge returns only ACTIVE items in context", () => {
     const s = new KnowledgeStore();
     s.add(item({ knowledgeId: "KG" }));
@@ -124,6 +143,18 @@ describe("KnowledgeStore — decay + conflict", () => {
     const r = resolveKnowledgeConflict([a, b]);
     expect(r.winner?.knowledgeId).toBe("B"); // TIER_0 beats TIER_3
     expect(r.conflict).toBe(false);
+  });
+
+  it("at equal trust tier, prefers the more-advanced lifecycle status", () => {
+    const a = item({ knowledgeId: "A", trustTier: TrustTier.TIER_1, lifecycleStatus: LifecycleStatus.ACTIVE, lastVerified: T1 });
+    const b = item({ knowledgeId: "B", trustTier: TrustTier.TIER_1, lifecycleStatus: LifecycleStatus.CANDIDATE, lastVerified: T1 });
+    expect(resolveKnowledgeConflict([b, a]).winner?.knowledgeId).toBe("A");
+  });
+
+  it("at equal tier+status, prefers the more-recently verified item", () => {
+    const older = item({ knowledgeId: "old", trustTier: TrustTier.TIER_1, lifecycleStatus: LifecycleStatus.ACTIVE, lastVerified: T1 });
+    const newer = item({ knowledgeId: "new", trustTier: TrustTier.TIER_1, lifecycleStatus: LifecycleStatus.ACTIVE, lastVerified: T2 });
+    expect(resolveKnowledgeConflict([older, newer]).winner?.knowledgeId).toBe("new");
   });
 
   it("flags a true tie as a conflict", () => {

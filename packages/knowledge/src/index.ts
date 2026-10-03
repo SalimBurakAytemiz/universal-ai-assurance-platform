@@ -145,7 +145,8 @@ export class KnowledgeStore {
   query(context: ScopeContext = {}): KnowledgeItem[] {
     return [...this.items.values()]
       .filter((i) => this.visible(i, context))
-      .sort((a, b) => a.knowledgeId.localeCompare(b.knowledgeId))
+      // Code-point ordering (not localeCompare) so query output is reproducible across machines/ICU.
+      .sort((a, b) => (a.knowledgeId < b.knowledgeId ? -1 : a.knowledgeId > b.knowledgeId ? 1 : 0))
       .map(clone);
   }
 
@@ -219,7 +220,8 @@ export function resolveKnowledgeConflict(items: readonly KnowledgeItem[]): { win
   const sorted = [...items].sort((a, b) => {
     const [ta, sa, va] = score(a);
     const [tb, sb, vb] = score(b);
-    return ta - tb || sa - sb || vb.localeCompare(va);
+    // recency: more-recent (larger ISO) first, by code point for determinism.
+    return ta - tb || sa - sb || (vb < va ? -1 : vb > va ? 1 : 0);
   });
   const [first, second] = sorted;
   const tie =
