@@ -1,6 +1,6 @@
 {
   "version": "0.8.0",
-  "updatedAt": "2026-10-03T09:30:00.000Z",
+  "updatedAt": "2026-10-04T00:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -523,8 +523,18 @@
       "tests": [
         "packages/knowledge/test/knowledge.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "1b71a2a52b42a72b14224fca6d3336adebdec306"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 5
+      }
     },
     {
       "id": "knowledge-lifecycle",
@@ -543,8 +553,18 @@
       "tests": [
         "packages/knowledge/test/knowledge.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "1b71a2a52b42a72b14224fca6d3336adebdec306"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 5
+      }
     },
     {
       "id": "knowledge-decay",
@@ -563,8 +583,18 @@
       "tests": [
         "packages/knowledge/test/knowledge.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "1b71a2a52b42a72b14224fca6d3336adebdec306"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 5
+      }
     },
     {
       "id": "technology-scout",
