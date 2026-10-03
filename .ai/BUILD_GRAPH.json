@@ -1,6 +1,6 @@
 {
   "version": "0.4.0",
-  "updatedAt": "2026-10-03T01:00:00.000Z",
+  "updatedAt": "2026-10-03T02:30:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -348,8 +348,18 @@
       "tests": [
         "packages/agent-permissions/test/permissions.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "0e0b4089b6c62abe3c48ff872f2b04b7950e0940"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 1
+      }
     },
     {
       "id": "skill-registry",
@@ -371,8 +381,18 @@
       "tests": [
         "tests/integration/skill-registry.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "0e0b4089b6c62abe3c48ff872f2b04b7950e0940"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 1
+      }
     },
     {
       "id": "tool-adapter-registry",
@@ -393,8 +413,18 @@
       "tests": [
         "packages/tool-adapter-registry/test/adapters.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "0e0b4089b6c62abe3c48ff872f2b04b7950e0940"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 1
+      }
     },
     {
       "id": "structured-agent-events",
@@ -414,8 +444,18 @@
       "tests": [
         "packages/agent-events/test/agent-events.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "0e0b4089b6c62abe3c48ff872f2b04b7950e0940"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 1
+      }
     },
     {
       "id": "agent-activation-planner",

@@ -4,9 +4,9 @@
   "visibility": "PRIVATE",
   "created": true,
   "origin": "https://github.com/SalimBurakAytemiz/universal-ai-assurance-platform.git",
-  "lastPushedCommit": "2b329a2a883ad37b63aa0af260fc00b001e814a6",
+  "lastPushedCommit": "0e0b4089b6c62abe3c48ff872f2b04b7950e0940",
   "openPR": null,
   "ci": "GREEN",
   "authStatus": "AUTHENTICATED",
-  "ciHeadSha": "bbd2df52fa6980e4d589ebdb8439de85d5010be5"
+  "ciHeadSha": "0e0b4089b6c62abe3c48ff872f2b04b7950e0940"
 }
