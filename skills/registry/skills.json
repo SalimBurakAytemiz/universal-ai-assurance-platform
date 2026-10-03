@@ -63,7 +63,7 @@
         "ajv"
       ],
       "requiredTools": [
-        "ajv-adapter"
+        "schema-adapter"
       ],
       "knowledgeRefs": [],
       "riskClass": "R1_LOW_IMPACT",
@@ -790,7 +790,7 @@
         "json-schema"
       ],
       "requiredTools": [
-        "ajv-adapter"
+        "schema-adapter"
       ],
       "knowledgeRefs": [],
       "riskClass": "R1_LOW_IMPACT",
@@ -948,7 +948,7 @@
         "openapi"
       ],
       "requiredTools": [
-        "ajv-adapter"
+        "schema-adapter"
       ],
       "knowledgeRefs": [],
       "riskClass": "R1_LOW_IMPACT",

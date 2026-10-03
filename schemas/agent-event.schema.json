@@ -32,13 +32,19 @@
   "allOf": [
     {
       "if": { "properties": { "type": { "const": "FINDING_CANDIDATE" } } },
-      "then": { "required": ["evidenceRefs", "requiresVerification"] }
+      "then": {
+        "required": ["evidenceRefs", "requiresVerification"],
+        "properties": { "evidenceRefs": { "minItems": 1 } }
+      }
     },
     {
       "if": { "properties": { "type": { "const": "FINDING_VERIFIED" } } },
       "then": {
         "required": ["evidenceRefs", "verificationStatus"],
-        "properties": { "verificationStatus": { "const": "CONFIRMED" } }
+        "properties": {
+          "verificationStatus": { "const": "CONFIRMED" },
+          "evidenceRefs": { "minItems": 1 }
+        }
       }
     }
   ]

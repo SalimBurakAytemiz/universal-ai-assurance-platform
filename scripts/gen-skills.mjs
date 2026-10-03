@@ -10,13 +10,15 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const agents = JSON.parse(readFileSync(join(ROOT, "agents/registry/agents.json"), "utf8"));
 
 // Skills that imply a deterministic tool adapter.
+// Each tool id here MUST exist in adapters/registry/adapters.json (enforced by
+// scripts/validate-adapters.mjs). Deterministic schema validation maps to schema-adapter.
 const TOOL_FOR = {
   playwright: ["playwright-adapter"],
   "selenium-compat": ["selenium-adapter"],
   appium: ["appium-adapter"],
-  ajv: ["ajv-adapter"],
-  "json-schema": ["ajv-adapter"],
-  openapi: ["ajv-adapter"],
+  ajv: ["schema-adapter"],
+  "json-schema": ["schema-adapter"],
+  openapi: ["schema-adapter"],
   "k6-smoke": ["k6-adapter"],
   "db-readonly-validation": ["database-readonly-adapter"],
   git: ["git-adapter"],

@@ -107,7 +107,20 @@ export class ToolBroker {
     if (!adapter || !adapter.supports(request.action)) {
       return { ok: false, decision, reason: `No adapter for capability "${lease.capability}" / action "${request.action}".` };
     }
-    const result = await adapter.execute(request);
+    // A misbehaving adapter must not reject the broker call unexpectedly: record and return a failure.
+    let result: AdapterResult;
+    try {
+      result = await adapter.execute(request);
+    } catch (e) {
+      const reason = `Adapter "${lease.capability}" threw during "${request.action}": ${(e as Error).message}`;
+      this.deps.audit.append(
+        AuditEventType.TOOL_EXECUTION,
+        request.requestedBy,
+        { action: request.action, capability: lease.capability, error: reason },
+        request.now,
+      );
+      return { ok: false, decision, reason };
+    }
     this.deps.audit.append(
       AuditEventType.TOOL_EXECUTION,
       request.requestedBy,

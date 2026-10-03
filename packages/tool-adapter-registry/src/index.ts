@@ -1,5 +1,5 @@
 import Ajv2020 from "ajv/dist/2020.js";
-import { sha256Hex, type ActionRequest } from "@uaap/core";
+import { sha256Hex, hashObject, type ActionRequest } from "@uaap/core";
 import type { TargetAdapter, AdapterResult } from "@uaap/tool-broker";
 
 /**
@@ -16,8 +16,10 @@ export class HashAdapter implements TargetAdapter {
     return action === "hash.sha256";
   }
   execute(request: ActionRequest): AdapterResult {
-    const data = typeof request.input === "string" ? request.input : JSON.stringify(request.input ?? null);
-    const digest = sha256Hex(data);
+    // Strings hash as-is; objects hash via the canonical (key-sorted) form so equal inputs
+    // with different key order produce the same digest.
+    const digest =
+      typeof request.input === "string" ? sha256Hex(request.input) : hashObject(request.input ?? null);
     return { output: { sha256: digest }, evidenceRef: `hash:${digest.slice(0, 12)}` };
   }
 }
@@ -25,19 +27,27 @@ export class HashAdapter implements TargetAdapter {
 /** Validates `request.input = { schema, data }` with Ajv (deterministic contract check). */
 export class SchemaValidateAdapter implements TargetAdapter {
   readonly capability = "schema";
-  private readonly ajv = new Ajv2020({ allErrors: true, strict: false });
   supports(action: string): boolean {
     return action === "schema.validate";
   }
   execute(request: ActionRequest): AdapterResult {
     const input = (request.input ?? {}) as { schema?: object; data?: unknown };
-    if (!input.schema) {
+    if (!input.schema || typeof input.schema !== "object") {
       return { output: { valid: false, errors: ["no schema provided"] } };
     }
-    const validate = this.ajv.compile(input.schema);
-    const valid = validate(input.data) as boolean;
-    const errors = valid ? [] : (validate.errors ?? []).map((e) => `${e.instancePath || "/"} ${e.message ?? ""}`.trim());
-    return { output: { valid, errors } };
+    try {
+      // A fresh Ajv per call: compiling a $id-bearing schema twice on a shared instance throws
+      // ("schema with key or id already exists"). A caller-supplied schema must never crash the
+      // broker call — a malformed schema yields a validation failure, not an unhandled throw.
+      const validate = new Ajv2020({ allErrors: true, strict: false }).compile(input.schema);
+      const valid = validate(input.data) as boolean;
+      const errors = valid
+        ? []
+        : (validate.errors ?? []).map((e) => `${e.instancePath || "/"} ${e.message ?? ""}`.trim());
+      return { output: { valid, errors } };
+    } catch (e) {
+      return { output: { valid: false, errors: [`invalid schema: ${(e as Error).message}`] } };
+    }
   }
 }
 

@@ -21,7 +21,9 @@ describe("Skill registry", () => {
     expect(missing).toEqual([]);
   });
 
-  it("never assigns a prohibited (R3) risk class to a skill", () => {
-    expect(skills.skills.some((s) => s.riskClass === "R3_PROHIBITED")).toBe(false);
+  it("assigns every skill a risk class within the allowed set (never R3)", () => {
+    const allowed = new Set(["R0_PASSIVE", "R1_LOW_IMPACT", "R2_ELEVATED"]);
+    const offenders = skills.skills.filter((s) => !allowed.has(s.riskClass)).map((s) => `${s.id}:${s.riskClass}`);
+    expect(offenders).toEqual([]);
   });
 });

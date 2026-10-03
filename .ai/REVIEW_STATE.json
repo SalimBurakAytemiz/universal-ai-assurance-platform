@@ -2,15 +2,31 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-03T00:17:34.488Z",
-    "scope": "foundation + trust-kernel + broker + orchestrator + agent-registry",
-    "type": "IMPLEMENTER_SELF_REVIEW",
-    "note": "Focused review of authorization bypass, policy bypass, scope confusion, direct agent->target, unsafe defaults. A separate-context independent review remains a follow-up per the contract."
+    "at": "2026-10-03T01:30:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "auto/agent-and-tooling-layer diff",
+    "agents": 37,
+    "reported": 16,
+    "confirmed": 15,
+    "distinctDefectsFixed": [
+      "agent-event schema allowed empty evidenceRefs on FINDING_VERIFIED/CANDIDATE (minItems:1 added)",
+      "SchemaValidateAdapter shared Ajv threw on repeated $id schema (fresh Ajv per call + try/catch)",
+      "canVerifyOwnFinding not const false in agent schema (now const false; test loop covers it)",
+      "agent-permissions had no code-level hard-deny (HARD_PROHIBITED set + fromRepo schema validation added)",
+      "HashAdapter non-canonical object hashing (now uses canonical hashObject)",
+      "skill->tool adapter refs dangling (adapters declared NOT_IMPLEMENTED + cross-validator added)",
+      "broker did not guard adapter throws (try/catch + audit added)",
+      "weak/vacuous tests strengthened (known-answer hash, enum risk-class, error-path coverage)"
+    ]
   },
   "unresolved": {
     "P0": 0,
     "P1": 0,
     "P2": 0,
     "P3": 0
+  },
+  "boundedLoop": {
+    "count": 1,
+    "max": 3
   }
 }

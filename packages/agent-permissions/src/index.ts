@@ -1,5 +1,6 @@
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import Ajv2020 from "ajv/dist/2020.js";
 import { ActionClass, readRepoJson } from "@uaap/core";
 
 export interface AgentPermissions {
@@ -52,6 +53,20 @@ const CAPABILITY_PERMISSION: Record<string, keyof AgentPermissions> = {
   "secret.export": "canExportSecret",
 };
 
+/**
+ * Capabilities that must be denied for EVERY agent regardless of registry data — defense in
+ * depth so the guarantee does not rest solely on a JSON file + a CI step. These all map to
+ * permission flags that are `const false` in the agent schema.
+ */
+const HARD_PROHIBITED: ReadonlySet<string> = new Set([
+  "authorization.create",
+  "scope.expand",
+  "policy.modify",
+  "secret.export",
+  "finding.close.own",
+  "finding.verify.own",
+]);
+
 /** Resolves whether a given agent may exercise a capability or an action class. Fail-closed. */
 export class AgentPermissionResolver {
   private readonly byId: Map<string, AgentDefinition>;
@@ -62,6 +77,12 @@ export class AgentPermissionResolver {
 
   static fromRepo(startDir = dirname(fileURLToPath(import.meta.url))): AgentPermissionResolver {
     const registry = readRepoJson<AgentRegistry>("agents/registry/agents.json", startDir);
+    const schema = readRepoJson<object>("schemas/agent.schema.json", startDir);
+    const validate = new Ajv2020({ allErrors: true, strict: false }).compile(schema);
+    if (!validate(registry)) {
+      const msg = (validate.errors ?? []).map((e) => `${e.instancePath || "/"} ${e.message ?? ""}`.trim()).join("; ");
+      throw new Error(`Agent registry failed schema validation; refusing to load (fail-closed): ${msg}`);
+    }
     return new AgentPermissionResolver(registry);
   }
 
@@ -73,6 +94,10 @@ export class AgentPermissionResolver {
   can(agentId: string, capability: string): PermissionVerdict {
     const agent = this.byId.get(agentId);
     if (!agent) return { allow: false, reason: `Unknown agent "${agentId}".` };
+    // Defense in depth: these are denied for every agent regardless of registry data.
+    if (HARD_PROHIBITED.has(capability)) {
+      return { allow: false, reason: `Capability "${capability}" is hard-prohibited for all agents.` };
+    }
     const flag = CAPABILITY_PERMISSION[capability];
     if (!flag) return { allow: false, reason: `Unknown capability "${capability}" (fail-closed).` };
     if (agent.permissions[flag]) return { allow: true, reason: `${agentId} has ${flag}.` };
@@ -96,4 +121,4 @@ export class AgentPermissionResolver {
   }
 }
 
-export { CAPABILITY_PERMISSION };
+export { CAPABILITY_PERMISSION, HARD_PROHIBITED };

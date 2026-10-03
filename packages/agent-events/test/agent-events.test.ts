@@ -65,6 +65,28 @@ describe("validateAgentEvent", () => {
     const r = validateAgentEvent({ type: AgentEventType.HYPOTHESIS, sourceAgent: "x", at: AT, confidence: 1.5 });
     expect(r.ok).toBe(false);
   });
+
+  it("rejects a CONFIRMED FINDING_VERIFIED with EMPTY evidence (evidence-required invariant)", () => {
+    const r = validateAgentEvent({
+      type: AgentEventType.FINDING_VERIFIED,
+      sourceAgent: "evr.finding-verifier",
+      at: AT,
+      evidenceRefs: [],
+      verificationStatus: VerificationStatus.CONFIRMED,
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects a FINDING_CANDIDATE with EMPTY evidence", () => {
+    const r = validateAgentEvent({
+      type: AgentEventType.FINDING_CANDIDATE,
+      sourceAgent: "sec.api-security",
+      at: AT,
+      evidenceRefs: [],
+      requiresVerification: true,
+    });
+    expect(r.ok).toBe(false);
+  });
 });
 
 describe("Claim epistemics", () => {
