@@ -20,6 +20,7 @@ export default defineConfig({
       "@uaap/evidence-engine": r("./packages/evidence-engine/src/index.ts"),
       "@uaap/verification-engine": r("./packages/verification-engine/src/index.ts"),
       "@uaap/release-gate": r("./packages/release-gate/src/index.ts"),
+      "@uaap/remediation-engine": r("./packages/remediation-engine/src/index.ts"),
     },
   },
   test: {
