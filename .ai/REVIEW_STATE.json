@@ -26,7 +26,25 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
+  },
+  "reReview": {
+    "at": "2026-10-03T02:00:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "areas": 8,
+    "allResolved": true,
+    "newFound": {
+      "P2": 1,
+      "P3": 6
+    },
+    "resolution": [
+      "P2 broker catch read (e as Error).message -> threw on `throw null/undefined`, re-rejecting + skipping audit. Fixed: defensive String(e); + broker-throw regression test (Error + undefined/null).",
+      "P3 empty-string evidence ref: schema items minLength:1 + isConfirmedFact non-empty check + tests.",
+      "P3 fromRepo throw path untested: added temp-fixture test asserting fail-closed throw on invalid registry.",
+      "P3 adapter health vs runtime drift: added reconciliation test (HEALTHY implemented; NOT_IMPLEMENTED unregistered).",
+      "P3 no broker throw-branch coverage: covered by broker-throw test.",
+      "P3 hash string/object collision: ACCEPTED BY DESIGN (keeps standard SHA-256 contract / known-answer vector); documented in HashAdapter."
+    ]
   }
 }

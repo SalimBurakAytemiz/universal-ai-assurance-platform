@@ -112,7 +112,10 @@ export class ToolBroker {
     try {
       result = await adapter.execute(request);
     } catch (e) {
-      const reason = `Adapter "${lease.capability}" threw during "${request.action}": ${(e as Error).message}`;
+      // Derive the message defensively: an adapter may `throw null`/`throw undefined`, and
+      // reading `.message` on that would itself throw inside the catch and re-reject the call.
+      const msg = e instanceof Error ? e.message : String(e);
+      const reason = `Adapter "${lease.capability}" threw during "${request.action}": ${msg}`;
       this.deps.audit.append(
         AuditEventType.TOOL_EXECUTION,
         request.requestedBy,

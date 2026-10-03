@@ -22,7 +22,7 @@
     "targetId": { "type": "string" },
     "runId": { "type": "string" },
     "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
-    "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+    "evidenceRefs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
     "requiresVerification": { "type": "boolean" },
     "verificationStatus": {
       "enum": ["UNVERIFIED", "VALIDATION_PENDING", "CONFIRMED", "REJECTED"]

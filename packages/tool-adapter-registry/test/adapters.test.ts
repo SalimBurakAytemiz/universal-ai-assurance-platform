@@ -98,4 +98,19 @@ describe("AdapterRegistry", () => {
     expect(map.has("hash")).toBe(true);
     expect(new AdapterRegistry().asBrokerMap().size).toBe(0);
   });
+
+  it("reconciles adapters.json health with the runtime registry (no fake HEALTHY)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const reg = JSON.parse(
+      readFileSync(new URL("../../../adapters/registry/adapters.json", import.meta.url), "utf8"),
+    ) as { adapters: { capability: string; health: string }[] };
+    const runtime = new Set(createDefaultAdapterRegistry().capabilities());
+    for (const a of reg.adapters) {
+      if (a.health === "HEALTHY") {
+        expect(runtime.has(a.capability), `HEALTHY "${a.capability}" must be implemented`).toBe(true);
+      } else {
+        expect(runtime.has(a.capability), `non-HEALTHY "${a.capability}" must not be registered`).toBe(false);
+      }
+    }
+  });
 });

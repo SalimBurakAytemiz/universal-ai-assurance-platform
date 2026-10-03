@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { ActionClass } from "@uaap/core";
 import { AgentPermissionResolver } from "@uaap/agent-permissions";
 
 const resolver = AgentPermissionResolver.fromRepo();
+const HERE = dirname(fileURLToPath(import.meta.url));
+const REPO = join(HERE, "..", "..", "..");
 
 describe("AgentPermissionResolver — least privilege from the real registry", () => {
   it("loads the 72-agent registry", () => {
@@ -44,6 +50,23 @@ describe("AgentPermissionResolver — least privilege from the real registry", (
     expect(resolver.canPerformClass("gov.master-orchestrator", ActionClass.R1_LOW_IMPACT).allow).toBe(false);
     expect(resolver.canPerformClass("sec.application-security", ActionClass.R2_ELEVATED).allow).toBe(true);
     expect(resolver.canPerformClass("sec.application-security", ActionClass.R3_PROHIBITED).allow).toBe(false);
+  });
+
+  it("fromRepo() throws (fail-closed) when the on-disk registry fails schema validation", () => {
+    // Build a minimal temp repo: marker + real agent schema + an INVALID registry (0 agents).
+    const dir = mkdtempSync(join(tmpdir(), "uaap-perm-"));
+    mkdirSync(join(dir, "schemas"), { recursive: true });
+    mkdirSync(join(dir, "agents", "registry"), { recursive: true });
+    writeFileSync(join(dir, "schemas", "policy.schema.json"), "{}"); // findRepoRoot marker
+    writeFileSync(
+      join(dir, "schemas", "agent.schema.json"),
+      readFileSync(join(REPO, "schemas", "agent.schema.json"), "utf8"),
+    );
+    writeFileSync(
+      join(dir, "agents", "registry", "agents.json"),
+      JSON.stringify({ version: "0.1.0", guilds: [], agents: [] }),
+    );
+    expect(() => AgentPermissionResolver.fromRepo(dir)).toThrow(/schema validation/i);
   });
 
   it("denies canPerformClass for an unknown agent and an unknown action class", () => {

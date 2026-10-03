@@ -87,6 +87,17 @@ describe("validateAgentEvent", () => {
     });
     expect(r.ok).toBe(false);
   });
+
+  it("rejects a blank-string evidence ref (not just an empty array)", () => {
+    const r = validateAgentEvent({
+      type: AgentEventType.FINDING_VERIFIED,
+      sourceAgent: "evr.finding-verifier",
+      at: AT,
+      evidenceRefs: [""],
+      verificationStatus: VerificationStatus.CONFIRMED,
+    });
+    expect(r.ok).toBe(false);
+  });
 });
 
 describe("Claim epistemics", () => {
@@ -104,5 +115,8 @@ describe("Claim epistemics", () => {
     expect(
       isConfirmedFact({ ...base, verificationStatus: VerificationStatus.CONFIRMED, evidenceRefs: ["EV-1"] }),
     ).toBe(true);
+    expect(
+      isConfirmedFact({ ...base, verificationStatus: VerificationStatus.CONFIRMED, evidenceRefs: ["  "] }),
+    ).toBe(false); // a blank evidence ref is not evidence
   });
 });

@@ -85,7 +85,10 @@ export interface Claim<T = unknown> {
   readonly verificationStatus: VerificationStatus;
 }
 
-/** A claim is actionable-as-fact only when CONFIRMED and backed by at least one evidence ref. */
+/** A claim is actionable-as-fact only when CONFIRMED and backed by at least one NON-EMPTY evidence ref. */
 export function isConfirmedFact(claim: Claim): boolean {
-  return claim.verificationStatus === VerificationStatus.CONFIRMED && claim.evidenceRefs.length > 0;
+  return (
+    claim.verificationStatus === VerificationStatus.CONFIRMED &&
+    claim.evidenceRefs.some((ref) => ref.trim().length > 0)
+  );
 }

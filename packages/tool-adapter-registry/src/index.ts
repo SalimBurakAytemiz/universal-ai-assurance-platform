@@ -9,7 +9,13 @@ import type { TargetAdapter, AdapterResult } from "@uaap/tool-broker";
  * with the Tool Broker when a run needs them.
  */
 
-/** Computes SHA-256 of `request.input` (coerced to string). */
+/**
+ * Computes SHA-256 of `request.input`. A string hashes to the standard SHA-256 of that string
+ * (so results match external tools / known-answer vectors); an object hashes via the canonical
+ * key-sorted form. By design this means a string equals the SHA-256 of its exact bytes — a
+ * string and an equivalent serialized object can therefore share a digest; callers that need
+ * them distinguished should tag the input type before hashing.
+ */
 export class HashAdapter implements TargetAdapter {
   readonly capability = "hash";
   supports(action: string): boolean {
