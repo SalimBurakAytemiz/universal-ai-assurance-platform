@@ -25,11 +25,20 @@ decision — all behind a **fail-closed trust kernel**.
 | Lease-based Tool Broker (boundary enforcement) | **IMPLEMENTED + TESTED** |
 | Orchestrator (no direct agent→target) | **IMPLEMENTED + TESTED** |
 | `.ai/` persistent state + build graph | **IMPLEMENTED** |
+| 72 canonical agents + runtime permissions + skill/tool-adapter/event registries | **IMPLEMENTED + TESTED** |
+| Project + Target model persistence; Digital Twin steward | **IMPLEMENTED + TESTED** |
+| Evidence engine (execution-backed + chain of custody) | **IMPLEMENTED + TESTED** |
+| Verification engine (independent, separation of duties) | **IMPLEMENTED + TESTED** |
+| Remediation lifecycle (SoD + independent retest + closure) | **IMPLEMENTED + TESTED** |
+| Release gate (fail-closed, decision ledger) | **IMPLEMENTED + TESTED** |
 | Desktop application (Electron shell, honest live state) | **SCAFFOLDED** |
-| Quality engines (API/web/mobile/db/...) | **NOT STARTED** (interfaces planned) |
-| Security engines (appsec/api/cloud/...) | **NOT STARTED** (interfaces planned) |
-| Evidence/verification/remediation/release-gate engines | **NOT STARTED** (contracts defined) |
-| GitHub full automation / packaging / SBOM | **PARTIAL / PLANNED** |
+| Quality execution engines (API/web/mobile/db via real tools) | **NOT STARTED** (interfaces/adapters planned) |
+| Security execution engines (appsec/api/cloud via real tools) | **NOT STARTED** (interfaces/adapters planned) |
+| Knowledge store / continuous-learning runtime | **NOT STARTED** (schema + validators done) |
+| GitHub automation (PR/CI/review/merge in practice) | **IMPLEMENTED** (4 PRs merged this way) |
+| Packaging / SBOM / desktop installer | **NOT STARTED** (planned) |
+
+Current local test suite: **156 tests across 17 files, all passing.**
 
 "IMPLEMENTED + TESTED" means real code with executable tests that pass locally.
 "SCAFFOLDED" means a real, runnable skeleton that shows `NOT AVAILABLE` for backends
