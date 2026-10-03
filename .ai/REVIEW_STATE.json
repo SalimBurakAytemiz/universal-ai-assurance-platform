@@ -1,6 +1,16 @@
 {
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
-  "lastReview": null,
-  "unresolved": { "P0": 0, "P1": 0, "P2": 0, "P3": 0 }
+  "lastReview": {
+    "at": "2026-10-03T00:17:34.488Z",
+    "scope": "foundation + trust-kernel + broker + orchestrator + agent-registry",
+    "type": "IMPLEMENTER_SELF_REVIEW",
+    "note": "Focused review of authorization bypass, policy bypass, scope confusion, direct agent->target, unsafe defaults. A separate-context independent review remains a follow-up per the contract."
+  },
+  "unresolved": {
+    "P0": 0,
+    "P1": 0,
+    "P2": 0,
+    "P3": 0
+  }
 }
