@@ -1,6 +1,6 @@
 {
   "version": "0.5.0",
-  "updatedAt": "2026-10-03T03:00:00.000Z",
+  "updatedAt": "2026-10-03T05:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -636,8 +636,18 @@
       "tests": [
         "packages/project-model/test/project-model.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "0f33cbf30c86c55741f0a4c3f8b1657242e19916"
+      ],
+      "review": {
+        "loops": 3,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 2
+      }
     },
     {
       "id": "digital-twin",
@@ -656,8 +666,18 @@
       "tests": [
         "packages/digital-twin/test/digital-twin.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "0f33cbf30c86c55741f0a4c3f8b1657242e19916"
+      ],
+      "review": {
+        "loops": 3,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 2
+      }
     },
     {
       "id": "knowledge-graph",
