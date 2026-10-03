@@ -1,6 +1,6 @@
 {
-  "version": "0.6.0",
-  "updatedAt": "2026-10-03T07:00:00.000Z",
+  "version": "0.7.0",
+  "updatedAt": "2026-10-03T07:30:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -850,12 +850,16 @@
       "dependencies": [
         "verification-engine"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-REMEDIATION-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/remediation-engine/src/index.ts"
+      ],
+      "tests": [
+        "packages/remediation-engine/test/remediation.test.ts"
+      ],
       "commits": [],
       "review": {}
     },

@@ -54,7 +54,7 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-SEC-ACTIVE-001 | Authorized active validation | SEC §4.2, M1 §17 | BLOCKED (needs external authorization + scope) | gate node | — |
 | REQ-EVIDENCE-001 | Execution-backed evidence + chain of custody | QA §16, M1 §29,§31 | IMPLEMENTED+TESTED | `packages/evidence-engine` | `evidence.test.ts` (11) |
 | REQ-VERIFY-001 | Independent verification (SoD) | SEC §13, M1 §35 | IMPLEMENTED+TESTED | `packages/verification-engine` (+ agent schema invariants) | `verification.test.ts` (7) |
-| REQ-REMEDIATION-001 | Remediation lifecycle | SEC §5, M1 §45 | NOT_STARTED (now READY) | — | — |
+| REQ-REMEDIATION-001 | Remediation lifecycle (SoD + retest) | SEC §5, M1 §45 | IMPLEMENTED+TESTED | `packages/remediation-engine` | `remediation.test.ts` (11) |
 | REQ-RELEASE-001 | Release gate on real results | M1 §46 | IMPLEMENTED+TESTED | `packages/release-gate` (fail-closed, decision ledger) | `release-gate.test.ts` (10) |
 | REQ-PACKAGING-001 | Windows packaging + update/rollback | M1 §80,§81 | NOT_STARTED | build script stub | — |
 | REQ-DESKTOP-AGENTS-001 | Desktop Agents view | M2 §48 | SCAFFOLDED (counts) | `apps/desktop` | — |

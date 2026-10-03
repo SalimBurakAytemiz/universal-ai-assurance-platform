@@ -81,6 +81,17 @@ describe("VerificationEngine — separation of duties + evidence", () => {
     expect(r.ok).toBe(false);
   });
 
+  it("blocks the SoD bypass via a CASE variant of the detector id", () => {
+    const r = engine.verify({ finding: finding({ detectedBy: "agent:Det" }), verifierId: "AGENT:det", verdict: Verdict.REJECT, now: "t" });
+    expect(r.ok).toBe(false);
+  });
+
+  it("fails closed (returns, not throws) on a malformed finding missing evidenceIds", () => {
+    const bad = { ...finding(), evidenceIds: undefined as unknown as string[] };
+    const r = engine.verify({ finding: bad, verifierId: "v", verdict: Verdict.REJECT, now: "t" });
+    expect(r.ok).toBe(false);
+  });
+
   it("records verifier provenance (verifiedBy trimmed, verifiedAt)", () => {
     const r = engine.verify({ finding: finding(), verifierId: "  v  ", verdict: Verdict.REJECT, now: "2026-10-03T12:00:00.000Z" });
     expect(r.ok).toBe(true);
