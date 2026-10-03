@@ -169,11 +169,12 @@ export class KnowledgeStore {
     }
   }
 
-  /** Mark matching ACTIVE/CERTIFIED items STALE (e.g. after a new major version / advisory). */
+  /** Mark matching ACTIVE items STALE. Only ACTIVE->STALE is a legal lifecycle move (see
+   *  TRANSITIONS), so markStale is restricted to ACTIVE to keep promote() and decay consistent. */
   markStale(predicate: (item: KnowledgeItem) => boolean, now: string): number {
     let n = 0;
     for (const [id, i] of this.items) {
-      if ((i.lifecycleStatus === LifecycleStatus.ACTIVE || i.lifecycleStatus === LifecycleStatus.CERTIFIED) && predicate(clone(i))) {
+      if (i.lifecycleStatus === LifecycleStatus.ACTIVE && predicate(clone(i))) {
         this.items.set(id, { ...i, lifecycleStatus: LifecycleStatus.STALE, lastVerified: now });
         n++;
       }
@@ -181,9 +182,13 @@ export class KnowledgeStore {
     return n;
   }
 
-  /** Items that are STALE and therefore require revalidation before trusted use. */
+  /** ALL items that are STALE and therefore require revalidation — across every scope, not just
+   *  GLOBAL (decay must surface tenant-scoped knowledge too). */
   needsRevalidation(): KnowledgeItem[] {
-    return this.query().filter((i) => i.lifecycleStatus === LifecycleStatus.STALE);
+    return [...this.items.values()]
+      .filter((i) => i.lifecycleStatus === LifecycleStatus.STALE)
+      .sort((a, b) => (a.knowledgeId < b.knowledgeId ? -1 : a.knowledgeId > b.knowledgeId ? 1 : 0))
+      .map(clone);
   }
 }
 
@@ -196,7 +201,16 @@ const STATUS_RANK: Record<string, number> = { ACTIVE: 0, CERTIFIED: 1, REVIEWED:
  * the result was ambiguous (a true tie) so callers can record a KNOWLEDGE_CONFLICT.
  */
 export function resolveKnowledgeConflict(items: readonly KnowledgeItem[]): { winner?: KnowledgeItem; conflict: boolean } {
-  if (items.length === 0) return { conflict: false };
+  // A retracted/untrusted item must never be elected authoritative, regardless of its trust tier.
+  const NON_CONSUMABLE: ReadonlySet<string> = new Set([
+    LifecycleStatus.REVOKED,
+    LifecycleStatus.SUPERSEDED,
+    LifecycleStatus.DEPRECATED,
+    LifecycleStatus.STALE,
+  ]);
+  const consumable = items.filter((i) => !NON_CONSUMABLE.has(i.lifecycleStatus));
+  if (consumable.length === 0) return { conflict: false };
+  items = consumable;
   const score = (i: KnowledgeItem): [number, number, string] => [
     TIER_RANK[i.trustTier] ?? 99,
     STATUS_RANK[i.lifecycleStatus] ?? 99,

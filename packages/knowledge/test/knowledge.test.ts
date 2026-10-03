@@ -132,6 +132,36 @@ describe("KnowledgeStore — decay + conflict", () => {
     expect(resolveKnowledgeConflict([a, b]).conflict).toBe(true);
   });
 
+  it("never elects a REVOKED/SUPERSEDED item as conflict winner, even at a better trust tier", () => {
+    const revoked = item({ knowledgeId: "R", trustTier: TrustTier.TIER_0, lifecycleStatus: LifecycleStatus.REVOKED });
+    const active = item({ knowledgeId: "A", trustTier: TrustTier.TIER_3, lifecycleStatus: LifecycleStatus.ACTIVE });
+    const r = resolveKnowledgeConflict([revoked, active]);
+    expect(r.winner?.knowledgeId).toBe("A");
+    expect(resolveKnowledgeConflict([revoked]).winner).toBeUndefined();
+  });
+
+  it("surfaces STALE items from ALL scopes (not just GLOBAL) in needsRevalidation", () => {
+    const s = new KnowledgeStore();
+    s.add(item({ knowledgeId: "KP", scope: KnowledgeScope.PROJECT, scopeRef: "PRJ_A" }));
+    for (const to of [
+      LifecycleStatus.SOURCE_VERIFIED, LifecycleStatus.SANDBOXED, LifecycleStatus.EVALUATED,
+      LifecycleStatus.REVIEWED, LifecycleStatus.CERTIFIED, LifecycleStatus.ACTIVE,
+    ]) s.promote("KP", to, T2);
+    expect(s.markStale(() => true, T2)).toBe(1);
+    expect(s.needsRevalidation().map((i) => i.knowledgeId)).toEqual(["KP"]);
+  });
+
+  it("markStale only affects ACTIVE items (CERTIFIED is left for promote/revoke)", () => {
+    const s = new KnowledgeStore();
+    s.add(item({ knowledgeId: "KC" }));
+    for (const to of [
+      LifecycleStatus.SOURCE_VERIFIED, LifecycleStatus.SANDBOXED, LifecycleStatus.EVALUATED,
+      LifecycleStatus.REVIEWED, LifecycleStatus.CERTIFIED,
+    ]) s.promote("KC", to, T2);
+    expect(s.markStale(() => true, T2)).toBe(0); // CERTIFIED is not marked stale
+    expect(s.get("KC")!.lifecycleStatus).toBe(LifecycleStatus.CERTIFIED);
+  });
+
   it("returns deep copies (no internal mutation leak)", () => {
     const s = new KnowledgeStore();
     s.add(item());

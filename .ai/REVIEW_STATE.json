@@ -23,7 +23,7 @@
     "P0": 0,
     "P1": 0,
     "P2": 0,
-    "P3": 0
+    "P3": 3
   },
   "boundedLoop": {
     "count": 2,
@@ -125,6 +125,26 @@
       "allResolved": true,
       "blocking": 0,
       "p3Fixed": "verification-engine canonical (case-insensitive) SoD; submitRetest/close + verification fail-closed on malformed finding (missing evidenceIds)."
+    }
+  },
+  "pr5": {
+    "loop1": {
+      "at": "2026-10-03T10:00:00.000Z",
+      "agents": 19,
+      "reported": 8,
+      "confirmed": 6,
+      "fixedNow": [
+        "P2 resolveKnowledgeConflict now excludes REVOKED/SUPERSEDED/DEPRECATED/STALE",
+        "P2 needsRevalidation surfaces all scopes",
+        "P3 markStale restricted to ACTIVE (lifecycle-consistent)"
+      ],
+      "remainingP3": [
+        "locale-dependent sort determinism in query()/conflict recency tiebreak",
+        "add ORG/RUN isolation + query clone-isolation tests",
+        "add conflict status/recency tiebreaker tests"
+      ],
+      "merged": false,
+      "note": "fixes pushed to branch; CI + re-review + merge NOT done (usage limit reached)."
     }
   }
 }
