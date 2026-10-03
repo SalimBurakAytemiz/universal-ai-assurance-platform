@@ -1,6 +1,6 @@
 {
   "version": "0.6.0",
-  "updatedAt": "2026-10-03T05:30:00.000Z",
+  "updatedAt": "2026-10-03T07:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -800,8 +800,18 @@
       "tests": [
         "packages/evidence-engine/test/evidence.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "9b096e86b2d3046f324260eb0074812f9c6f05d4"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 3
+      }
     },
     {
       "id": "verification-engine",
@@ -820,8 +830,18 @@
       "tests": [
         "packages/verification-engine/test/verification.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "9b096e86b2d3046f324260eb0074812f9c6f05d4"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 3
+      }
     },
     {
       "id": "remediation-engine",
@@ -856,8 +876,18 @@
       "tests": [
         "packages/release-gate/test/release-gate.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "9b096e86b2d3046f324260eb0074812f9c6f05d4"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 3
+      }
     },
     {
       "id": "desktop-agents-view",
