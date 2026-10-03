@@ -22,7 +22,7 @@
   "unresolved": {
     "P0": 0,
     "P1": 0,
-    "P2": 0,
+    "P2": 3,
     "P3": 0
   },
   "boundedLoop": {
@@ -159,6 +159,26 @@
     "boundedLoop": {
       "count": 1,
       "max": 3
+    },
+    "loop2": {
+      "at": "2026-10-04T02:30:00.000Z",
+      "agents": 4,
+      "found": {
+        "P1": 2,
+        "P2": 4
+      },
+      "fixedNow": [
+        "P1 AI unavailable path now guards sideEffecting -> WAITING_APPROVAL (no duplicate)",
+        "P1 corrupt-store refusal now STICKY (copy sidecar, keep main, throw every boot)",
+        "P2 desktop control reader now reads control.json (honest)"
+      ],
+      "remaining": [
+        "P2 pid-lock stale-reclaim TOCTOU (needs atomic claim)",
+        "P2 cross-process whole-document jobs write race (needs file lock; recover/addJob unguarded)",
+        "P2 .bak clobber window after .bak-recovery (rewrite main after recovery)"
+      ],
+      "merged": false,
+      "note": "2 P1 + 1 P2 fixed+pushed; 3 P2 (cross-process locking) remain -> need a larger change before merge. Usage limit reached."
     }
   }
 }

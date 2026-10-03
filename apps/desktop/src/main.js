@@ -30,11 +30,13 @@ function collectState() {
   // Autopilot: read the durable job store + provider control (same files the service uses).
   const apDoc = readJsonSafe(".ai/autopilot/jobs.json");
   const provider = readJsonSafe(".ai/autopilot/provider.json");
+  const apControl = readJsonSafe(".ai/autopilot/control.json");
   const apJobs = (apDoc && apDoc.jobs) || [];
   const apByState = apJobs.reduce((acc, j) => ((acc[j.state] = (acc[j.state] || 0) + 1), acc), {});
   const autopilot = {
     present: !!apDoc,
-    control: (apDoc && apDoc.meta && apDoc.meta.control) || "unknown",
+    // control now lives in its own file (decoupled from the jobs document)
+    control: (apControl && apControl.control) || "run",
     providerAvailable: provider ? provider.available === true : false,
     byState: apByState,
     running: apJobs.filter((j) => j.state === "RUNNING").map((j) => j.name),

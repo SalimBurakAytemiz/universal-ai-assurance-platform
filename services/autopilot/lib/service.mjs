@@ -128,10 +128,17 @@ export class AutopilotService {
       const out = await this.aiExecutor(running);
       if (out?.status === "ok") { this._set(running, RuntimeState.DONE, { result: out.result ?? null, error: null }); transitions.push([job.id, RuntimeState.DONE]); }
       else if (out?.status === "unavailable") {
-        // provider dropped mid-flight: back off instead of oscillating READY<->RUNNING every tick
-        const attempts = (running.attempts ?? 0) + 1;
-        this._set(running, RuntimeState.RETRY_SCHEDULED, { attempts, nextRetryAt: nextRetryAt(this.clock.now(), attempts, this.backoff) });
-        transitions.push([job.id, "UNAVAILABLE_BACKOFF"]);
+        // A side-effecting job may have already performed its effect before the provider dropped
+        // mid-multi-step: do NOT retry it (same exactly-once guard as _afterFailure).
+        if (running.sideEffecting) {
+          this._set(running, RuntimeState.WAITING_APPROVAL, { attempts: (running.attempts ?? 0) + 1 });
+          transitions.push([job.id, "NEEDS_RECONCILIATION"]);
+        } else {
+          // pure job: back off instead of oscillating READY<->RUNNING every tick
+          const attempts = (running.attempts ?? 0) + 1;
+          this._set(running, RuntimeState.RETRY_SCHEDULED, { attempts, nextRetryAt: nextRetryAt(this.clock.now(), attempts, this.backoff) });
+          transitions.push([job.id, "UNAVAILABLE_BACKOFF"]);
+        }
       } else { this._afterFailure(running, out?.error ?? "ai executor error", transitions); }
     } catch (e) {
       this._afterFailure(running, e instanceof Error ? e.message : String(e), transitions);

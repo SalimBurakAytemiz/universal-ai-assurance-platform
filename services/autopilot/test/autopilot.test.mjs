@@ -168,8 +168,10 @@ describe("autopilot — the five restart/recovery proofs", () => {
 });
 
 describe("autopilot — durability + control", () => {
-  it("refuses to start on a corrupt store (no silent empty, no overwrite)", () => {
+  it("refuses to start on a corrupt store, and the refusal is STICKY across restarts", () => {
     writeFileSync(jobsPath, "{ this is : not json");
+    expect(() => new JobStore(jobsPath)).toThrow(/corrupt/i);
+    // a supervisor restart must NOT find "no file" and silently start empty — it must throw again
     expect(() => new JobStore(jobsPath)).toThrow(/corrupt/i);
   });
 
@@ -198,6 +200,19 @@ describe("autopilot — AI retry / unavailable backoff", () => {
     await svc.tick();
     expect(store.get("AI").state).toBe(RuntimeState.RETRY_SCHEDULED);
     expect(store.get("AI").nextRetryAt).toBeTruthy();
+  });
+
+  it("a side-effecting AI job on the 'unavailable' path goes to WAITING_APPROVAL, never re-run", async () => {
+    const store = new JobStore(jobsPath);
+    let effects = 0;
+    const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(),
+      aiExecutor: async () => { effects++; return { status: "unavailable" }; } });
+    svc.addJob({ id: "PR", name: "open_pr", kind: "ai", sideEffecting: true });
+    await svc.tick();
+    expect(store.get("PR").state).toBe(RuntimeState.WAITING_APPROVAL);
+    expect(effects).toBe(1);
+    await svc.tick(); // must not re-run a possibly-completed side effect
+    expect(effects).toBe(1);
   });
 
   it("retries a failing (non-side-effecting) AI task then FAILS after maxAttempts", async () => {

@@ -49,9 +49,12 @@ export class JobStore {
         try { doc = JSON.parse(readFileSync(`${this.filePath}.bak`, "utf8")); } catch { doc = null; }
       }
       if (!doc) {
-        const corrupt = `${this.filePath}.corrupt.${new Date().toISOString().replace(/[:.]/g, "-")}`;
-        try { renameSync(this.filePath, corrupt); } catch { /* ignore */ }
-        throw new Error(`Autopilot job store is corrupt and no valid backup exists; refusing to start (moved to ${corrupt}).`);
+        // COPY (not rename) to a sidecar and LEAVE the corrupt main in place, so the refusal is
+        // STICKY: every subsequent boot re-detects the corruption and throws again, instead of a
+        // supervisor restart finding "no file" and silently starting empty. An operator must clear it.
+        const corrupt = `${this.filePath}.corrupt`;
+        try { copyFileSync(this.filePath, corrupt); } catch { /* ignore */ }
+        throw new Error(`Autopilot job store is corrupt and no valid backup exists; refusing to start (copy at ${corrupt}). Clear ${this.filePath} to reset.`);
       }
     }
     for (const j of doc.jobs ?? []) if (j && typeof j.id === "string") this.jobs.set(j.id, j);
