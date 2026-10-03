@@ -46,5 +46,15 @@
       "P3 no broker throw-branch coverage: covered by broker-throw test.",
       "P3 hash string/object collision: ACCEPTED BY DESIGN (keeps standard SHA-256 contract / known-answer vector); documented in HashAdapter."
     ]
+  },
+  "pr2": {
+    "loop1": {
+      "at": "2026-10-03T03:30:00.000Z",
+      "agents": 34,
+      "reported": 15,
+      "confirmed": 15,
+      "fixed": 15,
+      "note": "P1 path traversal + P2 atomic-write/snapshot-validation/blank-provenance/spread-id/corrupt-file + P3s; concurrency P3 documented as accepted."
+    }
   }
 }

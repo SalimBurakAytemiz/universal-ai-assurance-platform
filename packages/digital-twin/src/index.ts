@@ -75,12 +75,24 @@ export class DigitalTwinSteward {
   private readonly facts = new Map<string, TwinFact>(); // keyed by `${kind}::${key}`
 
   constructor(public readonly projectId: string, snapshot?: TwinSnapshot) {
-    if (snapshot) for (const f of snapshot.facts) this.facts.set(`${f.kind}::${f.key}`, f);
+    if (snapshot) {
+      for (const f of snapshot.facts) {
+        // Restore must honor the same invariants as proposeUpdate — a snapshot is NOT a
+        // trusted bypass. A critical fact without provenance (which the steward never creates)
+        // means a tampered/corrupt snapshot; fail closed.
+        const reason = invalidFactReason(f);
+        if (reason) throw new Error(`Refusing to restore an invalid twin fact (${f.kind}::${f.key}): ${reason}`);
+        this.facts.set(`${f.kind}::${f.key}`, clone(f));
+      }
+    }
   }
 
   proposeUpdate(proposal: UpdateProposal): ProposalResult {
     if (!proposal.key.trim()) return { applied: false, reason: "Proposal is missing a stable key." };
-    if (CRITICAL_KINDS.has(proposal.kind) && !proposal.provenance?.trim()) {
+    // Normalize a blank/whitespace provenance to "absent" so it neither satisfies the critical
+    // gate nor overwrites an existing provenance with blank on dedupe.
+    const incomingProvenance = proposal.provenance?.trim() ? proposal.provenance : undefined;
+    if (CRITICAL_KINDS.has(proposal.kind) && !incomingProvenance) {
       return {
         applied: false,
         reason: `A ${proposal.kind} fact is critical and requires a provenance/source reference.`,
@@ -92,7 +104,7 @@ export class DigitalTwinSteward {
       ? {
           ...existing,
           value: proposal.value,
-          provenance: proposal.provenance ?? existing.provenance,
+          provenance: incomingProvenance ?? existing.provenance,
           freshness: Freshness.FRESH,
           updatedAt: proposal.now,
         }
@@ -101,13 +113,13 @@ export class DigitalTwinSteward {
           kind: proposal.kind,
           key: proposal.key,
           value: proposal.value,
-          provenance: proposal.provenance,
+          provenance: incomingProvenance,
           freshness: Freshness.FRESH,
           createdAt: proposal.now,
           updatedAt: proposal.now,
         };
     this.facts.set(mapKey, fact);
-    return { applied: true, fact, created: !existing };
+    return { applied: true, fact: clone(fact), created: !existing };
   }
 
   /** Mark every fact matching the predicate STALE (e.g. after a repository change). Returns count. */
@@ -123,12 +135,15 @@ export class DigitalTwinSteward {
   }
 
   getFact(kind: TwinFactKind, key: string): TwinFact | undefined {
-    return this.facts.get(`${kind}::${key}`);
+    const f = this.facts.get(`${kind}::${key}`);
+    return f ? clone(f) : undefined;
   }
 
   getFacts(kind?: TwinFactKind): TwinFact[] {
     const all = [...this.facts.values()];
-    return (kind ? all.filter((f) => f.kind === kind) : all).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    return (kind ? all.filter((f) => f.kind === kind) : all)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id))
+      .map(clone);
   }
 
   staleFacts(): TwinFact[] {
@@ -138,4 +153,17 @@ export class DigitalTwinSteward {
   snapshot(): TwinSnapshot {
     return { projectId: this.projectId, facts: this.getFacts() };
   }
+}
+
+/** Return the reason a fact is invalid, or null if it is valid (shared by restore + validation). */
+function invalidFactReason(f: TwinFact): string | null {
+  if (!f || typeof f.kind !== "string" || typeof f.key !== "string") return "missing kind/key";
+  if (!f.key.trim()) return "blank key";
+  if (CRITICAL_KINDS.has(f.kind) && !f.provenance?.trim()) return "critical fact without provenance";
+  return null;
+}
+
+/** Deep copy so callers cannot mutate the steward's internal state through returned references. */
+function clone<T>(v: T): T {
+  return structuredClone(v);
 }

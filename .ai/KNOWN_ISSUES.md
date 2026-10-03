@@ -7,3 +7,4 @@
 | DESKTOP-RUN | Electron shell is scaffolded but not yet launched/validated in this session (large download). | OPEN |
 | ENGINES | Quality/Security/Data/Perf/Reliability/Privacy engines are NOT_STARTED (interfaces/contracts only). | OPEN |
 | DOCKER | Docker not installed on build host; container/IaC security fixtures deferred. | OPEN |
+| PROJECT-STORE-CONCURRENCY | ProjectStore is single-process local-first; no cross-process write locking (atomic temp+rename prevents torn files, but concurrent multi-process writers can lose updates). | ACCEPTED_FOR_NOW |

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Environment, Mode } from "@uaap/core";
@@ -66,5 +66,40 @@ describe("ProjectStore", () => {
     store.createProject({ name: "A", mode: Mode.INTERNAL_OWNED, now: T1 });
     store.createProject({ name: "B", mode: Mode.INTERNAL_OWNED, now: T2 });
     expect(store.list().map((p) => p.name)).toEqual(["A", "B"]);
+  });
+
+  it("rejects a crafted id (path traversal) on get and save", () => {
+    const store = new ProjectStore(dir);
+    for (const bad of ["../evil", "a/b", "..", ".hidden", "with.dot", ""]) {
+      expect(() => store.get(bad), `get ${bad}`).toThrow(/invalid project id/i);
+    }
+    expect(() => store.save({ id: "../evil", name: "x", mode: Mode.INTERNAL_OWNED, createdAt: T1, updatedAt: T1, repositories: [], targets: [] })).toThrow(/invalid project id/i);
+  });
+
+  it("round-trips a POPULATED project across a restart", () => {
+    const store = new ProjectStore(dir);
+    const p = store.createProject({ name: "Shop", mode: Mode.CLIENT_AUTHORIZED, now: T1 });
+    store.addRepository(p.id, { kind: "git", path: "/repo", remote: "https://example/r.git" }, T2);
+    store.addTarget(p.id, { name: "API", kind: TargetKind.API, identifiers: ["api.example.com"], environment: Environment.STAGING }, T2);
+
+    const reopened = new ProjectStore(dir).get(p.id)!;
+    expect(reopened.repositories).toHaveLength(1);
+    expect(reopened.repositories[0]).toMatchObject({ kind: "git", path: "/repo", remote: "https://example/r.git" });
+    expect(reopened.targets).toHaveLength(1);
+    expect(reopened.targets[0]).toMatchObject({ name: "API", kind: TargetKind.API, environment: Environment.STAGING });
+  });
+
+  it("skips a corrupt JSON file instead of breaking enumeration of the rest", () => {
+    const store = new ProjectStore(dir);
+    store.createProject({ name: "Good", mode: Mode.INTERNAL_OWNED, now: T1 });
+    writeFileSync(join(dir, "corrupt.json"), "{ this is not json");
+    const listed = store.list();
+    expect(listed.map((p) => p.name)).toEqual(["Good"]);
+  });
+
+  it("writes atomically (no leftover temp files after a save)", () => {
+    const store = new ProjectStore(dir);
+    store.createProject({ name: "Atomic", mode: Mode.INTERNAL_OWNED, now: T1 });
+    expect(readdirSync(dir).some((f) => f.includes(".tmp"))).toBe(false);
   });
 });

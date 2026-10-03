@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { newId, type Environment, type Mode } from "@uaap/core";
 
@@ -39,17 +39,27 @@ export interface Project {
   readonly targets: readonly ProjectTarget[];
 }
 
+/** A project id must be a single safe filename segment (also the shape newId produces). */
+const SAFE_ID = /^[A-Za-z0-9_-]+$/;
+
 /**
  * File-backed project/target persistence (local-first). One JSON document per project under
- * `<baseDir>/<id>.json`. Pure and deterministic given an injected `now` (no wall-clock reads),
- * so project state survives restarts and is reproducible in tests.
+ * `<baseDir>/<id>.json`. Pure and deterministic given an injected `now` (no wall-clock reads).
+ *
+ * Note: this is a single-process, local-first store. It does not coordinate concurrent writers
+ * across processes; see .ai/KNOWN_ISSUES.md (PROJECT-STORE-CONCURRENCY). Writes are atomic
+ * (temp file + rename) so a crash cannot leave a torn file.
  */
 export class ProjectStore {
   constructor(private readonly baseDir: string) {
     mkdirSync(this.baseDir, { recursive: true });
   }
 
+  /** Resolve a project id to its file, rejecting anything that is not a safe single segment. */
   private file(id: string): string {
+    if (typeof id !== "string" || !SAFE_ID.test(id)) {
+      throw new Error(`Invalid project id "${String(id)}" (must match ${SAFE_ID}).`);
+    }
     return join(this.baseDir, `${id}.json`);
   }
 
@@ -69,7 +79,10 @@ export class ProjectStore {
   }
 
   save(project: Project): void {
-    writeFileSync(this.file(project.id), JSON.stringify(project, null, 2) + "\n");
+    const target = this.file(project.id); // validates id
+    const tmp = join(this.baseDir, `.${project.id}.${newId("w")}.tmp`);
+    writeFileSync(tmp, JSON.stringify(project, null, 2) + "\n");
+    renameSync(tmp, target); // atomic on the same filesystem
   }
 
   get(id: string): Project | undefined {
@@ -78,12 +91,20 @@ export class ProjectStore {
     return JSON.parse(readFileSync(f, "utf8")) as Project;
   }
 
+  /** List projects; a single corrupt/foreign file is skipped rather than breaking enumeration. */
   list(): Project[] {
     if (!existsSync(this.baseDir)) return [];
-    return readdirSync(this.baseDir)
-      .filter((f) => f.endsWith(".json"))
-      .map((f) => JSON.parse(readFileSync(join(this.baseDir, f), "utf8")) as Project)
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const out: Project[] = [];
+    for (const f of readdirSync(this.baseDir)) {
+      if (!f.endsWith(".json") || f.startsWith(".")) continue;
+      try {
+        const p = JSON.parse(readFileSync(join(this.baseDir, f), "utf8")) as Project;
+        if (p && typeof p.id === "string" && typeof p.name === "string") out.push(p);
+      } catch {
+        // skip unparseable / partially written files; one bad file must not hide the rest.
+      }
+    }
+    return out.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
   }
 
   private mutate(id: string, now: string, fn: (p: Project) => Project): Project {
@@ -97,7 +118,8 @@ export class ProjectStore {
   addRepository(projectId: string, repo: Omit<RepositoryRef, "id">, now: string): Project {
     return this.mutate(projectId, now, (p) => ({
       ...p,
-      repositories: [...p.repositories, { id: newId("REPO"), ...repo }],
+      // generated id LAST so a caller-supplied id can never clobber it.
+      repositories: [...p.repositories, { ...repo, id: newId("REPO") }],
     }));
   }
 
@@ -105,7 +127,7 @@ export class ProjectStore {
     if (target.identifiers.length === 0) throw new Error("A target must have at least one identifier.");
     return this.mutate(projectId, now, (p) => ({
       ...p,
-      targets: [...p.targets, { id: newId("TGT"), ...target }],
+      targets: [...p.targets, { ...target, id: newId("TGT") }],
     }));
   }
 }
