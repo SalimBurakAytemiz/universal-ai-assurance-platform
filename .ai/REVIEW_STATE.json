@@ -300,5 +300,19 @@
         "live trading websocket"
       ]
     }
+  },
+  "pr9": {
+    "loop1": {
+      "reported": 7,
+      "confirmed": "2 P2 + 5 P3 (no P0/P1)",
+      "fixed": "unmapped-capability ledger; explicit core protection + below-budget test; accumulated reasons; budget-drop carries original reason; removed dead floor/break; dedup tests",
+      "outcome": "CONVERGED"
+    },
+    "mergedPR": 9,
+    "unresolved": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    }
   }
 }
