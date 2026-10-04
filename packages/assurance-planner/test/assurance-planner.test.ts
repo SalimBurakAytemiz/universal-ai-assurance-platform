@@ -50,6 +50,27 @@ describe("AssurancePlanner — run team manifest", () => {
     expect(budgeted.notSelected.some((n) => /over budget/i.test(n.reason))).toBe(true);
   });
 
+  it("never drops a core role even when the budget is BELOW the core count", () => {
+    const m = planner.plan({ runId: "R1", capabilities: ["payment", "web"], domains: ["fintech"], budgetMaxAgents: 3 });
+    expect(m.selected.length).toBe(CORE_ROLES.length); // ends at exactly the core roles
+    for (const id of CORE_ROLES) expect(m.selected.map((s) => s.agentId)).toContain(id);
+    expect(m.notSelected.some((n) => /over budget/i.test(n.reason) && /required/i.test(n.reason))).toBe(true); // carries original reason
+  });
+
+  it("flags a detected capability that has no role mapping (no silent coverage gap)", () => {
+    const m = planner.plan({ runId: "R1", capabilities: ["graphql", "payment"], domains: ["generic"] });
+    expect(m.unmappedCapabilities).toContain("graphql");
+    expect(m.unmappedCapabilities).not.toContain("payment");
+  });
+
+  it("deduplicates a role required by several capabilities and records ALL justifications", () => {
+    const m = planner.plan({ runId: "R1", capabilities: ["payment", "cart", "inventory"], domains: ["ecommerce"] });
+    const apiRoles = m.selected.filter((s) => s.agentId === "qa.api-contract");
+    expect(apiRoles).toHaveLength(1); // deduped
+    expect(apiRoles[0]!.reason).toMatch(/payment/);
+    expect(apiRoles[0]!.reason).toMatch(/cart/); // accumulated, not just the first
+  });
+
   it("every selected role is a real registry agent id", () => {
     const m = planner.plan({ runId: "R1", capabilities: ["payment", "web", "mobile", "realtime", "data-store", "auth"], domains: ["fintech"], riskLevel: "HIGH" });
     const registryIds = new Set((AssurancePlanner.fromRepo() as unknown as { ids: Set<string> }).ids);

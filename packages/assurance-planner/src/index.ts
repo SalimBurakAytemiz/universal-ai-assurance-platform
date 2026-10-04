@@ -55,6 +55,8 @@ export interface RunTeamManifest {
   readonly selected: readonly TeamMember[];
   /** Roles considered but not selected, with WHY (budget drops + registry roles not required). */
   readonly notSelected: readonly { readonly agentId: string; readonly reason: string }[];
+  /** Detected capabilities with NO role mapping — flagged so a coverage gap never passes silently. */
+  readonly unmappedCapabilities: readonly string[];
   readonly selectedCount: number;
   readonly totalRoles: number;
 }
@@ -75,32 +77,39 @@ export class AssurancePlanner {
    * real registry id (unknown mappings are dropped, never silently kept).
    */
   plan(input: PlanInput): RunTeamManifest {
-    const want = new Map<string, { reason: string; priority: number }>();
+    const coreSet = new Set(CORE_ROLES);
+    const want = new Map<string, { reasons: string[]; priority: number }>();
     const add = (id: string, reason: string, priority: number) => {
       if (!this.ids.has(id)) return; // never select a role that is not a real registry agent
       const cur = want.get(id);
-      if (!cur || priority < cur.priority) want.set(id, { reason, priority });
+      if (!cur || priority < cur.priority) want.set(id, { reasons: [reason], priority });
+      else if (priority === cur.priority && !cur.reasons.includes(reason)) cur.reasons.push(reason); // accumulate all justifications
     };
 
     for (const id of CORE_ROLES) add(id, "core governance / evidence / verification / reporting", 0);
+    const unmappedCapabilities: string[] = [];
     for (const cap of input.capabilities) {
-      for (const id of CAPABILITY_ROLES[cap] ?? []) add(id, `required by capability "${cap}"`, 1);
+      const roles = CAPABILITY_ROLES[cap];
+      if (roles === undefined) { if (!unmappedCapabilities.includes(cap)) unmappedCapabilities.push(cap); continue; }
+      for (const id of roles) add(id, `required by capability "${cap}"`, 1);
     }
     const sectorDomains = input.domains.filter((d) => d && d !== "generic");
     if (sectorDomains.length > 0) add("biz.domain-specialist-coordinator", `domain(s) present: ${sectorDomains.join(", ")}`, 2);
     if (input.riskLevel === "HIGH") for (const id of RISK_ROLES.HIGH ?? []) add(id, "elevated risk level", 2);
 
-    let members: TeamMember[] = [...want.entries()].map(([agentId, v]) => ({ agentId, reason: v.reason, priority: v.priority }));
+    let members: TeamMember[] = [...want.entries()].map(([agentId, v]) => ({ agentId, reason: v.reasons.join("; "), priority: v.priority }));
     members.sort((a, b) => a.priority - b.priority || (a.agentId < b.agentId ? -1 : 1));
 
     const notSelected: { agentId: string; reason: string }[] = [];
     if (input.budgetMaxAgents !== undefined) {
-      const cap = Math.max(CORE_ROLES.filter((id) => this.ids.has(id)).length, input.budgetMaxAgents);
-      while (members.length > cap) {
-        const victim = members[members.length - 1]!; // lowest priority (sorted asc), never a core (priority 0 sorts first)
-        if (victim.priority === 0) break; // safety: never drop core
-        members.pop();
-        notSelected.push({ agentId: victim.agentId, reason: `dropped: over budget (${input.budgetMaxAgents})` });
+      // Drop the lowest-priority NON-core roles first; CORE roles are never dropped (so the team may
+      // exceed the budget when it is set below the core-role count). Carry the original reason.
+      while (members.length > input.budgetMaxAgents) {
+        let victimIdx = -1;
+        for (let i = members.length - 1; i >= 0; i--) if (!coreSet.has(members[i]!.agentId)) { victimIdx = i; break; }
+        if (victimIdx === -1) break; // only core roles remain — keep them even if over budget
+        const victim = members.splice(victimIdx, 1)[0]!;
+        notSelected.push({ agentId: victim.agentId, reason: `required (${victim.reason}); dropped: over budget (${input.budgetMaxAgents})` });
       }
     }
 
@@ -112,6 +121,6 @@ export class AssurancePlanner {
       }
     }
 
-    return { runId: input.runId, selected: members, notSelected, selectedCount: members.length, totalRoles: this.ids.size };
+    return { runId: input.runId, selected: members, notSelected, unmappedCapabilities, selectedCount: members.length, totalRoles: this.ids.size };
   }
 }
