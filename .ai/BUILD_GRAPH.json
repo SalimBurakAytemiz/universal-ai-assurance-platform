@@ -1,6 +1,6 @@
 {
   "version": "0.9.0",
-  "updatedAt": "2026-10-04T01:00:00.000Z",
+  "updatedAt": "2026-10-04T05:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -1027,8 +1027,18 @@
         "services/autopilot/lib/states.mjs"
       ],
       "tests": [],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-job-store",
@@ -1047,8 +1057,18 @@
       "tests": [
         "services/autopilot/test/autopilot.test.mjs"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-service",
@@ -1068,8 +1088,18 @@
       "tests": [
         "services/autopilot/test/autopilot.test.mjs"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-provider-monitor",
@@ -1088,8 +1118,18 @@
       "tests": [
         "services/autopilot/test/autopilot.test.mjs"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-git-ci-monitor",
@@ -1108,8 +1148,18 @@
       "tests": [
         "services/autopilot/test/monitor.test.mjs"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-recovery",
@@ -1129,8 +1179,18 @@
       "tests": [
         "services/autopilot/test/autopilot.test.mjs"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-lifecycle-cli",
@@ -1151,8 +1211,18 @@
         "scripts/status-full-auto.ps1"
       ],
       "tests": [],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-restart-recovery-tests",
@@ -1172,8 +1242,18 @@
       "tests": [
         "services/autopilot/test/autopilot.test.mjs"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     },
     {
       "id": "autopilot-desktop-status",
@@ -1192,8 +1272,18 @@
         "apps/desktop/renderer/renderer.js"
       ],
       "tests": [],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a08bd1a2a41aaf96a67a40fef96ecd3b60c67c70"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 6
+      }
     }
   ]
 }
