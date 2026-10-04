@@ -25,6 +25,7 @@ export default defineConfig({
       "@uaap/agent-evaluation": r("./packages/agent-evaluation/src/index.ts"),
       "@uaap/domain-model": r("./packages/domain-model/src/index.ts"),
       "@uaap/assurance-planner": r("./packages/assurance-planner/src/index.ts"),
+      "@uaap/knowledge-graph": r("./packages/knowledge-graph/src/index.ts"),
     },
   },
   test: {

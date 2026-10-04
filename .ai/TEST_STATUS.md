@@ -2,18 +2,22 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-04 (branch auto/session-independent-autopilot)
+## Last local run — 2026-10-04 (branch auto/knowledge-graph)
 
 Command: `npm run verify` (validate → typecheck → test)
 
-- validate: **OK** (policies, build graph 55 nodes, 72 agents, 143 skills, 9 adapters, knowledge, state)
+- validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **199 passed / 199** across 21 files (single-writer redesign)
+- vitest: **255 passed / 255** across 25 files
 
-New this change — autopilot (`services/autopilot/test/`):
-- 5 restart/recovery proofs PASS (survive restart; WAITING_PROVIDER preserved; deterministic
-  continues while AI unavailable; AI resumes from checkpoint on provider return; no duplicate
-  commit/PR/merge after recovery).
-- bounded-backoff retry→FAIL, dependency gating, blocked-on-failed-dep, deterministic monitor parsing.
+New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **19 tests**
+- content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.
+- impact direction is semantic per edge type (DEPENDS_ON propagates to the dependent, not the
+  dependency); change-impact / blast-radius / bounded radius.
+- regression selection (only tests whose coverage is in the blast radius).
+- traceability path (requirement → evidence); root-cause (affected code → upstream dependencies).
+- release assurance FAIL-CLOSED: open finding on shipped surface blocks; requirement without
+  passing evidence = GAP; untraceable shipped feature; empty release never ASSURED.
+- schema-validated document load + defense-in-depth rejection of illegal relationships.
 
 P0/P1/P2/P3 open: 0 / 0 / 0 / 0.
