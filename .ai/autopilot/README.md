@@ -1,3 +1,4 @@
-# Autopilot
-Scaffold for the implement -> test -> commit -> push -> PR -> CI -> review -> safe-merge loop.
-Not enabled by default. The global kill switch must remain effective over real execution.
+# Autopilot (session-independent)
+Real runnable service in `services/autopilot/` (see docs/AUTOPILOT.md).
+Durable state: `.ai/autopilot/jobs.json` (machine-local, gitignored).
+Lifecycle: `node services/autopilot/cli.mjs start|stop|pause|resume|status|recover`.

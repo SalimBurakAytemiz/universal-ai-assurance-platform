@@ -32,3 +32,16 @@ secrets.json
 coverage/
 playwright-report/
 test-results/
+
+# autopilot runtime artifacts (machine-local durable state)
+.ai/autopilot/jobs.json
+.ai/autopilot/jobs.json.bak
+.ai/autopilot/control.json
+.ai/autopilot/jobs.lock
+.ai/autopilot/jobs.json.corrupt
+.ai/autopilot/monitor.json
+.ai/autopilot/provider.json
+.ai/autopilot/*.pid
+.ai/autopilot/*.tmp
+.ai/autopilot/*.acq.*
+.ai/autopilot/*.steal.*

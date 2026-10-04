@@ -9,7 +9,7 @@ const MENU = [
   ["Agents & Knowledge", [["agents", "Agents", "live"], ["agent-teams", "Agent Teams"], ["evaluations", "Agent Evaluations"], ["knowledge", "Knowledge"], ["learning", "Learning"]]],
   ["Operations", [["runs", "Runs"], ["schedules", "Schedules"], ["automation", "Automation"], ["findings", "Findings"], ["risks", "Risks"], ["evidence", "Evidence"], ["reports", "Reports"]]],
   ["Governance", [["approvals", "Approvals"], ["policies", "Policies"], ["authorization", "Authorization", "live"], ["release", "Release Center", "live"]]],
-  ["Build", [["buildgraph", "Build Graph", "live"]]],
+  ["Build", [["buildgraph", "Build Graph", "live"], ["autopilot", "Autopilot", "live"]]],
 ];
 
 let STATE = null;
@@ -56,7 +56,7 @@ function show(id) {
   setActive(id);
   const main = document.getElementById("main");
   main.innerHTML = "";
-  const views = { home, "system-health": systemHealth, agents: agentsView, authorization: authView, release: releaseView, buildgraph: buildGraphView, audit: auditView };
+  const views = { home, "system-health": systemHealth, agents: agentsView, authorization: authView, release: releaseView, buildgraph: buildGraphView, audit: auditView, autopilot: autopilotView };
   (views[id] || (() => notAvailable(id)))(main);
 }
 
@@ -126,6 +126,33 @@ function auditView(main) {
     <p class="sub">Every decision is recorded in a tamper-evident ledger (hash chain).</p>
     <div class="na-note">No runs have executed in this build yet, so the live ledger is empty.
     The ledger implementation and its verification are tested in <code>packages/audit</code>.</div>`));
+}
+
+function autopilotView(main) {
+  const a = STATE.autopilot || { present: false };
+  if (!a.present) {
+    main.appendChild(el(`<p class="title">Autopilot</p>
+      <p class="sub">Session-independent automation service.</p>
+      <div class="na-note"><b>NOT RUNNING</b><br/>No durable job store found at <code>.ai/autopilot/jobs.json</code>.
+      Start it with <code>powershell -ExecutionPolicy Bypass -File .\\scripts\\start-full-auto.ps1</code>
+      or <code>node services/autopilot/cli.mjs start</code>. It survives this UI closing and model unavailability.</div>`));
+    return;
+  }
+  const rows = (a.jobs || []).map((j) =>
+    `<tr><td>${j.id}</td><td>${j.name}</td><td>${j.kind}</td><td><span class="pill s-${j.state}">${j.state}</span></td>
+     <td>${j.attempts || 0}</td><td>${j.nextRetryAt || "—"}</td></tr>`).join("");
+  main.appendChild(el(`<p class="title">Autopilot</p>
+    <p class="sub">Session-independent automation service (durable; survives restart + model unavailability).</p>
+    <div class="grid">
+      <div class="card"><div class="k">Control</div><div class="v">${a.control}</div></div>
+      <div class="card"><div class="k">AI provider</div><div class="v" style="color:${a.providerAvailable ? "var(--ok)" : "var(--warn)"}">${a.providerAvailable ? "available" : "unavailable"}</div></div>
+      <div class="card"><div class="k">Waiting on provider</div><div class="v">${(a.waitingProvider || []).length}</div></div>
+      <div class="card"><div class="k">Running now</div><div class="v">${(a.running || []).length}</div></div>
+    </div>
+    <table><thead><tr><th>id</th><th>job</th><th>kind</th><th>state</th><th>attempts</th><th>next retry</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="6">No jobs enqueued.</td></tr>'}</tbody></table>
+    <p class="foot">AI tasks are never faked: when the provider is unavailable they are parked in
+    WAITING_PROVIDER and resumed when it returns. State read from .ai/autopilot/.</p>`));
 }
 
 function buildGraphView(main) {

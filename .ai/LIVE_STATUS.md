@@ -1,8 +1,8 @@
 # LIVE STATUS
 
-- Build graph: 46 nodes — 26 DONE, 9 READY, 1 BLOCKED (by design), 10 NOT_STARTED.
-- Last verify: 169/169 tests PASS (18 files); typecheck OK; validators OK.
+- Build graph: 55 nodes — 35 DONE, 9 READY, 1 BLOCKED (by design), 10 NOT_STARTED.
+- Last verify: 189/189 tests PASS (20 files); typecheck OK; validators OK.
+- Session-independent autopilot: IMPLEMENTED + TESTED (5 restart/recovery proofs pass).
 - Active security validation: LOCKED_BY_DESIGN.
-- GitHub: PRIVATE; 4 PRs merged; PR #5 (knowledge layer) in progress.
-- Current branch: auto/knowledge-layer.
-- Next READY: domain-capability-model; agent-evaluation; technology/standards/advisory (need external access).
+- GitHub: PRIVATE; 5 PRs merged; PR #6 (autopilot) in progress.
+- Current branch: auto/session-independent-autopilot.

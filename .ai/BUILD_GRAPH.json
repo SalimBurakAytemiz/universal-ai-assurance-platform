@@ -1,6 +1,6 @@
 {
-  "version": "0.8.0",
-  "updatedAt": "2026-10-04T00:00:00.000Z",
+  "version": "0.9.0",
+  "updatedAt": "2026-10-04T01:00:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -1008,6 +1008,189 @@
         "REQ-PACKAGING-001"
       ],
       "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-runtime-states",
+      "name": "Autopilot runtime state model",
+      "family": "autopilot",
+      "dependencies": [
+        "ai-state"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-STATES-001"
+      ],
+      "files": [
+        "services/autopilot/lib/states.mjs"
+      ],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-job-store",
+      "name": "Durable job + build-graph state store (survives restart)",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-runtime-states"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-STORE-001"
+      ],
+      "files": [
+        "services/autopilot/lib/store.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/autopilot.test.mjs"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-service",
+      "name": "Session-independent automation service (deterministic scheduler + lifecycle)",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-job-store"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-SERVICE-001"
+      ],
+      "files": [
+        "services/autopilot/lib/service.mjs",
+        "services/autopilot/lib/backoff.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/autopilot.test.mjs"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-provider-monitor",
+      "name": "Provider availability + WAITING_PROVIDER + bounded backoff",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-service"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-PROVIDER-001"
+      ],
+      "files": [
+        "services/autopilot/lib/provider.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/autopilot.test.mjs"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-git-ci-monitor",
+      "name": "Independent Git/GitHub/PR/CI monitor (deterministic)",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-service"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-MONITOR-001"
+      ],
+      "files": [
+        "services/autopilot/lib/monitor.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/monitor.test.mjs"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-recovery",
+      "name": "Crash/restart recovery (no duplicate commit/PR/merge)",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-job-store",
+        "autopilot-service"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-RECOVERY-001"
+      ],
+      "files": [
+        "services/autopilot/lib/service.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/autopilot.test.mjs"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-lifecycle-cli",
+      "name": "Lifecycle CLI start/stop/pause/resume/status/recover + PS1 wiring",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-service"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-CLI-001"
+      ],
+      "files": [
+        "services/autopilot/cli.mjs",
+        "scripts/start-full-auto.ps1",
+        "scripts/stop-full-auto.ps1",
+        "scripts/resume-full-auto.ps1",
+        "scripts/status-full-auto.ps1"
+      ],
+      "tests": [],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-restart-recovery-tests",
+      "name": "Restart/recovery proof tests (5 scenarios)",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-recovery",
+        "autopilot-provider-monitor"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-TESTS-001"
+      ],
+      "files": [
+        "services/autopilot/test/autopilot.test.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/autopilot.test.mjs"
+      ],
+      "commits": [],
+      "review": {}
+    },
+    {
+      "id": "autopilot-desktop-status",
+      "name": "Desktop autopilot/provider/task/CI/recovery status",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-service",
+        "desktop-shell"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-AUTOPILOT-DESKTOP-001"
+      ],
+      "files": [
+        "apps/desktop/src/main.js",
+        "apps/desktop/renderer/renderer.js"
+      ],
       "tests": [],
       "commits": [],
       "review": {}
