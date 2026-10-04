@@ -22,6 +22,7 @@ export default defineConfig({
       "@uaap/release-gate": r("./packages/release-gate/src/index.ts"),
       "@uaap/remediation-engine": r("./packages/remediation-engine/src/index.ts"),
       "@uaap/knowledge": r("./packages/knowledge/src/index.ts"),
+      "@uaap/agent-evaluation": r("./packages/agent-evaluation/src/index.ts"),
     },
   },
   test: {
