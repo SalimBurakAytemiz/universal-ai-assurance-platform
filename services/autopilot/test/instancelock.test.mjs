@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { mkdtempSync, writeFileSync, existsSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, existsSync, readFileSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { acquireInstanceLock, releaseInstanceLock, liveInstanceHeld } from "../lib/instancelock.mjs";
@@ -30,5 +30,14 @@ describe("instance lock (atomic single-instance)", () => {
     writeFileSync(lockPath, JSON.stringify({ pid: 2 ** 30, at: Date.now() })); // not ours
     releaseInstanceLock(lockPath); // must NOT delete someone else's lock
     expect(existsSync(lockPath)).toBe(true);
+  });
+
+  it("does NOT steal a FRESH empty/unparseable lock (live mid-create), but DOES reclaim an aged one", () => {
+    writeFileSync(lockPath, ""); // fresh empty = a holder in its create window
+    expect(acquireInstanceLock(lockPath)).toBe(false);
+    const old = Date.now() / 1000 - 3600; // age it past the grace window
+    utimesSync(lockPath, old, old);
+    expect(acquireInstanceLock(lockPath)).toBe(true);
+    expect(JSON.parse(readFileSync(lockPath, "utf8")).pid).toBe(process.pid);
   });
 });

@@ -27,9 +27,16 @@ export class GitCiMonitor {
     return r.code === 0 ? r.stdout.trim() : null;
   }
 
+  /** A git ref safe to interpolate into a shell command (no metacharacters). */
+  _safeBranch(branch) {
+    return typeof branch === "string" && /^[A-Za-z0-9._/-]+$/.test(branch) ? branch : null;
+  }
+
   /** @returns {{bound:boolean, number?:number, state?:string}} */
   prStatus(branch) {
-    const r = this._run(`gh pr view ${branch} --json number,state`);
+    const b = this._safeBranch(branch);
+    if (!b) return { bound: false };
+    const r = this._run(`gh pr view ${b} --json number,state`);
     if (r.code !== 0) return { bound: false };
     try {
       const d = JSON.parse(r.stdout);
@@ -44,7 +51,9 @@ export class GitCiMonitor {
    * Deterministic reduction of `gh pr checks --json` into a pass/pending/fail summary.
    */
   ciStatus(branch) {
-    const r = this._run(`gh pr checks ${branch} --json name,state`);
+    const b = this._safeBranch(branch);
+    if (!b) return { available: false };
+    const r = this._run(`gh pr checks ${b} --json name,state`);
     if (r.code !== 0) return { available: false };
     try {
       const checks = JSON.parse(r.stdout);

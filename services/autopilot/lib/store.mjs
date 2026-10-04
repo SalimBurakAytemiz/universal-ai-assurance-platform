@@ -12,7 +12,8 @@
 // Concurrency model: a SINGLE writer. Only the running `start` loop mutates the jobs document, and
 // `start` is single-instance (enforced by the atomic instance lock in cli.mjs). Other mutating
 // commands refuse while a live instance holds the lock. Within the writer process an in-process
-// mutex (service.mjs) serializes tick/recover/addJob/approve. This removes the whole multi-writer
+// mutex (service.mjs) serializes the async mutators tick/recover/approve; addJob is a synchronous
+// single upsert on the shared in-memory map (safe under the single-writer model). This removes the whole multi-writer
 // race class instead of relying on a fragile cross-process advisory lock. Control (pause/resume/
 // stop) lives in a SEPARATE 1-field file and is safe to write from any process (the loop reads it).
 import {

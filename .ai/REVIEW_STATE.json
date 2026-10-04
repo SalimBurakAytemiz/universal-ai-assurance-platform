@@ -195,6 +195,19 @@
       "redesign": "SINGLE-WRITER model — removed fragile cross-process advisory lock; start loop is the only mutator (atomic single-instance lock via rename-steal reclaim + ownership-checked release); concurrent mutating commands refuse; in-process mutex serializes tick/recover/addJob/approve. Eliminates the TTL-steal, blind-unlink TOCTOU, and unconditional-release race class by construction.",
       "newModule": "services/autopilot/lib/instancelock.mjs (unit-tested: block-while-held, atomic stale reclaim, ownership release)",
       "tests": "23 autopilot tests (incl. overlapping-tick exactly-once via mutex)"
+    },
+    "loop5": {
+      "at": "2026-10-04T04:00:00.000Z",
+      "found": {
+        "P1": 1,
+        "P3": 2
+      },
+      "fixed": [
+        "P1 instance-lock create-before-write double-win: acquire now atomic create-with-content via linkSync (lock never empty) + aged-unparseable grace so a live mid-create holder is not stolen",
+        "P3 monitor branch-name shell sanitization",
+        "P3 store comment + unused cli imports"
+      ],
+      "test": "instancelock fresh-empty-not-stolen/aged-reclaimed; 24 autopilot tests"
     }
   }
 }

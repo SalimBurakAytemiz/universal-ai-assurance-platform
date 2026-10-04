@@ -7,7 +7,7 @@
 //   node services/autopilot/cli.mjs recover    # reload durable state, reset interrupted jobs
 //   node services/autopilot/cli.mjs pause|resume|stop
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, openSync, closeSync, writeSync, unlinkSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { JobStore } from "./lib/store.mjs";
