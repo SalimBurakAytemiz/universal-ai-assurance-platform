@@ -1,6 +1,6 @@
 {
   "version": "0.9.0",
-  "updatedAt": "2026-10-04T09:00:00.000Z",
+  "updatedAt": "2026-10-04T09:30:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -465,12 +465,16 @@
         "agent-definitions-72",
         "digital-twin"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-AGENT-ACTIVATION-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/assurance-planner/src/index.ts"
+      ],
+      "tests": [
+        "packages/assurance-planner/test/assurance-planner.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
