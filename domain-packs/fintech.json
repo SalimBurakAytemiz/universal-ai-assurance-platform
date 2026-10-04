@@ -1,0 +1,12 @@
+{
+  "id": "fintech",
+  "name": "Fintech / Payments",
+  "entities": ["account", "ledger", "transaction", "balance", "refund", "commission", "limit"],
+  "workflows": ["deposit", "withdraw", "transfer", "refund", "reconcile"],
+  "businessInvariants": ["ledger balances to zero", "no negative balance beyond limit", "every transaction has a ledger entry", "refund <= original charge"],
+  "criticalAssets": ["funds", "ledger", "PAN/card data", "KYC data"],
+  "qaPatterns": ["data-reconciliation", "state-machine", "idempotency", "concurrency", "property-based"],
+  "securityPatterns": ["authz", "business-logic-security", "encryption-at-rest", "audit-trail"],
+  "capabilities": ["payment", "ledger", "auth", "data-store"],
+  "signals": ["stripe", "payment", "ledger", "iban", "card", "transaction", "balance"]
+}

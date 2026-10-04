@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/domain-pack.schema.json",
+  "title": "UAAP Domain Pack",
+  "description": "Sector/business knowledge for capability-based + domain-aware assurance. Unknown domains fall back to the generic pack; the platform is never single-domain or hard-coded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "capabilities"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "generic": { "type": "boolean" },
+    "entities": { "type": "array", "items": { "type": "string" } },
+    "workflows": { "type": "array", "items": { "type": "string" } },
+    "businessInvariants": { "type": "array", "items": { "type": "string" } },
+    "criticalAssets": { "type": "array", "items": { "type": "string" } },
+    "qaPatterns": { "type": "array", "items": { "type": "string" } },
+    "securityPatterns": { "type": "array", "items": { "type": "string" } },
+    "capabilities": { "type": "array", "items": { "type": "string" } },
+    "signals": { "type": "array", "items": { "type": "string" } }
+  }
+}

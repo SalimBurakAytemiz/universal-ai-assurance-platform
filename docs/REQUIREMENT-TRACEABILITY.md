@@ -48,7 +48,7 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-PROJECT-001 | Project + target model | M1 §8 | IMPLEMENTED+TESTED | `packages/project-model` (file-backed store) | `project-model.test.ts` (6) |
 | REQ-TWIN-001 | Digital twin | M1 §10 | IMPLEMENTED+TESTED | `packages/digital-twin` (steward, provenance, staleness) | `digital-twin.test.ts` (7) |
 | REQ-GRAPH-001 | Assurance knowledge graph | M1 §11 | NOT_STARTED | — | — |
-| REQ-DOMAIN-001 | Domain-aware + capability-based + packs | M1 §12,§13 | NOT_STARTED | — | — |
+| REQ-DOMAIN-001 | Domain-aware + capability-based + packs (generic fallback, multi-domain) | M1 §12,§13 | IMPLEMENTED+TESTED | `packages/domain-model`, `domain-packs/`, `schemas/domain-pack.schema.json` | `domain-model.test.ts` |
 | REQ-QA-API-001 | Strict API contract (AJV) engine | QA §11, M1 §14 | NOT_STARTED | — | — |
 | REQ-QA-WEB-001 | Web automation engine | QA §12 | NOT_STARTED | — | — |
 | REQ-SEC-APPSEC-001 | Application security engine | SEC §12 | NOT_STARTED | — | — |

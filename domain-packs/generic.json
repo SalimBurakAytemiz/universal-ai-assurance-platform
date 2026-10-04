@@ -1,0 +1,13 @@
+{
+  "id": "generic",
+  "name": "Generic",
+  "generic": true,
+  "entities": ["user", "session", "resource", "record"],
+  "workflows": ["authenticate", "authorize", "create", "read", "update", "delete"],
+  "businessInvariants": ["authorized access only", "input is validated", "no data loss on update"],
+  "criticalAssets": ["credentials", "personal data", "session tokens"],
+  "qaPatterns": ["api-contract", "negative-testing", "idempotency", "regression"],
+  "securityPatterns": ["authn", "authz", "input-validation", "secrets-hygiene"],
+  "capabilities": ["auth", "data-store"],
+  "signals": []
+}

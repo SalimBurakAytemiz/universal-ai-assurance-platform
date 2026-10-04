@@ -1,6 +1,6 @@
 {
   "version": "0.9.0",
-  "updatedAt": "2026-10-04T07:00:00.000Z",
+  "updatedAt": "2026-10-04T07:30:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -772,12 +772,19 @@
       "dependencies": [
         "digital-twin"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-DOMAIN-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "schemas/domain-pack.schema.json",
+        "domain-packs/",
+        "packages/domain-model/src/index.ts",
+        "scripts/validate-domain-packs.mjs"
+      ],
+      "tests": [
+        "packages/domain-model/test/domain-model.test.ts"
+      ],
       "commits": [],
       "review": {}
     },

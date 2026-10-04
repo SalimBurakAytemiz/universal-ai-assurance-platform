@@ -18,14 +18,15 @@
     "validate:policies": "node scripts/validate-policies.mjs",
     "validate:buildgraph": "node scripts/validate-build-graph.mjs",
     "validate:state": "node scripts/validate-state.mjs",
-    "validate": "npm run validate:policies && npm run validate:buildgraph && npm run validate:agents && npm run validate:skills && npm run validate:adapters && npm run validate:knowledge && npm run validate:state",
+    "validate": "npm run validate:policies && npm run validate:buildgraph && npm run validate:agents && npm run validate:skills && npm run validate:adapters && npm run validate:domains && npm run validate:knowledge && npm run validate:state",
     "verify": "npm run validate && npm run typecheck && npm run test",
     "desktop:dev": "cd apps/desktop && npm install && npm run dev",
     "desktop:build": "cd apps/desktop && npm install && npm run build",
     "validate:agents": "node scripts/validate-agent-registry.mjs",
     "validate:knowledge": "node scripts/validate-knowledge.mjs",
     "validate:skills": "node scripts/validate-skill-registry.mjs",
-    "validate:adapters": "node scripts/validate-adapters.mjs"
+    "validate:adapters": "node scripts/validate-adapters.mjs",
+    "validate:domains": "node scripts/validate-domain-packs.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
