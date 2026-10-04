@@ -91,7 +91,8 @@ export async function runEvaluation(
   now: string,
   opts: { repeats?: number } = {},
 ): Promise<EvaluationResult> {
-  const repeats = Math.max(1, opts.repeats ?? 3);
+  // At least 2 runs so reproducibility is ALWAYS measured (never left to the fail-open default).
+  const repeats = Math.max(2, opts.repeats ?? 3);
   const outcomes: CaseOutcome[] = [];
   let matched = 0;
   let totalRepeats = 0;
@@ -101,7 +102,12 @@ export async function runEvaluation(
     for (let r = 1; r < repeats; r++) {
       const extra = await runner(c.id);
       totalRepeats++;
-      if (extra.correct === primary.correct && !!extra.falsePositive === !!primary.falsePositive && !!extra.falseNegative === !!primary.falseNegative) matched++;
+      if (
+        extra.correct === primary.correct &&
+        !!extra.falsePositive === !!primary.falsePositive &&
+        !!extra.falseNegative === !!primary.falseNegative &&
+        !!extra.policyCompliant === !!primary.policyCompliant
+      ) matched++;
     }
   }
   return { agentId, version, metrics: aggregateMetrics(outcomes, totalRepeats > 0 ? { matched, repeats: totalRepeats } : undefined), at: now };
@@ -174,6 +180,11 @@ export function decideCertification(
   if (fail.length > 0) return { decision: "FAIL", reasons: fail };
 
   if (baseline) {
+    // A non-finite baseline means non-regression cannot be established -> fail closed.
+    const bvals = [baseline.correctness, baseline.falsePositiveRate, baseline.falseNegativeRate, baseline.evidenceQuality, baseline.reproducibility, baseline.failureRecovery];
+    if (bvals.some((v) => !Number.isFinite(v))) {
+      return { decision: "DO_NOT_PROMOTE", reasons: ["Baseline metrics are non-finite; cannot establish non-regression (fail-closed)."] };
+    }
     const reg: string[] = [];
     const worseHigher = (cur: number, base: number, name: string) => { if (Number.isFinite(base) && cur > base) reg.push(`${name} regressed (${cur} > baseline ${base}).`); };
     const worseLower = (cur: number, base: number, name: string) => { if (Number.isFinite(base) && cur < base) reg.push(`${name} regressed (${cur} < baseline ${base}).`); };

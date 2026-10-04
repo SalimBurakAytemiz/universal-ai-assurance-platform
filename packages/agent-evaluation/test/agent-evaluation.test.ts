@@ -59,8 +59,14 @@ describe("runEvaluation", () => {
   });
 
   it("scores a declared recovery case with no `recovered` as NOT recovered (fail-closed)", async () => {
-    const r = await runEvaluation("a", "1.0.0", [{ id: "x", recovery: true }], async (id) => outcome({ id }), NOW, { repeats: 1 });
+    const r = await runEvaluation("a", "1.0.0", [{ id: "x", recovery: true }], async (id) => outcome({ id }), NOW);
     expect(r.metrics.failureRecovery).toBe(0);
+  });
+
+  it("always measures reproducibility (repeats:1 is clamped to >=2, never fail-open to 1.0)", async () => {
+    let n = 0;
+    const r = await runEvaluation("a", "1.0.0", [{ id: "x" }], async (id) => { n++; return outcome({ id, correct: n === 1 }); }, NOW, { repeats: 1 });
+    expect(r.metrics.reproducibility).toBe(0); // 2nd run differs -> 0/1 match, NOT a fail-open 1.0
   });
 });
 
@@ -89,6 +95,12 @@ describe("decideCertification — SELF-LEARNING != SELF-TRUSTING", () => {
   it("FAILS when any metric is non-finite (NaN cannot slip past a `<`/`>` gate)", () => {
     const m = { ...perfectMetrics(), correctness: NaN } as EvaluationMetrics;
     expect(decideCertification({ agentId: "a", version: "1", metrics: m, at: NOW }, "human").decision).toBe("FAIL");
+  });
+
+  it("DO_NOT_PROMOTE when the baseline is non-finite (cannot establish non-regression)", () => {
+    const badBaseline = { ...perfectMetrics(), correctness: NaN } as EvaluationMetrics;
+    const d = decideCertification(perfectResult(), "human", DEFAULT_THRESHOLDS, badBaseline);
+    expect(d.decision).toBe("DO_NOT_PROMOTE");
   });
 
   it("DO_NOT_PROMOTE on a correctness regression vs baseline", () => {
