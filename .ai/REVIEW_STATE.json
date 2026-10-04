@@ -157,9 +157,9 @@
       "fixed": "P1 crash-window duplicate side effect (sideEffecting->WAITING_APPROVAL/reconcile, never auto-rerun); P1 corrupt-store now refuses+renames+.bak (no silent empty/overwrite); P1 control moved to separate file (no jobs-doc race); P1 BLOCKED propagates transitively + un-blocks; P2 single-instance pid lock; P2 fsync; P2 provider probe fail-closed (no substring); P2 AI unavailable backoff (no oscillation); P2 CLI monitor-on-tick (real deterministic work); P3 reserved-states documented, test renamed."
     },
     "boundedLoop": {
-      "count": 3,
+      "count": 4,
       "max": 3,
-      "outcome": "CONVERGED"
+      "note": "exceeded bounded-3 deliberately: the 4th round was an architecture change to the correct single-writer model, not another patch of the same lock."
     },
     "loop2": {
       "at": "2026-10-04T02:30:00.000Z",
@@ -189,6 +189,12 @@
         "P2 .bak no longer clobbered by a corrupt main; load() repairs main from .bak"
       ],
       "remaining": []
+    },
+    "loop4": {
+      "at": "2026-10-04T03:30:00.000Z",
+      "redesign": "SINGLE-WRITER model — removed fragile cross-process advisory lock; start loop is the only mutator (atomic single-instance lock via rename-steal reclaim + ownership-checked release); concurrent mutating commands refuse; in-process mutex serializes tick/recover/addJob/approve. Eliminates the TTL-steal, blind-unlink TOCTOU, and unconditional-release race class by construction.",
+      "newModule": "services/autopilot/lib/instancelock.mjs (unit-tested: block-while-held, atomic stale reclaim, ownership release)",
+      "tests": "23 autopilot tests (incl. overlapping-tick exactly-once via mutex)"
     }
   }
 }

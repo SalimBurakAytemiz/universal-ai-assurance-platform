@@ -148,7 +148,7 @@ describe("autopilot — the five restart/recovery proofs", () => {
     await svcR.tick();
     expect(commits2).toBe(0); // the possibly-completed effect is never duplicated
     // operator confirms the effect already happened
-    svcR.approve("C2", "done");
+    await svcR.approve("C2", "done");
     expect(svcR.store.get("C2").state).toBe(RuntimeState.DONE);
   });
 
@@ -187,16 +187,14 @@ describe("autopilot — durability + control", () => {
     expect(() => new JobStore(jobsPath)).not.toThrow();
   });
 
-  it("serializes concurrent ticks across processes — a job runs exactly once (no double-exec)", async () => {
-    // two independent services over the SAME durable files (simulating two processes)
+  it("in-process mutex serializes overlapping ticks — a job runs exactly once", async () => {
     let runs = 0;
-    const handlers = { once: async () => { runs++; return 1; } };
-    const svcA = new AutopilotService({ store: new JobStore(jobsPath), providerGate: gate(true), clock: makeClock(), handlers });
-    svcA.addJob({ id: "ONCE", name: "once" });
-    const svcB = new AutopilotService({ store: new JobStore(jobsPath), providerGate: gate(true), clock: makeClock(), handlers });
-    await Promise.all([svcA.tick(), svcB.tick()]); // race
-    expect(runs).toBe(1); // the lock + reload-inside guarantees exactly one execution
-    expect(new JobStore(jobsPath).get("ONCE").state).toBe(RuntimeState.DONE);
+    const svc = new AutopilotService({ store: new JobStore(jobsPath), providerGate: gate(true), clock: makeClock(),
+      handlers: { once: async () => { runs++; } } });
+    svc.addJob({ id: "ONCE", name: "once" });
+    await Promise.all([svc.tick(), svc.tick(), svc.tick()]); // overlapping calls, not awaited individually
+    expect(runs).toBe(1); // the mutex guarantees exactly one execution
+    expect(svc.store.get("ONCE").state).toBe(RuntimeState.DONE);
   });
 
   it("control lives in a separate file so pause does not rewrite the jobs document", async () => {

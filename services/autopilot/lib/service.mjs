@@ -35,21 +35,25 @@ export class AutopilotService {
     this.reconcile = deps.reconcile ?? null;
     this.backoff = deps.backoff ?? {};
     this.log = deps.logger ?? (() => {});
+    this._chain = Promise.resolve(); // in-process mutex (single writer process)
   }
 
   get control() { return this.store.readControl(); }
 
+  /** Serialize async mutators within this process so passes never overlap. */
+  _withMutex(fn) {
+    const run = this._chain.then(() => fn());
+    this._chain = run.then(() => {}, () => {});
+    return run;
+  }
+
   addJob({ id, name, kind = "deterministic", dependsOn = [], maxAttempts = 5, sideEffecting = false }) {
     if (!id || !name) throw new Error("addJob requires id and name.");
-    // Under the cross-process lock: reload, then add only if absent (idempotent by id).
-    return this.store.withLockSync(() => {
-      this.store.load();
-      if (this.store.get(id)) return this.store.get(id);
-      const now = this.clock.now();
-      return this.store.upsert({
-        id, name, kind, dependsOn: [...dependsOn], sideEffecting: !!sideEffecting, state: RuntimeState.READY,
-        attempts: 0, maxAttempts, nextRetryAt: null, error: null, createdAt: now, updatedAt: now,
-      });
+    if (this.store.get(id)) return this.store.get(id); // idempotent by id (single-writer process)
+    const now = this.clock.now();
+    return this.store.upsert({
+      id, name, kind, dependsOn: [...dependsOn], sideEffecting: !!sideEffecting, state: RuntimeState.READY,
+      attempts: 0, maxAttempts, nextRetryAt: null, error: null, createdAt: now, updatedAt: now,
     });
   }
 
@@ -76,8 +80,8 @@ export class AutopilotService {
 
   /** One deterministic scheduling pass, serialized across processes by the store lock. */
   async tick() {
-    return this.store.withLock(async () => {
-      this.store.load(); // fresh state under the lock (picks up external adds/control)
+    return this._withMutex(async () => {
+      this.store.load(); // re-read authoritative state (control + persisted jobs)
       return this._tickInner();
     });
   }
@@ -175,7 +179,7 @@ export class AutopilotService {
    *  - without it: a side-effecting job -> WAITING_APPROVAL (await an operator), a pure job -> READY.
    */
   async recover() {
-    return this.store.withLock(async () => this._recoverInner());
+    return this._withMutex(async () => this._recoverInner());
   }
 
   async _recoverInner() {
@@ -198,11 +202,14 @@ export class AutopilotService {
   }
 
   /** Operator decision for a WAITING_APPROVAL job: mark the (already-performed) effect DONE or (safe to redo) READY. */
-  approve(jobId, outcome /* "done" | "redo" */) {
-    const job = this.store.get(jobId);
-    if (!job || job.state !== RuntimeState.WAITING_APPROVAL) return { ok: false, reason: "Job is not awaiting approval." };
-    this._set(job, outcome === "done" ? RuntimeState.DONE : RuntimeState.READY);
-    return { ok: true };
+  async approve(jobId, outcome /* "done" | "redo" */) {
+    return this._withMutex(async () => {
+      this.store.load();
+      const job = this.store.get(jobId);
+      if (!job || job.state !== RuntimeState.WAITING_APPROVAL) return { ok: false, reason: "Job is not awaiting approval." };
+      this._set(job, outcome === "done" ? RuntimeState.DONE : RuntimeState.READY);
+      return { ok: true };
+    });
   }
 
   counts() { const c = {}; for (const j of this.store.list()) c[j.state] = (c[j.state] ?? 0) + 1; return c; }

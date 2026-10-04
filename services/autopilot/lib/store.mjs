@@ -1,4 +1,4 @@
-// Durable, crash-safe, cross-process-safe job store for the autopilot.
+// Durable, crash-safe job store for the autopilot.
 //
 // Durability:
 //  - writes are atomic (temp file, fsync, rename) with a best-effort directory fsync;
@@ -9,22 +9,18 @@
 //    bad file to `<file>.corrupt`, leaves the corrupt main in place (so the refusal is STICKY across
 //    restarts) and THROWS.
 //
-// Cross-process safety:
-//  - an advisory lock file (`<file>.lock`) serializes read-modify-write across processes, so a
-//    running `start` loop and a separate `recover`/`addJob` process cannot double-execute jobs or
-//    lose updates. Stale locks (dead pid or aged out) are reclaimed atomically via unlink + O_EXCL.
-//
-// Control (pause/resume/stop) lives in a SEPARATE file so a control command never rewrites the jobs
-// document.
+// Concurrency model: a SINGLE writer. Only the running `start` loop mutates the jobs document, and
+// `start` is single-instance (enforced by the atomic instance lock in cli.mjs). Other mutating
+// commands refuse while a live instance holds the lock. Within the writer process an in-process
+// mutex (service.mjs) serializes tick/recover/addJob/approve. This removes the whole multi-writer
+// race class instead of relying on a fragile cross-process advisory lock. Control (pause/resume/
+// stop) lives in a SEPARATE 1-field file and is safe to write from any process (the loop reads it).
 import {
-  closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync,
-  rmSync, statSync, unlinkSync, writeSync,
+  closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
 
 const VERSION = "1";
-const LOCK_STALE_MS = 60_000;
-const LOCK_TIMEOUT_MS = 15_000;
 
 function isParseableFile(file) {
   try { JSON.parse(readFileSync(file, "utf8")); return true; } catch { return false; }
@@ -36,14 +32,9 @@ function atomicWrite(file, data) {
   const tmp = join(dir, `.${process.pid}.${Math.floor(performance.now())}.tmp`);
   const fd = openSync(tmp, "w");
   try { writeSync(fd, data); fsyncSync(fd); } finally { closeSync(fd); }
-  // Only back up a PARSEABLE main — never overwrite a good .bak with a corrupt main.
   try { if (existsSync(file) && isParseableFile(file)) copyFileSync(file, `${file}.bak`); } catch { /* best effort */ }
   renameSync(tmp, file); // atomic on same filesystem
   try { const dfd = openSync(dir, "r"); try { fsyncSync(dfd); } finally { closeSync(dfd); } } catch { /* dir fsync unsupported on some FS */ }
-}
-
-function processAlive(pid) {
-  try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
 }
 
 export class JobStore {
@@ -51,7 +42,6 @@ export class JobStore {
   constructor(filePath) {
     this.filePath = filePath;
     this.controlPath = join(dirname(filePath), "control.json");
-    this.lockPath = join(dirname(filePath), "jobs.lock");
     this.jobs = new Map();
     this.meta = {};
     this.load();
@@ -70,17 +60,13 @@ export class JobStore {
         try { doc = JSON.parse(readFileSync(`${this.filePath}.bak`, "utf8")); recoveredFromBak = true; } catch { doc = null; }
       }
       if (!doc) {
-        // Copy (not rename) to a sidecar and LEAVE the corrupt main in place: refusal is STICKY so a
-        // supervisor restart re-detects corruption instead of finding "no file" and starting empty.
         try { copyFileSync(this.filePath, `${this.filePath}.corrupt`); } catch { /* ignore */ }
         throw new Error(`Autopilot job store is corrupt and no valid backup exists; refusing to start (copy at ${this.filePath}.corrupt). Clear ${this.filePath} to reset.`);
       }
     }
     for (const j of doc.jobs ?? []) if (j && typeof j.id === "string") this.jobs.set(j.id, j);
     this.meta = doc.meta ?? {};
-    // Repair: if we fell back to .bak, rewrite the main from it so main becomes authoritative again
-    // (atomicWrite skips backing up the still-corrupt main, so the good .bak is preserved).
-    if (recoveredFromBak) this.save();
+    if (recoveredFromBak) this.save(); // repair main from .bak so main stays authoritative
   }
 
   save() {
@@ -92,53 +78,10 @@ export class JobStore {
   list() { return [...this.jobs.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); }
   setMeta(key, value) { this.meta[key] = value; this.save(); }
 
-  // --- cross-process advisory lock ---
-  _lockIsStale() {
-    try {
-      const info = JSON.parse(readFileSync(this.lockPath, "utf8"));
-      const age = Date.now() - (info.at || 0);
-      return !info.pid || !processAlive(info.pid) || age > LOCK_STALE_MS;
-    } catch {
-      // unreadable lock + exists: use file age as the staleness signal.
-      try { return Date.now() - statSync(this.lockPath).mtimeMs > LOCK_STALE_MS; } catch { return true; }
-    }
-  }
-  _tryCreateLock() {
-    try { const fd = openSync(this.lockPath, "wx"); writeSync(fd, JSON.stringify({ pid: process.pid, at: Date.now() })); closeSync(fd); return true; }
-    catch { return false; }
-  }
-  _releaseLock() { try { unlinkSync(this.lockPath); } catch { /* ignore */ } }
-
-  async withLock(fn) {
-    const start = performance.now();
-    for (;;) {
-      if (this._tryCreateLock()) break;
-      if (this._lockIsStale()) { try { unlinkSync(this.lockPath); } catch { /* lost the race; retry */ } continue; }
-      if (performance.now() - start > LOCK_TIMEOUT_MS) throw new Error("Could not acquire autopilot store lock (timeout).");
-      await new Promise((r) => setTimeout(r, 25));
-    }
-    try { return await fn(); } finally { this._releaseLock(); }
-  }
-
-  /** Synchronous lock for short critical sections (e.g. addJob). Uses a real sync sleep to back off. */
-  withLockSync(fn) {
-    const start = performance.now();
-    const sab = new Int32Array(new SharedArrayBuffer(4));
-    for (;;) {
-      if (this._tryCreateLock()) break;
-      if (this._lockIsStale()) { try { unlinkSync(this.lockPath); } catch { /* retry */ } continue; }
-      if (performance.now() - start > LOCK_TIMEOUT_MS) throw new Error("Could not acquire autopilot store lock (timeout).");
-      Atomics.wait(sab, 0, 0, 25);
-    }
-    try { return fn(); } finally { this._releaseLock(); }
-  }
-
-  // --- control (separate file; never rewrites the jobs document) ---
   readControl() {
     try { if (existsSync(this.controlPath)) return JSON.parse(readFileSync(this.controlPath, "utf8")).control ?? "run"; } catch { /* fall through */ }
     return "run";
   }
   writeControl(v) { atomicWrite(this.controlPath, JSON.stringify({ control: v }) + "\n"); }
-
   removeBackup() { try { rmSync(`${this.filePath}.bak`, { force: true }); } catch { /* ignore */ } }
 }

@@ -14,6 +14,7 @@ import { JobStore } from "./lib/store.mjs";
 import { ProviderGate, defaultProbe } from "./lib/provider.mjs";
 import { GitCiMonitor } from "./lib/monitor.mjs";
 import { AutopilotService } from "./lib/service.mjs";
+import { acquireInstanceLock, releaseInstanceLock, liveInstanceHeld } from "./lib/instancelock.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const AI_DIR = join(REPO_ROOT, ".ai", "autopilot");
@@ -30,29 +31,6 @@ const exec = (cmd) => {
   }
 };
 
-function processAlive(pid) {
-  try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
-}
-
-/**
- * Acquire an exclusive pidfile. Reclaims a stale lock (dead pid) ATOMICALLY: unlink the stale file,
- * then retry the O_EXCL create — so two racing starts cannot both reclaim (the second's `wx` fails
- * and it re-evaluates against the now-live winner).
- */
-function acquirePidLock() {
-  for (let i = 0; i < 2; i++) {
-    try { const fd = openSync(PID_PATH, "wx"); writeSync(fd, String(process.pid)); closeSync(fd); return true; }
-    catch {
-      let stale = false;
-      try { const existing = parseInt(readFileSync(PID_PATH, "utf8").trim(), 10); stale = !existing || !processAlive(existing); }
-      catch { stale = true; }
-      if (!stale) return false; // a live instance holds it
-      try { unlinkSync(PID_PATH); } catch { /* lost the race; the next wx decides the winner */ }
-    }
-  }
-  return false;
-}
-
 function build() {
   const store = new JobStore(JOBS_PATH);
   const providerGate = new ProviderGate({ probe: () => defaultProbe(PROVIDER_PATH) });
@@ -68,14 +46,14 @@ async function main() {
 
   switch (cmd) {
     case "start": {
-      // Single-instance guard: an exclusive (wx) pidfile create fails if another live loop holds it.
-      if (!acquirePidLock()) {
-        console.error(`[autopilot] another instance appears to be running (see ${PID_PATH}). Refusing to start a second loop.`);
+      // Single-instance guard (atomic acquire + stale reclaim).
+      if (!acquireInstanceLock(PID_PATH)) {
+        console.error(`[autopilot] another live instance holds ${PID_PATH}. Refusing to start a second loop.`);
         process.exitCode = 3;
         break;
       }
       service.resume();
-      const release = () => { try { rmSync(PID_PATH, { force: true }); } catch { /* ignore */ } };
+      const release = () => releaseInstanceLock(PID_PATH);
       process.on("SIGINT", () => { service.stop(); });
       process.on("SIGTERM", () => { service.stop(); });
       console.log(`[autopilot] started pid=${process.pid}; provider=${providerGate.isAvailable()}; jobs=${store.list().length}`);
@@ -94,8 +72,14 @@ async function main() {
     case "pause": service.pause(); console.log("[autopilot] paused"); break;
     case "resume": service.resume(); console.log("[autopilot] resumed"); break;
     case "recover": {
-      const r = await service.recover();
-      console.log(JSON.stringify({ recovered: true, ...r }, null, 2));
+      // Mutating command: refuse to run concurrently with a live start loop (single writer).
+      if (liveInstanceHeld(PID_PATH)) {
+        console.error("[autopilot] a live instance is running; it recovers on its own cycle. Not running a second recover.");
+        process.exitCode = 3; break;
+      }
+      if (!acquireInstanceLock(PID_PATH)) { console.error("[autopilot] could not acquire instance lock for recover."); process.exitCode = 3; break; }
+      try { const r = await service.recover(); console.log(JSON.stringify({ recovered: true, ...r }, null, 2)); }
+      finally { releaseInstanceLock(PID_PATH); }
       break;
     }
     case "status": {
