@@ -175,6 +175,30 @@ describe("autopilot — durability + control", () => {
     expect(() => new JobStore(jobsPath)).toThrow(/corrupt/i);
   });
 
+  it("recovers from .bak and repairs the main file (good backup survives)", () => {
+    const store = new JobStore(jobsPath);
+    store.upsert({ id: "J", name: "t", kind: "deterministic", dependsOn: [], state: RuntimeState.DONE, attempts: 0, maxAttempts: 5, nextRetryAt: null, createdAt: "t", updatedAt: "t" });
+    store.save(); // second save of a parseable main creates jobs.json.bak
+    // now corrupt the main
+    writeFileSync(jobsPath, "{ broken");
+    const reopened = new JobStore(jobsPath); // should recover from .bak and repair main
+    expect(reopened.get("J")).toBeDefined();
+    // main is now parseable again (repaired), so a fresh open does not throw
+    expect(() => new JobStore(jobsPath)).not.toThrow();
+  });
+
+  it("serializes concurrent ticks across processes — a job runs exactly once (no double-exec)", async () => {
+    // two independent services over the SAME durable files (simulating two processes)
+    let runs = 0;
+    const handlers = { once: async () => { runs++; return 1; } };
+    const svcA = new AutopilotService({ store: new JobStore(jobsPath), providerGate: gate(true), clock: makeClock(), handlers });
+    svcA.addJob({ id: "ONCE", name: "once" });
+    const svcB = new AutopilotService({ store: new JobStore(jobsPath), providerGate: gate(true), clock: makeClock(), handlers });
+    await Promise.all([svcA.tick(), svcB.tick()]); // race
+    expect(runs).toBe(1); // the lock + reload-inside guarantees exactly one execution
+    expect(new JobStore(jobsPath).get("ONCE").state).toBe(RuntimeState.DONE);
+  });
+
   it("control lives in a separate file so pause does not rewrite the jobs document", async () => {
     const store = new JobStore(jobsPath);
     const svc = new AutopilotService({ store, providerGate: gate(true), clock: makeClock(), handlers: { t: async () => 1 } });

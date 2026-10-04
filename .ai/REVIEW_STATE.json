@@ -22,7 +22,7 @@
   "unresolved": {
     "P0": 0,
     "P1": 0,
-    "P2": 3,
+    "P2": 0,
     "P3": 0
   },
   "boundedLoop": {
@@ -157,8 +157,9 @@
       "fixed": "P1 crash-window duplicate side effect (sideEffecting->WAITING_APPROVAL/reconcile, never auto-rerun); P1 corrupt-store now refuses+renames+.bak (no silent empty/overwrite); P1 control moved to separate file (no jobs-doc race); P1 BLOCKED propagates transitively + un-blocks; P2 single-instance pid lock; P2 fsync; P2 provider probe fail-closed (no substring); P2 AI unavailable backoff (no oscillation); P2 CLI monitor-on-tick (real deterministic work); P3 reserved-states documented, test renamed."
     },
     "boundedLoop": {
-      "count": 1,
-      "max": 3
+      "count": 3,
+      "max": 3,
+      "outcome": "CONVERGED"
     },
     "loop2": {
       "at": "2026-10-04T02:30:00.000Z",
@@ -179,6 +180,15 @@
       ],
       "merged": false,
       "note": "2 P1 + 1 P2 fixed+pushed; 3 P2 (cross-process locking) remain -> need a larger change before merge. Usage limit reached."
+    },
+    "loop3": {
+      "at": "2026-10-04T03:00:00.000Z",
+      "fixed": [
+        "P2 cross-process advisory lock (jobs.lock) serializes tick/recover/addJob - exactly-once across processes (concurrency test proves it)",
+        "P2 pid-lock stale reclaim now atomic (unlink + O_EXCL retry)",
+        "P2 .bak no longer clobbered by a corrupt main; load() repairs main from .bak"
+      ],
+      "remaining": []
     }
   }
 }

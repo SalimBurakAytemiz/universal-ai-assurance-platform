@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph 55 nodes, 72 agents, 143 skills, 9 adapters, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **193 passed / 193** across 20 files (post-review hardening)
+- vitest: **196 passed / 196** across 20 files (post concurrency hardening)
 
 New this change — autopilot (`services/autopilot/test/`):
 - 5 restart/recovery proofs PASS (survive restart; WAITING_PROVIDER preserved; deterministic

@@ -41,11 +41,15 @@ export class AutopilotService {
 
   addJob({ id, name, kind = "deterministic", dependsOn = [], maxAttempts = 5, sideEffecting = false }) {
     if (!id || !name) throw new Error("addJob requires id and name.");
-    if (this.store.get(id)) return this.store.get(id); // idempotent: never duplicate a job
-    const now = this.clock.now();
-    return this.store.upsert({
-      id, name, kind, dependsOn: [...dependsOn], sideEffecting: !!sideEffecting, state: RuntimeState.READY,
-      attempts: 0, maxAttempts, nextRetryAt: null, error: null, createdAt: now, updatedAt: now,
+    // Under the cross-process lock: reload, then add only if absent (idempotent by id).
+    return this.store.withLockSync(() => {
+      this.store.load();
+      if (this.store.get(id)) return this.store.get(id);
+      const now = this.clock.now();
+      return this.store.upsert({
+        id, name, kind, dependsOn: [...dependsOn], sideEffecting: !!sideEffecting, state: RuntimeState.READY,
+        attempts: 0, maxAttempts, nextRetryAt: null, error: null, createdAt: now, updatedAt: now,
+      });
     });
   }
 
@@ -70,8 +74,15 @@ export class AutopilotService {
   resume() { this.store.writeControl("run"); }
   stop() { this.store.writeControl("stopped"); }
 
-  /** One deterministic scheduling pass. */
+  /** One deterministic scheduling pass, serialized across processes by the store lock. */
   async tick() {
+    return this.store.withLock(async () => {
+      this.store.load(); // fresh state under the lock (picks up external adds/control)
+      return this._tickInner();
+    });
+  }
+
+  async _tickInner() {
     if (this.control !== "run") return { skipped: true, control: this.control };
     const transitions = [];
     for (const job of this.store.list()) {
@@ -164,6 +175,10 @@ export class AutopilotService {
    *  - without it: a side-effecting job -> WAITING_APPROVAL (await an operator), a pure job -> READY.
    */
   async recover() {
+    return this.store.withLock(async () => this._recoverInner());
+  }
+
+  async _recoverInner() {
     this.store.load();
     const resolved = [];
     for (const job of this.store.list()) {
@@ -205,10 +220,9 @@ export class AutopilotService {
   /** Run tick() on an interval until control becomes "stopped" (used by the CLI `start`). */
   async startLoop(intervalMs = 5000, { sleep = (ms) => new Promise((r) => setTimeout(r, ms)), beforeTick } = {}) {
     this.resume();
-    while (this.control !== "stopped") {
-      this.store.load(); // pick up external job changes
+    while (this.store.readControl() !== "stopped") {
       if (beforeTick) { try { await beforeTick(); } catch (e) { this.log(`beforeTick error: ${e}`); } }
-      await this.tick();
+      await this.tick(); // loads fresh state under the cross-process lock
       await sleep(intervalMs);
     }
     return this.status();

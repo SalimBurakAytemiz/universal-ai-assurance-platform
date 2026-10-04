@@ -37,6 +37,8 @@ test-results/
 .ai/autopilot/jobs.json
 .ai/autopilot/jobs.json.bak
 .ai/autopilot/control.json
+.ai/autopilot/jobs.lock
+.ai/autopilot/jobs.json.corrupt
 .ai/autopilot/monitor.json
 .ai/autopilot/provider.json
 .ai/autopilot/*.pid

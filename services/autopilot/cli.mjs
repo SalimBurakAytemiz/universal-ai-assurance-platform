@@ -7,7 +7,7 @@
 //   node services/autopilot/cli.mjs recover    # reload durable state, reset interrupted jobs
 //   node services/autopilot/cli.mjs pause|resume|stop
 import { execSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, openSync, closeSync, writeSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, openSync, closeSync, writeSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { JobStore } from "./lib/store.mjs";
@@ -34,22 +34,23 @@ function processAlive(pid) {
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
 }
 
-/** Acquire an exclusive pidfile. Reclaims a stale lock whose PID is no longer alive. */
+/**
+ * Acquire an exclusive pidfile. Reclaims a stale lock (dead pid) ATOMICALLY: unlink the stale file,
+ * then retry the O_EXCL create — so two racing starts cannot both reclaim (the second's `wx` fails
+ * and it re-evaluates against the now-live winner).
+ */
 function acquirePidLock() {
-  try {
-    const fd = openSync(PID_PATH, "wx"); // fails if exists
-    writeSync(fd, String(process.pid)); closeSync(fd);
-    return true;
-  } catch {
-    try {
-      const existing = parseInt(readFileSync(PID_PATH, "utf8").trim(), 10);
-      if (!existing || !processAlive(existing)) { // stale lock -> reclaim
-        writeFileSync(PID_PATH, String(process.pid));
-        return true;
-      }
-    } catch { /* ignore */ }
-    return false;
+  for (let i = 0; i < 2; i++) {
+    try { const fd = openSync(PID_PATH, "wx"); writeSync(fd, String(process.pid)); closeSync(fd); return true; }
+    catch {
+      let stale = false;
+      try { const existing = parseInt(readFileSync(PID_PATH, "utf8").trim(), 10); stale = !existing || !processAlive(existing); }
+      catch { stale = true; }
+      if (!stale) return false; // a live instance holds it
+      try { unlinkSync(PID_PATH); } catch { /* lost the race; the next wx decides the winner */ }
+    }
   }
+  return false;
 }
 
 function build() {
