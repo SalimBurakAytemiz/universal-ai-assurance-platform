@@ -1,6 +1,6 @@
 {
   "version": "0.9.0",
-  "updatedAt": "2026-10-04T05:00:00.000Z",
+  "updatedAt": "2026-10-04T05:30:00.000Z",
   "model": "dependency-aware-continuous-build-graph",
   "nodes": [
     {
@@ -481,12 +481,16 @@
       "dependencies": [
         "agent-definitions-72"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-EVALUATION-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/agent-evaluation/src/index.ts"
+      ],
+      "tests": [
+        "packages/agent-evaluation/test/agent-evaluation.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -497,12 +501,16 @@
       "dependencies": [
         "agent-evaluation"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-EVALUATION-002"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/agent-evaluation/src/index.ts"
+      ],
+      "tests": [
+        "packages/agent-evaluation/test/agent-evaluation.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
@@ -652,7 +660,7 @@
         "knowledge-lifecycle",
         "agent-evaluation"
       ],
-      "status": "NOT_STARTED",
+      "status": "READY",
       "requirements": [
         "REQ-LEARNING-001"
       ],

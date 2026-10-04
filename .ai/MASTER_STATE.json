@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "updatedAt": "2026-10-04T05:00:00.000Z",
+  "updatedAt": "2026-10-04T05:30:00.000Z",
   "product": "Universal AI Assurance Platform",
   "model": "ONE_PRODUCT_ONE_REPOSITORY_ONE_DESKTOP",
   "executionModel": "DEPENDENCY_AWARE_CONTINUOUS_BUILD_GRAPH",
@@ -38,7 +38,7 @@
     "implementedDefinitions": 72,
     "certified": 0
   },
-  "currentFocus": "Merged session-independent autopilot (PR #6). Next READY: domain-capability-model; agent-evaluation; knowledge-graph; evidence/verification wiring; desktop views.",
+  "currentFocus": "Agent evaluation + certification (certify-before-active, no self-cert, regression blocks promotion). Next READY: domain-capability-model; knowledge-graph; sandbox-learning.",
   "humanActionRequired": [
     {
       "id": "HAR-LICENSE",

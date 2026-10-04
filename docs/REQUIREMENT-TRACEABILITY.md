@@ -37,7 +37,8 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-TOOL-ADAPTER-001 | Tool adapter registry | M2 §36 | IMPLEMENTED+TESTED | `packages/tool-adapter-registry`, `adapters/registry/adapters.json` | `adapters.test.ts` (5) |
 | REQ-AGENT-EVENTS-001 | Structured agent events (schema) | M2 §9 | IMPLEMENTED+TESTED | `packages/agent-events`, `schemas/agent-event.schema.json` | `agent-events.test.ts` (7) |
 | REQ-AGENT-ACTIVATION-001 | Assurance planner selects team | M2 §8 | NOT_STARTED | — | — |
-| REQ-EVALUATION-001/002 | Agent evaluation + certification | M2 §32,§33 | NOT_STARTED | — | — |
+| REQ-EVALUATION-001 | Agent evaluation (benchmark metrics) | M2 §32 | IMPLEMENTED+TESTED | `packages/agent-evaluation` | `agent-evaluation.test.ts` |
+| REQ-EVALUATION-002 | Agent certification (certify-before-active, no self-cert, regression gate) | M2 §33 | IMPLEMENTED+TESTED | `packages/agent-evaluation` | `agent-evaluation.test.ts` |
 | REQ-KNOWLEDGE-PROV-001 | Knowledge provenance schema | M2 §23 | IMPLEMENTED | `schemas/knowledge-item.schema.json` | `validate-knowledge.mjs` |
 | REQ-KNOWLEDGE-LIFECYCLE-001 | Candidate→certified lifecycle (external never directly ACTIVE) | M2 §24 | IMPLEMENTED+TESTED | `packages/knowledge` | `knowledge.test.ts` |
 | REQ-KNOWLEDGE-DECAY-001 | Freshness/decay + revalidation | M2 §25 | IMPLEMENTED+TESTED | `packages/knowledge` (markStale/needsRevalidation) | `knowledge.test.ts` |
