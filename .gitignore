@@ -42,4 +42,6 @@ test-results/
 .ai/autopilot/monitor.json
 .ai/autopilot/provider.json
 .ai/autopilot/*.pid
-.ai/autopilot/.jobs.*.tmp
+.ai/autopilot/*.tmp
+.ai/autopilot/*.acq.*
+.ai/autopilot/*.steal.*

@@ -1,46 +1,35 @@
 // Atomic single-instance lock for the autopilot writer process.
 //
-// Acquisition is atomic create-WITH-CONTENT: the pid is written to a temp file first, then the lock
-// is published with linkSync() (atomic, fails EEXIST if present). The visible lock is therefore
-// NEVER empty — so a racer can always read a real pid and do a liveness check, closing the
-// "create-then-write" window where an empty lock could be mistaken for stale and stolen.
-//
-// A stale lock (dead holder) is reclaimed by ATOMICALLY renaming it away: only one racer's rename
-// of a given source can succeed, so two processes can never both win the reclaim. An unparseable
-// lock is treated as a LIVE mid-operation holder unless it is older than a grace window (then it is
-// a genuine abandoned/corrupt lock and is reclaimed). Release is ownership-checked.
-import { linkSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
-
-const STALE_UNPARSEABLE_MS = 5000;
+// Correctness by construction: the ONLY path to acquiring the lock is an atomic create-with-content
+// (write pid to a temp file, then publish with linkSync(), which fails EEXIST if the lock exists).
+// `acquire` NEVER deletes or renames an existing lock, so two processes can never both hold it and a
+// live holder's lock is never removed out from under it — eliminating the stale-reclaim TOCTOU class
+// entirely. A stale lock left by a HARD crash therefore causes a SAFE refusal (fail-closed), not a
+// double-win; it is cleared by an explicit operator action (`clearStaleLock`, exposed as the CLI
+// `clear` command) which only removes a lock whose holder is provably dead. Release is
+// ownership-checked. This favors "refuse to start" over "risk duplicate commit/PR/merge".
+import { closeSync, linkSync, openSync, readFileSync, rmSync, writeFileSync, writeSync } from "node:fs";
 
 export function processAlive(pid) {
   try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; }
 }
 
-/** @returns {boolean} true if this process now holds the lock. */
+/** @returns {boolean} true if this process now holds the lock. Only ever succeeds via atomic create. */
 export function acquireInstanceLock(lockPath) {
-  for (let i = 0; i < 5; i++) {
-    const tmp = `${lockPath}.acq.${process.pid}.${Date.now()}.${i}`;
-    try { writeFileSync(tmp, JSON.stringify({ pid: process.pid, at: Date.now() })); } catch { return false; }
-    try { linkSync(tmp, lockPath); rmSync(tmp, { force: true }); return true; } // atomic publish-with-content
-    catch { try { rmSync(tmp, { force: true }); } catch { /* ignore */ } }
-
-    // lockPath already exists — decide whether its holder is stale.
-    let stale = false;
-    try {
-      const info = JSON.parse(readFileSync(lockPath, "utf8"));
-      stale = !info.pid || !processAlive(info.pid);
-    } catch {
-      // Unparseable: a holder mid-operation is LIVE; only an AGED unparseable lock is abandoned.
-      try { stale = Date.now() - statSync(lockPath).mtimeMs > STALE_UNPARSEABLE_MS; } catch { stale = false; }
-    }
-    if (!stale) return false; // a live holder (including the create-with-content window) holds it
-
-    // Atomic steal: rename the stale file away. Only ONE racer's rename of this source can succeed.
-    const steal = `${lockPath}.steal.${process.pid}.${Date.now()}`;
-    try { renameSync(lockPath, steal); rmSync(steal, { force: true }); } catch { /* lost the steal; retry */ }
+  const payload = JSON.stringify({ pid: process.pid, at: Date.now() });
+  const tmp = `${lockPath}.acq.${process.pid}.${Date.now()}`;
+  try { writeFileSync(tmp, payload); } catch { return false; }
+  try {
+    linkSync(tmp, lockPath); // atomic publish-with-content; EEXIST if a lock is present
+    return true;
+  } catch (e) {
+    if (e && e.code === "EEXIST") return false; // held (live or stale) -> refuse; never steal
+    // Filesystem without hardlink support: fall back to atomic O_EXCL create (still never steals).
+    try { const fd = openSync(lockPath, "wx"); writeSync(fd, payload); closeSync(fd); return true; }
+    catch { return false; }
+  } finally {
+    try { rmSync(tmp, { force: true }); } catch { /* ignore */ }
   }
-  return false;
 }
 
 /** Release only if THIS process owns the lock (never delete someone else's live lock). */
@@ -49,8 +38,20 @@ export function releaseInstanceLock(lockPath) {
   catch { /* not ours / already gone */ }
 }
 
-/** Is a live instance currently holding the lock? (for other commands to refuse concurrent mutation) */
+/** Is a live instance currently holding the lock? */
 export function liveInstanceHeld(lockPath) {
   try { const info = JSON.parse(readFileSync(lockPath, "utf8")); return !!info.pid && processAlive(info.pid); }
   catch { return false; }
+}
+
+/**
+ * Explicit, operator-invoked cleanup of a lock left by a hard crash. Removes the lock ONLY if its
+ * holder is provably dead (or it is unparseable — a torn lock from a crash). Returns whether it was
+ * cleared. This is NOT called from the concurrent `start` path; run it when no instance is running.
+ */
+export function clearStaleLock(lockPath) {
+  let held;
+  try { held = JSON.parse(readFileSync(lockPath, "utf8")); } catch { held = null; }
+  if (held && held.pid && processAlive(held.pid)) return false; // a live instance holds it — keep it
+  try { rmSync(lockPath, { force: true }); return true; } catch { return false; }
 }

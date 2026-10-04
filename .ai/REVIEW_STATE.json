@@ -208,6 +208,16 @@
         "P3 store comment + unused cli imports"
       ],
       "test": "instancelock fresh-empty-not-stolen/aged-reclaimed; 24 autopilot tests"
-    }
+    },
+    "loop6": {
+      "at": "2026-10-04T04:30:00.000Z",
+      "found": {
+        "P1": 1,
+        "P3": 4
+      },
+      "resolution": "Removed automatic stale-reclaim entirely (its TOCTOU could double-win / delete a live lock). acquire is now ONLY an atomic linkSync create-with-content (openSync-wx fallback for no-hardlink FS); it never deletes an existing lock, so at most one holder EVER (no double-win by construction); a stale post-crash lock causes a SAFE refusal cleared by an explicit \u001b[H\u001b[2J\u001b[3J command. P3: bare start now self-recovers; branch sanitized; gitignore reconciled; hardlink fallback added. (AI-executor-in-headless-process is by design + documented.)",
+      "boundedLoopNote": "resolved the concurrency class by eliminating the racy mechanism rather than patching it further."
+    },
+    "outcome": "CONCURRENCY_CLASS_ELIMINATED"
   }
 }

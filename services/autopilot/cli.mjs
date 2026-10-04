@@ -14,7 +14,7 @@ import { JobStore } from "./lib/store.mjs";
 import { ProviderGate, defaultProbe } from "./lib/provider.mjs";
 import { GitCiMonitor } from "./lib/monitor.mjs";
 import { AutopilotService } from "./lib/service.mjs";
-import { acquireInstanceLock, releaseInstanceLock, liveInstanceHeld } from "./lib/instancelock.mjs";
+import { acquireInstanceLock, releaseInstanceLock, liveInstanceHeld, clearStaleLock } from "./lib/instancelock.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const AI_DIR = join(REPO_ROOT, ".ai", "autopilot");
@@ -48,10 +48,14 @@ async function main() {
     case "start": {
       // Single-instance guard (atomic acquire + stale reclaim).
       if (!acquireInstanceLock(PID_PATH)) {
-        console.error(`[autopilot] another live instance holds ${PID_PATH}. Refusing to start a second loop.`);
+        const msg = liveInstanceHeld(PID_PATH)
+          ? "another live instance is running"
+          : "a stale lock remains after a hard crash — run `node services/autopilot/cli.mjs clear` if no instance is running";
+        console.error(`[autopilot] cannot start: ${msg} (${PID_PATH}).`);
         process.exitCode = 3;
         break;
       }
+      await service.recover(); // resume interrupted jobs before looping (bare `start` self-recovers)
       service.resume();
       const release = () => releaseInstanceLock(PID_PATH);
       process.on("SIGINT", () => { service.stop(); });
@@ -66,6 +70,12 @@ async function main() {
       await service.startLoop(5000, { beforeTick });
       release();
       console.log("[autopilot] stopped");
+      break;
+    }
+    case "clear": {
+      if (liveInstanceHeld(PID_PATH)) { console.error("[autopilot] a live instance is running; not clearing its lock."); process.exitCode = 3; break; }
+      const cleared = clearStaleLock(PID_PATH);
+      console.log(cleared ? "[autopilot] stale lock cleared." : "[autopilot] no stale lock to clear.");
       break;
     }
     case "stop": service.stop(); console.log("[autopilot] stop requested (running loop will exit)"); break;
@@ -92,7 +102,7 @@ async function main() {
       break;
     }
     default:
-      console.error(`Unknown command "${cmd}". Use: start|stop|pause|resume|status|recover`);
+      console.error(`Unknown command "${cmd}". Use: start|stop|pause|resume|status|recover|clear`);
       process.exitCode = 2;
   }
 }
