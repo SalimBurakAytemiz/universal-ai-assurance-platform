@@ -57,4 +57,25 @@ describe("DomainRegistry — resolution", () => {
     const r = registry.resolve(["STRIPE PAYMENT"]);
     expect(r.domains.map((d) => d.id)).toContain("fintech");
   });
+
+  it("uses WHOLE-WORD matching — common words that merely CONTAIN a signal do NOT match", () => {
+    for (const noise of [
+      "border-radius css styling",       // "order" ⊂ border  -> must NOT match ecommerce
+      "production environment deploy",    // "product" ⊂ production
+      "load balancer healthcheck",        // "balance" ⊂ balancer
+      "wildcard dns certificate",         // "card" ⊂ wildcard
+      "discard local changes",            // "card" ⊂ discard
+      "concurrency control",              // "currency" ⊂ concurrency
+      "workshop booking",                 // "shop" ⊂ workshop
+    ]) {
+      expect(registry.resolve([noise]).domains.map((d) => d.id), noise).toEqual(["generic"]);
+    }
+  });
+
+  it("a retail inventory system matches ecommerce only (not gaming) — signals are disambiguated", () => {
+    const r = registry.resolve(["warehouse inventory management for retail stock"]);
+    const ids = r.domains.map((d) => d.id);
+    expect(ids).toContain("ecommerce");
+    expect(ids).not.toContain("gaming");
+  });
 });

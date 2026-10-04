@@ -254,5 +254,23 @@
         "outcome": "CONVERGED"
       }
     }
+  },
+  "pr8": {
+    "loop1": {
+      "at": "2026-10-04T08:00:00.000Z",
+      "reported": 10,
+      "confirmed": "P1 substring false-positive matching + P2/P3",
+      "fixed": [
+        "P1 whole-word tokenized signal matching (border!=order, production!=product, balancer!=balance, concurrency!=currency, workshop!=shop)",
+        "P2 disambiguated shared inventory signal (gaming->matchmaking/gameplay/loot/...)",
+        "P3 empty-signal guarded (schema minLength + tokenize filter)",
+        "validator now FAILS on signals shared across non-generic packs",
+        "negative tests for the substring false-positives + retail-inventory->ecommerce-only"
+      ],
+      "boundedLoop": {
+        "count": 1,
+        "max": 3
+      }
+    }
   }
 }

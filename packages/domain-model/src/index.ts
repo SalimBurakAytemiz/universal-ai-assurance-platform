@@ -7,6 +7,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findRepoRoot } from "@uaap/core";
 
+/** Split free-form text into lowercased alphanumeric word tokens for whole-word signal matching. */
+function tokenize(s: string): string[] {
+  return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+}
+
 export interface DomainPack {
   readonly id: string;
   readonly name: string;
@@ -74,9 +79,16 @@ export class DomainRegistry {
    * of capabilities, invariants and patterns. An unknown project matches only generic — never a crash.
    */
   resolve(signals: readonly string[]): DomainResolution {
-    const hay = signals.map((s) => String(s).toLowerCase());
+    // Whole-WORD (tokenized) matching, NOT raw substring — so "border" never matches "order",
+    // "production" never matches "product", "balancer" never matches "balance", etc. A multi-word
+    // signal matches only if every one of its words is present as an input token. Empty/whitespace
+    // signals tokenize to nothing and never match (closes the ''.includes('') footgun).
+    const inputTokens = new Set(signals.flatMap(tokenize));
     const matchedSectors = this.list().filter(
-      (p) => !p.generic && (p.signals ?? []).some((sig) => hay.some((h) => h.includes(sig.toLowerCase()))),
+      (p) => !p.generic && (p.signals ?? []).some((sig) => {
+        const words = tokenize(sig);
+        return words.length > 0 && words.every((w) => inputTokens.has(w));
+      }),
     );
     const generic = this.generic();
     const domains = generic ? [...matchedSectors, generic] : matchedSectors;

@@ -16,4 +16,15 @@ for (const f of readdirSync(dir)) {
   count++;
 }
 if (!hasGeneric) throw new Error("domain-packs: a generic fallback pack is required");
+// Fail on a signal shared by more than one non-generic pack (forces disambiguation).
+const sigOwners = {};
+for (const f of readdirSync(dir)) {
+  if (!f.endsWith(".json")) continue;
+  const p = readJson(join("domain-packs", f));
+  if (p.generic) continue;
+  for (const sig of p.signals ?? []) (sigOwners[sig] ??= []).push(p.id);
+}
+const collisions = Object.entries(sigOwners).filter(([, owners]) => owners.length > 1);
+if (collisions.length) throw new Error(`domain-packs: signals shared across packs (ambiguous): ${collisions.map(([s, o]) => `${s}=>${o.join("/")}`).join(", ")}`);
+
 console.log(`OK: ${count} domain pack(s) valid (generic fallback present)`);
