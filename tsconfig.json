@@ -22,7 +22,8 @@
       "@uaap/remediation-engine": ["packages/remediation-engine/src/index.ts"],
       "@uaap/knowledge": ["packages/knowledge/src/index.ts"],
       "@uaap/agent-evaluation": ["packages/agent-evaluation/src/index.ts"],
-      "@uaap/domain-model": ["packages/domain-model/src/index.ts"]
+      "@uaap/domain-model": ["packages/domain-model/src/index.ts"],
+      "@uaap/assurance-planner": ["packages/assurance-planner/src/index.ts"]
     }
   },
   "include": [
