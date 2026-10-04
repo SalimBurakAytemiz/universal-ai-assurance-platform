@@ -22,7 +22,7 @@ for (const f of readdirSync(dir)) {
   if (!f.endsWith(".json")) continue;
   const p = readJson(join("domain-packs", f));
   if (p.generic) continue;
-  for (const sig of p.signals ?? []) (sigOwners[sig] ??= []).push(p.id);
+  for (const sig of new Set(p.signals ?? [])) (sigOwners[sig] ??= []).push(p.id);
 }
 const collisions = Object.entries(sigOwners).filter(([, owners]) => owners.length > 1);
 if (collisions.length) throw new Error(`domain-packs: signals shared across packs (ambiguous): ${collisions.map(([s, o]) => `${s}=>${o.join("/")}`).join(", ")}`);

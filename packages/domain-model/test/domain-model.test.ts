@@ -24,8 +24,8 @@ describe("DomainRegistry — resolution", () => {
     expect(r.businessInvariants.some((i) => /ledger balances/i.test(i))).toBe(true);
   });
 
-  it("supports MULTI-domain projects (gaming + marketplace + payment + realtime)", () => {
-    const r = registry.resolve(["player inventory", "websocket realtime", "checkout cart", "stripe payment"]);
+  it("supports MULTI-domain projects (gaming + marketplace + payment)", () => {
+    const r = registry.resolve(["loot matchmaking leaderboard", "shopping cart with sku inventory", "stripe payment ledger"]);
     const ids = r.domains.map((d) => d.id);
     expect(ids).toContain("gaming");
     expect(ids).toContain("ecommerce");
@@ -58,15 +58,26 @@ describe("DomainRegistry — resolution", () => {
     expect(r.domains.map((d) => d.id)).toContain("fintech");
   });
 
-  it("uses WHOLE-WORD matching — common words that merely CONTAIN a signal do NOT match", () => {
+  it("does not match on substrings OR on bare common words / generic infra terms", () => {
     for (const noise of [
-      "border-radius css styling",       // "order" ⊂ border  -> must NOT match ecommerce
-      "production environment deploy",    // "product" ⊂ production
-      "load balancer healthcheck",        // "balance" ⊂ balancer
-      "wildcard dns certificate",         // "card" ⊂ wildcard
-      "discard local changes",            // "card" ⊂ discard
-      "concurrency control",              // "currency" ⊂ concurrency
-      "workshop booking",                 // "shop" ⊂ workshop
+      // substring false-positives (killed by whole-word matching)
+      "border-radius css styling",
+      "production environment deploy",
+      "load balancer healthcheck",
+      "wildcard dns certificate",
+      "concurrency control",
+      "workshop booking",
+      // bare common-word false-positives (killed by specific multi-word signals)
+      "card component react dashboard", // UI "card" is not "credit card"
+      "graphics card driver update",
+      "performance trade-off analysis", // "trade" is no longer a gaming signal
+      "sort results in ascending order", // "order" is not "purchase order"
+      "dot product of two vectors", // "product" is not "product catalog"
+      "binary tree balance rotation", // "balance" is not "account balance"
+      "git checkout branch", // "checkout" is not an ecommerce signal
+      // generic infra terms are NOT gaming-exclusive anymore
+      "realtime websocket chat service",
+      "live trading dashboard websocket realtime feed",
     ]) {
       expect(registry.resolve([noise]).domains.map((d) => d.id), noise).toEqual(["generic"]);
     }

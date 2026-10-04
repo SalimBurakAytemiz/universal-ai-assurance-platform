@@ -271,6 +271,34 @@
         "count": 1,
         "max": 3
       }
+    },
+    "loop2": {
+      "at": "2026-10-04T08:30:00.000Z",
+      "found": {
+        "P2": 2,
+        "P3": 1
+      },
+      "fixed": [
+        "P2 bare common-word signals (card/balance/order/product/trade) -> specific multi-word/domain signals (credit card, account balance, purchase order, product catalog, shopping cart); matcher requires all words present",
+        "P2 removed generic infra terms realtime/websocket from gaming (now relies on matchmaking/gameplay/leaderboard/loot/anti-cheat/battle pass)",
+        "P3 validator dedupes within-pack signals before cross-pack collision check"
+      ],
+      "boundedLoop": {
+        "count": 2,
+        "max": 3,
+        "outcome": "CONVERGED"
+      },
+      "negativeTestsAdded": [
+        "card component",
+        "graphics card",
+        "trade-off",
+        "sort order",
+        "dot product",
+        "balance rotation",
+        "git checkout",
+        "realtime websocket",
+        "live trading websocket"
+      ]
     }
   }
 }

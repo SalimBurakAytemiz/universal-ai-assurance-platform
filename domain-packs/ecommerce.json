@@ -1,12 +1,61 @@
 {
   "id": "ecommerce",
   "name": "E-commerce / Marketplace",
-  "entities": ["product", "price", "discount", "stock", "cart", "order", "shipment", "refund"],
-  "workflows": ["browse", "add-to-cart", "checkout", "pay", "fulfil", "refund"],
-  "businessInvariants": ["stock never negative", "cart total = sum(items) - discounts", "order paid before fulfilment", "discount within allowed bounds"],
-  "criticalAssets": ["inventory", "pricing", "customer PII", "payment data"],
-  "qaPatterns": ["data-reconciliation", "concurrency", "visual-regression", "api-contract"],
-  "securityPatterns": ["authz", "business-logic-security", "price-tampering-checks"],
-  "capabilities": ["cart", "catalog", "payment", "inventory", "auth", "data-store"],
-  "signals": ["cart", "checkout", "product", "order", "sku", "inventory", "shop"]
+  "entities": [
+    "product",
+    "price",
+    "discount",
+    "stock",
+    "cart",
+    "order",
+    "shipment",
+    "refund"
+  ],
+  "workflows": [
+    "browse",
+    "add-to-cart",
+    "checkout",
+    "pay",
+    "fulfil",
+    "refund"
+  ],
+  "businessInvariants": [
+    "stock never negative",
+    "cart total = sum(items) - discounts",
+    "order paid before fulfilment",
+    "discount within allowed bounds"
+  ],
+  "criticalAssets": [
+    "inventory",
+    "pricing",
+    "customer PII",
+    "payment data"
+  ],
+  "qaPatterns": [
+    "data-reconciliation",
+    "concurrency",
+    "visual-regression",
+    "api-contract"
+  ],
+  "securityPatterns": [
+    "authz",
+    "business-logic-security",
+    "price-tampering-checks"
+  ],
+  "capabilities": [
+    "cart",
+    "catalog",
+    "payment",
+    "inventory",
+    "auth",
+    "data-store"
+  ],
+  "signals": [
+    "sku",
+    "inventory",
+    "stock",
+    "shopping cart",
+    "product catalog",
+    "purchase order"
+  ]
 }

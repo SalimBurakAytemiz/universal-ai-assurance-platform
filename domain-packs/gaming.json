@@ -53,8 +53,7 @@
     "gameplay",
     "leaderboard",
     "loot",
-    "realtime",
-    "websocket",
-    "trade"
+    "anti-cheat",
+    "battle pass"
   ]
 }
