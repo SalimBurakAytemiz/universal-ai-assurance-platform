@@ -1,0 +1,59 @@
+{
+  "id": "gaming",
+  "name": "Gaming",
+  "entities": [
+    "player",
+    "inventory",
+    "currency",
+    "reward",
+    "purchase",
+    "trade",
+    "progression",
+    "session"
+  ],
+  "workflows": [
+    "login",
+    "purchase",
+    "trade",
+    "reward",
+    "progress"
+  ],
+  "businessInvariants": [
+    "currency never duplicated (no dupe exploit)",
+    "inventory ownership is exclusive",
+    "trade is atomic (both sides or neither)",
+    "progression is monotonic"
+  ],
+  "criticalAssets": [
+    "virtual currency",
+    "inventory",
+    "player accounts"
+  ],
+  "qaPatterns": [
+    "state-machine",
+    "concurrency",
+    "race-conditions",
+    "idempotency",
+    "property-based"
+  ],
+  "securityPatterns": [
+    "anti-cheat",
+    "business-logic-security",
+    "session-security"
+  ],
+  "capabilities": [
+    "inventory",
+    "currency",
+    "realtime",
+    "payment",
+    "auth"
+  ],
+  "signals": [
+    "matchmaking",
+    "gameplay",
+    "leaderboard",
+    "loot",
+    "anti-cheat",
+    "battle pass"
+  ]
+}

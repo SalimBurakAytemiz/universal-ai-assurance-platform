@@ -23,6 +23,7 @@ export default defineConfig({
       "@uaap/remediation-engine": r("./packages/remediation-engine/src/index.ts"),
       "@uaap/knowledge": r("./packages/knowledge/src/index.ts"),
       "@uaap/agent-evaluation": r("./packages/agent-evaluation/src/index.ts"),
+      "@uaap/domain-model": r("./packages/domain-model/src/index.ts"),
     },
   },
   test: {
