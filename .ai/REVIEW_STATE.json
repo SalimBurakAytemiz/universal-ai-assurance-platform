@@ -25,12 +25,21 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the fix commit pending before merge (session usage limit reached)"
+    "at": "2026-10-05T10:40:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "fix commit 7cb0eb0 (PR #10)",
+    "agents": 11,
+    "reported": 4,
+    "confirmed": 2,
+    "distinctDefectsFixed": [
+      "P1 residual: graphFromDocument duplicate-id guard caught only identical document ids, not two distinct doc ids resolving to the same (type,key) identity — addNode's idempotent last-wins merge could silently overwrite a CONFIRMED finding with a CLOSED one (order-dependent fake ASSURED). Now rejects identity collisions (fail-closed).",
+      "P3: releaseAssurance ignored FAILING evidence — a requirement with coexisting PASS+FAIL evidence was ASSURED. Now any failing evidence on a validating test forces GAP (neutral LOG evidence does not)."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

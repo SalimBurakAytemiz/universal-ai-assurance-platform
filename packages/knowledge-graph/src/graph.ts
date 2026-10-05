@@ -53,6 +53,7 @@ export interface ReleaseAssuranceReport {
     readonly key: string;
     readonly validated: boolean;
     readonly passingEvidence: boolean;
+    readonly failingEvidence: boolean;
     readonly status: "ASSURED" | "GAP";
   }[];
   readonly untraceableShipped: readonly { readonly id: string; readonly type: NodeType; readonly key: string }[];
@@ -71,6 +72,13 @@ function isPassingEvidence(node: GraphNode): boolean {
   const a = node.attrs ?? {};
   const outcome = String((a as Record<string, unknown>).outcome ?? (a as Record<string, unknown>).verdict ?? "").toUpperCase();
   return outcome === "PASS" || outcome === "PASSED" || (a as Record<string, unknown>).passed === true;
+}
+
+/** Explicitly-failing evidence (a FAIL/ERROR verdict). Neutral evidence (e.g. a LOG) is neither. */
+function isFailingEvidence(node: GraphNode): boolean {
+  const a = node.attrs ?? {};
+  const outcome = String((a as Record<string, unknown>).outcome ?? (a as Record<string, unknown>).verdict ?? "").toUpperCase();
+  return outcome === "FAIL" || outcome === "FAILED" || outcome === "ERROR" || (a as Record<string, unknown>).passed === false;
 }
 
 export class KnowledgeGraph {
@@ -379,21 +387,22 @@ export class KnowledgeGraph {
       .map((req) => {
         const validatingTests = (this.in.get(req.id) ?? []).filter((e) => e.type === EdgeType.VALIDATES).map((e) => e.from);
         const validated = validatingTests.length > 0;
+        // Scan ALL evidence (no short-circuit): a requirement is only ASSURED if it has passing
+        // evidence AND no FAILING evidence. A coexisting FAIL result forces a GAP — a failing
+        // validation on a shipped requirement must never be reported assured just because a PASS
+        // also exists (fail-closed).
         let passingEvidence = false;
+        let failingEvidence = false;
         for (const testId of validatingTests) {
           for (const e of this.out.get(testId) ?? []) {
-            if (e.type === EdgeType.PRODUCES) {
-              const ev = this.nodes.get(e.to)!;
-              if (isPassingEvidence(ev)) {
-                passingEvidence = true;
-                break;
-              }
-            }
+            if (e.type !== EdgeType.PRODUCES) continue;
+            const ev = this.nodes.get(e.to)!;
+            if (isPassingEvidence(ev)) passingEvidence = true;
+            if (isFailingEvidence(ev)) failingEvidence = true;
           }
-          if (passingEvidence) break;
         }
-        const status: "ASSURED" | "GAP" = validated && passingEvidence ? "ASSURED" : "GAP";
-        return { id: req.id, key: req.key, validated, passingEvidence, status };
+        const status: "ASSURED" | "GAP" = validated && passingEvidence && !failingEvidence ? "ASSURED" : "GAP";
+        return { id: req.id, key: req.key, validated, passingEvidence, failingEvidence, status };
       });
 
     // Blocking findings: open findings affecting the shipped surface. The surface is the shipped

@@ -30,10 +30,23 @@ export function graphFromDocument(doc: unknown, startDir = dirname(fileURLToPath
   const d = doc as GraphDocument;
   const g = new KnowledgeGraph();
   const idByOriginal = new Map<string, string>();
+  const docIdByEngineId = new Map<string, string>();
   for (const n of d.nodes) {
-    // Fail-closed on ambiguity: a document that declares the same node id twice is rejected, never
-    // last-wins resolved (which would silently rebind edges to the wrong node and corrupt queries).
+    // Fail-closed on ambiguity, TWO ways:
+    //  (1) the same document id declared twice; and
+    //  (2) two DIFFERENT document ids that resolve to the SAME content-addressed identity
+    //      (identical type+key). Without (2), addNode's idempotent last-wins attr-merge would
+    //      silently collapse the two into one node — e.g. a CONFIRMED finding overwritten by a
+    //      later CLOSED one — producing an order-dependent, fake-ASSURED verdict from loaded input.
     if (idByOriginal.has(n.id)) throw new Error(`knowledge-graph: duplicate node id "${n.id}" in document`);
+    const engineId = KnowledgeGraph.nodeId(n.type, n.key);
+    const priorDocId = docIdByEngineId.get(engineId);
+    if (priorDocId !== undefined) {
+      throw new Error(
+        `knowledge-graph: ambiguous node identity (type=${n.type}, key="${n.key}") declared under multiple document ids "${priorDocId}" and "${n.id}"`,
+      );
+    }
+    docIdByEngineId.set(engineId, n.id);
     const newNodeId = g.addNode({
       type: n.type,
       key: n.key,

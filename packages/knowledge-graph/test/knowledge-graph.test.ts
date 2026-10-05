@@ -398,3 +398,53 @@ describe("KnowledgeGraph — serialization & schema-validated load", () => {
     }
   });
 });
+
+describe("KnowledgeGraph — re-review regressions (PR #10 fix commit)", () => {
+  it("P1: graphFromDocument rejects two distinct doc ids with the SAME (type,key) identity, order-independently", () => {
+    const open = { id: "fd_open", type: "FINDING", key: "fd", attrs: { status: "CONFIRMED", severity: "P1" } };
+    const closed = { id: "fd_closed", type: "FINDING", key: "fd", attrs: { status: "CLOSED" } };
+    expect(() => graphFromDocument({ nodes: [open, closed], edges: [] })).toThrow(/ambiguous node identity/);
+    expect(() => graphFromDocument({ nodes: [closed, open], edges: [] })).toThrow(/ambiguous node identity/); // same verdict regardless of order
+  });
+
+  it("P3: a requirement with coexisting PASS and FAIL evidence is a GAP (failing evidence is never ignored)", () => {
+    const g = new KnowledgeGraph();
+    const rel = g.addNode({ type: NodeType.RELEASE, key: "r" });
+    const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+    const code = g.addNode({ type: NodeType.CODE, key: "c" });
+    const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+    const test = g.addNode({ type: NodeType.TEST, key: "t" });
+    const pass = g.addNode({ type: NodeType.EVIDENCE, key: "ep", attrs: { outcome: "PASS" } });
+    const fail = g.addNode({ type: NodeType.EVIDENCE, key: "ef", attrs: { outcome: "FAIL" } });
+    g.addEdge(EdgeType.SHIPS, rel, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+    g.addEdge(EdgeType.VALIDATES, test, req);
+    g.addEdge(EdgeType.PRODUCES, test, pass);
+    g.addEdge(EdgeType.PRODUCES, test, fail);
+    const r = g.releaseAssurance(rel);
+    const rq = r.requirements.find((x) => x.key === "rq");
+    expect(rq?.passingEvidence).toBe(true);
+    expect(rq?.failingEvidence).toBe(true);
+    expect(rq?.status).toBe("GAP");
+    expect(r.verdict).toBe("NOT_ASSURED");
+  });
+
+  it("a neutral (non-verdict) evidence like a LOG does not mark a requirement as failing", () => {
+    const g = new KnowledgeGraph();
+    const rel = g.addNode({ type: NodeType.RELEASE, key: "r" });
+    const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+    const code = g.addNode({ type: NodeType.CODE, key: "c" });
+    const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+    const test = g.addNode({ type: NodeType.TEST, key: "t" });
+    const pass = g.addNode({ type: NodeType.EVIDENCE, key: "ep", attrs: { outcome: "PASS" } });
+    const log = g.addNode({ type: NodeType.EVIDENCE, key: "el", attrs: { kind: "LOG" } }); // no verdict
+    g.addEdge(EdgeType.SHIPS, rel, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+    g.addEdge(EdgeType.VALIDATES, test, req);
+    g.addEdge(EdgeType.PRODUCES, test, pass);
+    g.addEdge(EdgeType.PRODUCES, test, log);
+    expect(g.releaseAssurance(rel).verdict).toBe("ASSURED");
+  });
+});
