@@ -2,21 +2,20 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-03T01:30:00.000Z",
+    "at": "2026-10-05T05:15:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "auto/agent-and-tooling-layer diff",
-    "agents": 37,
-    "reported": 16,
-    "confirmed": 15,
+    "scope": "PR #10 auto/knowledge-graph diff (@uaap/knowledge-graph)",
+    "agents": 22,
+    "reported": 9,
+    "confirmed": 7,
     "distinctDefectsFixed": [
-      "agent-event schema allowed empty evidenceRefs on FINDING_VERIFIED/CANDIDATE (minItems:1 added)",
-      "SchemaValidateAdapter shared Ajv threw on repeated $id schema (fresh Ajv per call + try/catch)",
-      "canVerifyOwnFinding not const false in agent schema (now const false; test loop covers it)",
-      "agent-permissions had no code-level hard-deny (HARD_PROHIBITED set + fromRepo schema validation added)",
-      "HashAdapter non-canonical object hashing (now uses canonical hashObject)",
-      "skill->tool adapter refs dangling (adapters declared NOT_IMPLEMENTED + cross-validator added)",
-      "broker did not guard adapter throws (try/catch + audit added)",
-      "weak/vacuous tests strengthened (known-answer hash, enum risk-class, error-path coverage)"
+      "P0 releaseAssurance faked ASSURED for a release shipping a bare SERVICE/CODE/COMPONENT (untraceable check only covered FEATURE/BUSINESS_FLOW) — now ALL shipped types must trace to a requirement",
+      "P0 requirement discovery walked only IMPLEMENTS, missing requirements behind a shipped container — now traverses IMPLEMENTS+CONTAINS+EXPOSES so a shipped service's requirements are discovered and gated",
+      "P1 open-finding status match was case-sensitive — now case-insensitive",
+      "P1+P2 finding gate was a fail-OPEN allow-list — inverted to a CLOSED allow-list (only CLOSED / REJECTED_FALSE_POSITIVE do not block; unknown/missing/mis-cased blocks)",
+      "P2 findings on a shipped service's DATABASE never blocked — shippedSurface now follows PERSISTS_TO",
+      "P1 graphFromDocument silently last-wins merged duplicate node ids — now rejects duplicate ids (fail-closed on ambiguity)",
+      "P3 addNode/addEdge type guards used `in`/bracket access (prototype-chain fail-open for toString/constructor) — now Object.prototype.hasOwnProperty.call own-key checks"
     ]
   },
   "unresolved": {
@@ -26,26 +25,12 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
+    "count": 1,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-03T02:00:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "areas": 8,
-    "allResolved": true,
-    "newFound": {
-      "P2": 1,
-      "P3": 6
-    },
-    "resolution": [
-      "P2 broker catch read (e as Error).message -> threw on `throw null/undefined`, re-rejecting + skipping audit. Fixed: defensive String(e); + broker-throw regression test (Error + undefined/null).",
-      "P3 empty-string evidence ref: schema items minLength:1 + isConfirmedFact non-empty check + tests.",
-      "P3 fromRepo throw path untested: added temp-fixture test asserting fail-closed throw on invalid registry.",
-      "P3 adapter health vs runtime drift: added reconciliation test (HEALTHY implemented; NOT_IMPLEMENTED unregistered).",
-      "P3 no broker throw-branch coverage: covered by broker-throw test.",
-      "P3 hash string/object collision: ACCEPTED BY DESIGN (keeps standard SHA-256 contract / known-answer vector); documented in HashAdapter."
-    ]
+    "at": null,
+    "note": "re-review of the fix commit pending before merge (session usage limit reached)"
   },
   "pr2": {
     "loop1": {

@@ -8,7 +8,7 @@ import {
   EDGE_TYPES,
   EdgeType,
   NodeType,
-  OPEN_FINDING_STATUSES,
+  NON_BLOCKING_FINDING_STATUSES,
   type GraphDocument,
   type GraphEdge,
   type GraphNode,
@@ -89,7 +89,8 @@ export class KnowledgeGraph {
 
   /** Add (or merge attrs into) a node. Idempotent per (type, key). Returns the node id. */
   addNode(spec: NodeSpec): string {
-    if (!(spec.type in NodeType)) throw new Error(`knowledge-graph: unknown node type "${spec.type}"`);
+    // own-property check (NOT `in`) so inherited names like "toString"/"constructor" are rejected.
+    if (!Object.prototype.hasOwnProperty.call(NodeType, spec.type)) throw new Error(`knowledge-graph: unknown node type "${spec.type}"`);
     if (typeof spec.key !== "string" || spec.key.length === 0) throw new Error("knowledge-graph: node key must be a non-empty string");
     const id = KnowledgeGraph.nodeId(spec.type, spec.key);
     const existing = this.nodes.get(id);
@@ -108,8 +109,9 @@ export class KnowledgeGraph {
 
   /** Add an edge. Validates the type and the endpoint node types against the edge contract. */
   addEdge(type: EdgeType, from: string, to: string, attrs?: Readonly<Record<string, unknown>>): string {
+    // own-property check (NOT bracket access) so "constructor"/"valueOf" cannot resolve a bogus descriptor.
+    if (!Object.prototype.hasOwnProperty.call(EDGE_TYPES, type)) throw new Error(`knowledge-graph: unknown edge type "${type}"`);
     const desc = EDGE_TYPES[type];
-    if (!desc) throw new Error(`knowledge-graph: unknown edge type "${type}"`);
     const f = this.nodes.get(from);
     const t = this.nodes.get(to);
     if (!f) throw new Error(`knowledge-graph: edge ${type} references missing source node "${from}"`);
@@ -285,10 +287,15 @@ export class KnowledgeGraph {
     return out;
   }
 
+  /** Edge types followed FORWARD when expanding the shipped surface (what a shipped artifact pulls in). */
+  private static readonly SURFACE_FORWARD: ReadonlySet<EdgeType> = new Set([EdgeType.CONTAINS, EdgeType.EXPOSES, EdgeType.PERSISTS_TO]);
+
   /**
    * The realized surface of a set of shipped nodes: the shipped nodes themselves, everything a
-   * shipped container holds (forward CONTAINS/EXPOSES), and the code/features that implement a
-   * shipped spec (backward IMPLEMENTS). Used to scope which findings block a release.
+   * shipped container holds or uses (forward CONTAINS/EXPOSES/PERSISTS_TO — so the APIs a service
+   * exposes and the DATABASE it persists to are in scope), and the code/features that implement a
+   * shipped spec (backward IMPLEMENTS). Used to scope which findings block a release — a defect on a
+   * shipped service's database or exposed API must block, not just one on its own node.
    */
   private shippedSurface(shippedIds: readonly string[]): Set<string> {
     const surface = new Set<string>(shippedIds);
@@ -296,7 +303,7 @@ export class KnowledgeGraph {
     for (let i = 0; i < queue.length; i++) {
       const cur = queue[i]!;
       for (const e of this.out.get(cur) ?? []) {
-        if ((e.type === EdgeType.CONTAINS || e.type === EdgeType.EXPOSES) && !surface.has(e.to)) {
+        if (KnowledgeGraph.SURFACE_FORWARD.has(e.type) && !surface.has(e.to)) {
           surface.add(e.to);
           queue.push(e.to);
         }
@@ -333,8 +340,8 @@ export class KnowledgeGraph {
   /**
    * Release assurance: is everything this release ships actually traceable to validated, passing
    * evidence and free of open findings? FAIL-CLOSED — a requirement with no validating test or no
-   * passing evidence is a GAP; a shipped feature with no requirement is untraceable; any open
-   * finding on the shipped surface blocks; an empty release is NOT_ASSURED.
+   * passing evidence is a GAP; ANY shipped artifact (of any type) that traces to no requirement is
+   * untraceable; any non-terminal finding on the shipped surface blocks; an empty release is NOT_ASSURED.
    */
   releaseAssurance(releaseId: string): ReleaseAssuranceReport {
     const release = this.nodes.get(releaseId);
@@ -348,15 +355,20 @@ export class KnowledgeGraph {
       return { id: n.id, type: n.type, key: n.key };
     });
 
-    // Requirements reachable from the shipped artifacts via IMPLEMENTS (code->feature->requirement).
-    const reqIds = this.forwardReach(shippedIds, new Set([EdgeType.IMPLEMENTS]), NodeType.REQUIREMENT);
+    // Requirements reachable from the shipped artifacts through the FULL realized surface: a shipped
+    // SERVICE reaches its requirements via CONTAINS -> code -> IMPLEMENTS -> feature -> IMPLEMENTS ->
+    // requirement, not via IMPLEMENTS alone. Walking only IMPLEMENTS would miss every requirement
+    // behind a shipped container and fake an ASSURED verdict.
+    const reqReach: ReadonlySet<EdgeType> = new Set([EdgeType.IMPLEMENTS, EdgeType.CONTAINS, EdgeType.EXPOSES]);
+    const reqIds = this.forwardReach(shippedIds, reqReach, NodeType.REQUIREMENT);
 
-    // Shipped features/flows that trace to NO requirement are untraceable gaps.
+    // ANY shipped artifact (of any type — FEATURE, CODE, SERVICE, COMPONENT) that traces to NO
+    // requirement is untraceable. Fail-closed: a bare shipped service/code with nothing behind it is
+    // a gap, never a silent pass.
     const untraceableShipped: { id: string; type: NodeType; key: string }[] = [];
     for (const id of shippedIds) {
       const n = this.nodes.get(id)!;
-      if (n.type !== NodeType.FEATURE && n.type !== NodeType.BUSINESS_FLOW) continue;
-      const reqsOfThis = this.forwardReach([id], new Set([EdgeType.IMPLEMENTS]), NodeType.REQUIREMENT);
+      const reqsOfThis = this.forwardReach([id], reqReach, NodeType.REQUIREMENT);
       if (reqsOfThis.size === 0) untraceableShipped.push({ id: n.id, type: n.type, key: n.key });
     }
 
@@ -392,8 +404,11 @@ export class KnowledgeGraph {
     const blockingFindings: ReleaseAssuranceReport["blockingFindings"][number][] = [];
     for (const node of this.nodes.values()) {
       if (node.type !== NodeType.FINDING) continue;
-      const status = String((node.attrs as Record<string, unknown> | undefined)?.status ?? "");
-      if (!OPEN_FINDING_STATUSES.has(status)) continue;
+      const statusRaw = String((node.attrs as Record<string, unknown> | undefined)?.status ?? "");
+      // CLOSED allow-list, case-insensitive: a finding blocks UNLESS it is a terminal non-blocking
+      // status. Unknown / mis-cased / missing status => blocks (fail-closed), so a detector cannot
+      // hide an open defect behind a status the gate doesn't recognise.
+      if (NON_BLOCKING_FINDING_STATUSES.has(statusRaw.toUpperCase())) continue;
       const affects = (this.out.get(node.id) ?? [])
         .filter((e) => e.type === EdgeType.AFFECTS && surface.has(e.to))
         .map((e) => this.nodes.get(e.to)!.key);
@@ -401,7 +416,7 @@ export class KnowledgeGraph {
         blockingFindings.push({
           id: node.id,
           key: node.key,
-          status,
+          status: statusRaw === "" ? "UNKNOWN" : statusRaw,
           severity: (node.attrs as Record<string, unknown> | undefined)?.severity as string | undefined,
           affects: affects.sort(),
         });
@@ -413,7 +428,7 @@ export class KnowledgeGraph {
     if (shipped.length === 0) reasons.push("release ships nothing (cannot be assured)");
     const gaps = requirements.filter((r) => r.status === "GAP");
     if (gaps.length > 0) reasons.push(`${gaps.length} requirement(s) without validated passing evidence`);
-    if (untraceableShipped.length > 0) reasons.push(`${untraceableShipped.length} shipped feature(s) not traceable to a requirement`);
+    if (untraceableShipped.length > 0) reasons.push(`${untraceableShipped.length} shipped artifact(s) not traceable to a requirement`);
     if (blockingFindings.length > 0) reasons.push(`${blockingFindings.length} open finding(s) on the shipped surface`);
     const verdict: "ASSURED" | "NOT_ASSURED" =
       shipped.length > 0 && gaps.length === 0 && untraceableShipped.length === 0 && blockingFindings.length === 0 ? "ASSURED" : "NOT_ASSURED";

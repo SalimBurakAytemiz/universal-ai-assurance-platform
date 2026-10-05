@@ -213,6 +213,153 @@ describe("KnowledgeGraph — release assurance (fail closed)", () => {
   });
 });
 
+// A release that ships a FEATURE which is fully traceable (code -> feature -> requirement),
+// validated by a test with passing evidence. Optionally attaches a finding to the code so the
+// verdict depends ONLY on the finding's status.
+function assuredBase(findingAttrs?: Record<string, unknown>) {
+  const g = new KnowledgeGraph();
+  const rel = g.addNode({ type: NodeType.RELEASE, key: "r" });
+  const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+  const code = g.addNode({ type: NodeType.CODE, key: "c" });
+  const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+  const test = g.addNode({ type: NodeType.TEST, key: "t" });
+  const ev = g.addNode({ type: NodeType.EVIDENCE, key: "e", attrs: { outcome: "PASS" } });
+  g.addEdge(EdgeType.SHIPS, rel, feat);
+  g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+  g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+  g.addEdge(EdgeType.VALIDATES, test, req);
+  g.addEdge(EdgeType.PRODUCES, test, ev);
+  if (findingAttrs) {
+    const fd = g.addNode({ type: NodeType.FINDING, key: "fd", attrs: findingAttrs });
+    g.addEdge(EdgeType.AFFECTS, fd, code);
+  }
+  return { g, rel };
+}
+
+describe("KnowledgeGraph — review regressions (PR #10, confirmed findings)", () => {
+  it("P0: a release that ships a bare SERVICE/CODE/COMPONENT is NOT_ASSURED (no fake pass)", () => {
+    for (const t of [NodeType.SERVICE, NodeType.CODE, NodeType.COMPONENT]) {
+      const g = new KnowledgeGraph();
+      const rel = g.addNode({ type: NodeType.RELEASE, key: "rel" });
+      const node = g.addNode({ type: t, key: `bare-${t}` });
+      g.addEdge(EdgeType.SHIPS, rel, node);
+      const r = g.releaseAssurance(rel);
+      expect(r.verdict, t).toBe("NOT_ASSURED");
+      expect(r.untraceableShipped.map((s) => s.key), t).toContain(`bare-${t}`);
+    }
+  });
+
+  it("P0: requirements behind a shipped SERVICE (via CONTAINS) are discovered and gated", () => {
+    // svc CONTAINS code IMPLEMENTS feat IMPLEMENTS req — req has NO passing evidence => GAP.
+    const g = new KnowledgeGraph();
+    const rel = g.addNode({ type: NodeType.RELEASE, key: "rel" });
+    const svc = g.addNode({ type: NodeType.SERVICE, key: "svc" });
+    const code = g.addNode({ type: NodeType.CODE, key: "c" });
+    const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+    const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+    g.addEdge(EdgeType.SHIPS, rel, svc);
+    g.addEdge(EdgeType.CONTAINS, svc, code);
+    g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+    const r = g.releaseAssurance(rel);
+    expect(r.verdict).toBe("NOT_ASSURED");
+    expect(r.requirements.map((x) => x.key)).toContain("rq"); // discovered through the container
+    expect(r.requirements.find((x) => x.key === "rq")?.status).toBe("GAP");
+  });
+
+  it("P0: a shipped SERVICE fully traceable + validated + passing evidence is ASSURED", () => {
+    const g = new KnowledgeGraph();
+    const rel = g.addNode({ type: NodeType.RELEASE, key: "rel" });
+    const svc = g.addNode({ type: NodeType.SERVICE, key: "svc" });
+    const code = g.addNode({ type: NodeType.CODE, key: "c" });
+    const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+    const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+    const test = g.addNode({ type: NodeType.TEST, key: "t" });
+    const ev = g.addNode({ type: NodeType.EVIDENCE, key: "e", attrs: { outcome: "PASS" } });
+    g.addEdge(EdgeType.SHIPS, rel, svc);
+    g.addEdge(EdgeType.CONTAINS, svc, code);
+    g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+    g.addEdge(EdgeType.VALIDATES, test, req);
+    g.addEdge(EdgeType.PRODUCES, test, ev);
+    expect(g.releaseAssurance(rel).verdict).toBe("ASSURED");
+  });
+
+  it("sanity: the assuredBase fixture with no finding is ASSURED", () => {
+    const { g, rel } = assuredBase();
+    expect(g.releaseAssurance(rel).verdict).toBe("ASSURED");
+  });
+
+  it("P1: an open finding blocks even with non-canonical case ('confirmed')", () => {
+    const { g, rel } = assuredBase({ status: "confirmed", severity: "P1" });
+    const r = g.releaseAssurance(rel);
+    expect(r.verdict).toBe("NOT_ASSURED");
+    expect(r.blockingFindings.map((f) => f.key)).toContain("fd");
+  });
+
+  it("P2: an UNKNOWN or MISSING finding status blocks (fail-closed allow-list)", () => {
+    expect(g2(assuredBase({ status: "WeIrD-STATE" })).verdict).toBe("NOT_ASSURED"); // unknown
+    expect(g2(assuredBase({ severity: "P2" })).verdict).toBe("NOT_ASSURED"); // missing status
+  });
+
+  it("only terminal statuses (CLOSED / REJECTED_FALSE_POSITIVE, any case) do not block", () => {
+    expect(g2(assuredBase({ status: "closed" })).verdict).toBe("ASSURED");
+    expect(g2(assuredBase({ status: "REJECTED_FALSE_POSITIVE" })).verdict).toBe("ASSURED");
+  });
+
+  it("P2: a finding on a shipped SERVICE's DATABASE blocks (database is in the shipped surface)", () => {
+    const g = new KnowledgeGraph();
+    const rel = g.addNode({ type: NodeType.RELEASE, key: "rel" });
+    const svc = g.addNode({ type: NodeType.SERVICE, key: "svc" });
+    const code = g.addNode({ type: NodeType.CODE, key: "c" });
+    const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+    const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+    const test = g.addNode({ type: NodeType.TEST, key: "t" });
+    const ev = g.addNode({ type: NodeType.EVIDENCE, key: "e", attrs: { outcome: "PASS" } });
+    const db = g.addNode({ type: NodeType.DATABASE, key: "db" });
+    const fd = g.addNode({ type: NodeType.FINDING, key: "fd", attrs: { status: "CONFIRMED" } });
+    g.addEdge(EdgeType.SHIPS, rel, svc);
+    g.addEdge(EdgeType.CONTAINS, svc, code);
+    g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+    g.addEdge(EdgeType.VALIDATES, test, req);
+    g.addEdge(EdgeType.PRODUCES, test, ev);
+    g.addEdge(EdgeType.PERSISTS_TO, svc, db);
+    g.addEdge(EdgeType.AFFECTS, fd, db);
+    const r = g.releaseAssurance(rel);
+    expect(r.verdict).toBe("NOT_ASSURED");
+    expect(r.blockingFindings.map((f) => f.key)).toContain("fd");
+  });
+
+  it("P1: graphFromDocument rejects a document with a duplicate node id (fail-closed on ambiguity)", () => {
+    const doc = {
+      nodes: [
+        { id: "dup", type: "SERVICE", key: "a" },
+        { id: "dup", type: "CODE", key: "b" },
+      ],
+      edges: [],
+    };
+    expect(() => graphFromDocument(doc)).toThrow(/duplicate node id/);
+  });
+
+  it("P3: prototype property names are rejected as node/edge types (no fail-open)", () => {
+    const g = new KnowledgeGraph();
+    for (const bogus of ["toString", "constructor", "valueOf", "hasOwnProperty"]) {
+      expect(() => g.addNode({ type: bogus as unknown as NodeType, key: "k" }), bogus).toThrow(/unknown node type/);
+    }
+    const a = g.addNode({ type: NodeType.SERVICE, key: "a" });
+    const b = g.addNode({ type: NodeType.API, key: "b" });
+    for (const bogus of ["constructor", "toString", "valueOf"]) {
+      expect(() => g.addEdge(bogus as unknown as EdgeType, a, b), bogus).toThrow(/unknown edge type/);
+    }
+  });
+});
+
+// helper: run releaseAssurance on an assuredBase({...}) result
+function g2(base: { g: KnowledgeGraph; rel: string }) {
+  return base.g.releaseAssurance(base.rel);
+}
+
 describe("KnowledgeGraph — serialization & schema-validated load", () => {
   it("round-trips through a schema-validated document and preserves queries", () => {
     const { g, ids } = build();

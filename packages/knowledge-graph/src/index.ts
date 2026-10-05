@@ -31,6 +31,9 @@ export function graphFromDocument(doc: unknown, startDir = dirname(fileURLToPath
   const g = new KnowledgeGraph();
   const idByOriginal = new Map<string, string>();
   for (const n of d.nodes) {
+    // Fail-closed on ambiguity: a document that declares the same node id twice is rejected, never
+    // last-wins resolved (which would silently rebind edges to the wrong node and corrupt queries).
+    if (idByOriginal.has(n.id)) throw new Error(`knowledge-graph: duplicate node id "${n.id}" in document`);
     const newNodeId = g.addNode({
       type: n.type,
       key: n.key,

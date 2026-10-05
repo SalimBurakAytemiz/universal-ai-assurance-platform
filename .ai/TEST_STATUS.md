@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **255 passed / 255** across 25 files
+- vitest: **265 passed / 265** across 25 files (10 added as review regressions for PR #10 findings)
 
 New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **19 tests**
 - content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.
@@ -20,4 +20,10 @@ New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): 
   passing evidence = GAP; untraceable shipped feature; empty release never ASSURED.
 - schema-validated document load + defense-in-depth rejection of illegal relationships.
 
-P0/P1/P2/P3 open: 0 / 0 / 0 / 0.
+Adversarial review (PR #10, 22 agents) confirmed 7 defects — ALL fixed with regression tests:
+2×P0 release-assurance fake-PASS (bare shipped service/code untraceable check + requirement
+discovery through containers), 2×P1 (case-sensitive finding status; duplicate-node-id silent
+merge on load), 2×P2 (fail-open finding allow-list → closed allow-list; DATABASE findings never
+blocked), 1×P3 (prototype-chain type-guard fail-open).
+
+P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Re-review of the fix commit pending before merge.

@@ -177,3 +177,14 @@ export const OPEN_FINDING_STATUSES: ReadonlySet<string> = new Set([
   "RETEST_PENDING",
   "REOPENED",
 ]);
+
+/**
+ * The ONLY finding statuses that do NOT block a release — the terminal, resolved states. Release
+ * assurance uses this as a CLOSED allow-list (fail-closed): any status not in here, including an
+ * unknown, misspelled, mis-cased or missing status, is treated as blocking. A detector/importer can
+ * never hide an open defect by emitting a status the gate hasn't heard of. Compared case-insensitively.
+ */
+export const NON_BLOCKING_FINDING_STATUSES: ReadonlySet<string> = new Set([
+  "CLOSED",
+  "REJECTED_FALSE_POSITIVE",
+]);
