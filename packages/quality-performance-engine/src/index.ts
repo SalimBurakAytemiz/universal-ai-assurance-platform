@@ -141,32 +141,6 @@ export class QualityPerformanceEngine implements ExecutionEngine {
           collector.finding(finding({ severity: SEV.P2, kind: "budget-unverifiable", title: "Budget has no samples", detail: `Endpoint "${budget.id}" declares a budget but has no sample array; it cannot pass (fail-closed).`, locator: loc }));
           continue;
         }
-        // Isolate malformed samples; collect finite latencies + error count.
-        const latencies: number[] = [];
-        let errors = 0;
-        let total = 0;
-        raw.forEach((s, i) => {
-          if (s && typeof s === "object" && typeof s.latencyMs === "number" && Number.isFinite(s.latencyMs)) {
-            latencies.push(s.latencyMs);
-            total++;
-            if (s.ok === false) errors++;
-          } else {
-            collector.finding(finding({ severity: SEV.P2, kind: "malformed-sample", title: "Malformed performance sample", detail: `Sample ${i} of "${budget.id}" has no finite numeric latencyMs; skipped.`, locator: `${loc} sample[${i}]` }));
-          }
-        });
-        if (latencies.length === 0) {
-          collector.finding(finding({ severity: SEV.P2, kind: "budget-unverifiable", title: "Budget has no usable samples", detail: `Endpoint "${budget.id}" has no finite-latency samples; the budget cannot be evaluated (fail-closed).`, locator: loc }));
-          continue;
-        }
-        evaluated++;
-        const sorted = [...latencies].sort((a, b) => a - b);
-        const computed: Record<string, number> = {
-          p50: percentile(sorted, 50),
-          p95: percentile(sorted, 95),
-          p99: percentile(sorted, 99),
-          max: sorted[sorted.length - 1]!,
-          errorRate: total > 0 ? errors / total : 0,
-        };
         const th = budget.thresholds;
         let violations = 0;
         const add = (f: EngineFinding) => {
@@ -174,18 +148,66 @@ export class QualityPerformanceEngine implements ExecutionEngine {
           collector.finding(f);
         };
 
-        // Fail-closed vocabulary: an unrecognized threshold key is surfaced, not ignored.
-        for (const key of Object.keys(th)) {
+        // Fail-closed vocabulary + VALUE validation: an unknown threshold KEY, or a known key whose
+        // VALUE is not a finite number (e.g. "100", null, NaN), is surfaced — never silently skipped.
+        for (const [key, val] of Object.entries(th)) {
           if (!KNOWN_THRESHOLDS.has(key)) add(finding({ severity: SEV.P2, kind: "unknown-threshold", title: "Unknown performance threshold", detail: `Endpoint "${budget.id}" declares threshold "${key}" which is not one of ${[...KNOWN_THRESHOLDS].join("/")}.`, locator: loc }));
+          else if (typeof val !== "number" || !Number.isFinite(val)) add(finding({ severity: SEV.P2, kind: "malformed-threshold", title: "Malformed performance threshold", detail: `Endpoint "${budget.id}" threshold "${key}" is not a finite number (${JSON.stringify(val)}); it cannot be enforced (fail-closed).`, locator: loc }));
         }
+        const limitOf = (k: "p50" | "p95" | "p99" | "max"): number | undefined => (typeof th[k] === "number" && Number.isFinite(th[k]) ? (th[k] as number) : undefined);
+
+        // Classify samples. A latency is usable only if it is a finite, NON-NEGATIVE number (a
+        // negative latency is impossible and would deflate percentiles -> flagged malformed). The
+        // error-rate base counts every observed request: any sample with a boolean `ok` OR a usable
+        // latency; `ok===false` (even without a latency, e.g. a timeout) is an error.
+        const latencies: number[] = [];
+        let errors = 0;
+        let errorTotal = 0;
+        raw.forEach((s, i) => {
+          const sloc = `${loc} sample[${i}]`;
+          if (!s || typeof s !== "object") {
+            add(finding({ severity: SEV.P2, kind: "malformed-sample", title: "Malformed performance sample", detail: `Sample ${i} is null or not an object.`, locator: sloc }));
+            return;
+          }
+          const hasLatKey = Object.prototype.hasOwnProperty.call(s, "latencyMs");
+          const latVal = (s as { latencyMs?: unknown }).latencyMs;
+          const validLat = typeof latVal === "number" && Number.isFinite(latVal) && latVal >= 0;
+          const hasOk = typeof s.ok === "boolean";
+          if (validLat) latencies.push(latVal as number);
+          else if (hasLatKey) add(finding({ severity: SEV.P2, kind: "malformed-sample", title: "Malformed performance sample", detail: `Sample ${i} latencyMs=${JSON.stringify(latVal)} is not a finite non-negative number.`, locator: sloc }));
+          else if (!hasOk) add(finding({ severity: SEV.P2, kind: "malformed-sample", title: "Malformed performance sample", detail: `Sample ${i} has neither a usable latencyMs nor an ok flag.`, locator: sloc }));
+          if (hasOk || validLat) {
+            errorTotal++;
+            if (s.ok === false) errors++;
+          }
+        });
+
+        if (latencies.length === 0 && errorTotal === 0) {
+          collector.finding(finding({ severity: SEV.P2, kind: "budget-unverifiable", title: "Budget has no usable samples", detail: `Endpoint "${budget.id}" has no usable samples; the budget cannot be evaluated (fail-closed).`, locator: loc }));
+          continue;
+        }
+        evaluated++;
+        const sorted = [...latencies].sort((a, b) => a - b);
+        const computed = {
+          p50: percentile(sorted, 50),
+          p95: percentile(sorted, 95),
+          p99: percentile(sorted, 99),
+          max: sorted.length > 0 ? sorted[sorted.length - 1]! : NaN,
+          errorRate: errorTotal > 0 ? errors / errorTotal : NaN,
+        };
+
         for (const metric of LATENCY_METRICS) {
-          const limit = th[metric];
-          if (typeof limit === "number" && Number.isFinite(limit) && computed[metric]! > limit) {
-            add(finding({ severity: SEV.P1, kind: "latency-budget-exceeded", title: `Latency budget exceeded (${metric})`, detail: `${metric} = ${computed[metric]!.toFixed(2)}ms exceeds budget ${limit}ms.`, locator: loc }));
+          const limit = limitOf(metric);
+          if (limit === undefined) continue;
+          if (latencies.length === 0) {
+            add(finding({ severity: SEV.P2, kind: "budget-unverifiable", title: "Latency budget unverifiable", detail: `Endpoint "${budget.id}" declares a ${metric} budget but has no usable latency samples.`, locator: loc }));
+          } else if (computed[metric] > limit) {
+            add(finding({ severity: SEV.P1, kind: "latency-budget-exceeded", title: `Latency budget exceeded (${metric})`, detail: `${metric} = ${computed[metric].toFixed(2)}ms exceeds budget ${limit}ms.`, locator: loc }));
           }
         }
-        if (typeof th.errorRate === "number" && Number.isFinite(th.errorRate) && computed.errorRate! > th.errorRate) {
-          add(finding({ severity: SEV.P1, kind: "error-rate-exceeded", title: "Error rate budget exceeded", detail: `error rate = ${(computed.errorRate! * 100).toFixed(2)}% exceeds budget ${(th.errorRate * 100).toFixed(2)}% (${errors}/${total}).`, locator: loc }));
+        if (typeof th.errorRate === "number" && Number.isFinite(th.errorRate)) {
+          if (errorTotal === 0) add(finding({ severity: SEV.P2, kind: "budget-unverifiable", title: "Error-rate budget unverifiable", detail: `Endpoint "${budget.id}" declares an errorRate budget but has no samples with a delivery outcome.`, locator: loc }));
+          else if (computed.errorRate > th.errorRate) add(finding({ severity: SEV.P1, kind: "error-rate-exceeded", title: "Error rate budget exceeded", detail: `error rate = ${(computed.errorRate * 100).toFixed(2)}% exceeds budget ${(th.errorRate * 100).toFixed(2)}% (${errors}/${errorTotal}).`, locator: loc }));
         }
 
         collector.evidence({
@@ -193,8 +215,8 @@ export class QualityPerformanceEngine implements ExecutionEngine {
           action: "perf.budget.evaluate",
           kind: "METRIC",
           classification: "INTERNAL",
-          summary: `endpoint ${budget.id}: n=${total}, p95=${computed.p95!.toFixed(1)}ms, err=${(computed.errorRate! * 100).toFixed(1)}%, ${violations} violation(s)`,
-          data: { endpoint: budget.id, samples: total, computed, violations, at: ctx.now() },
+          summary: `endpoint ${budget.id}: n=${latencies.length}, reqs=${errorTotal}, p95=${Number.isNaN(computed.p95) ? "n/a" : computed.p95.toFixed(1) + "ms"}, err=${Number.isNaN(computed.errorRate) ? "n/a" : (computed.errorRate * 100).toFixed(1) + "%"}, ${violations} violation(s)`,
+          data: { endpoint: budget.id, latencySamples: latencies.length, requestSamples: errorTotal, computed, violations, at: ctx.now() },
         });
       } catch (e) {
         collector.finding(finding({ severity: SEV.P2, kind: "engine-error", title: "Engine error while evaluating budget", detail: e instanceof Error ? e.message : String(e), locator: loc }));

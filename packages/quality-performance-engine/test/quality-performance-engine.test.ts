@@ -88,3 +88,28 @@ describe("QualityPerformanceEngine — budget evaluation against the local fixtu
     expect(caps.capabilities).toContain("perf.error-rate");
   });
 });
+
+describe("QualityPerformanceEngine — review-fix regressions (threshold value, negative latency, error-rate base)", () => {
+  it("a non-finite threshold VALUE on a known key is surfaced (malformed-threshold), not silently skipped", async () => {
+    const input = { budgets: { endpoints: [{ id: "a", thresholds: { p95: "100" } }] }, samples: { a: [{ latencyMs: 5000, ok: true }, { latencyMs: 6000, ok: true }] } };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).toContain("malformed-threshold"); // was a silent false green before
+  });
+
+  it("negative latencies are rejected as malformed and the real breach is still caught", async () => {
+    const input = { budgets: { endpoints: [{ id: "a", thresholds: { p50: 100 } }] }, samples: { a: [{ latencyMs: -5 }, { latencyMs: -5 }, { latencyMs: -5 }, { latencyMs: 200 }, { latencyMs: 200 }] } };
+    const r = await drive(input);
+    const k = kinds(r.findings);
+    expect(k).toContain("malformed-sample"); // the negatives
+    expect(k).toContain("latency-budget-exceeded"); // real p50 (200) > 100, no longer masked by negatives
+  });
+
+  it("an error with no latency (e.g. a timeout) counts toward the error rate", async () => {
+    const input = { budgets: { endpoints: [{ id: "a", thresholds: { errorRate: 0.2 } }] }, samples: { a: [{ ok: false }, { latencyMs: 10, ok: true }, { latencyMs: 10, ok: true }, { latencyMs: 10, ok: true }] } };
+    const r = await drive(input);
+    const k = kinds(r.findings);
+    expect(k).toContain("error-rate-exceeded"); // 1/4 = 25% > 20%
+    expect(k).not.toContain("malformed-sample"); // {ok:false} with no latency is a valid failure record
+  });
+});
