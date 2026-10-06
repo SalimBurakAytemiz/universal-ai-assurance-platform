@@ -849,15 +849,17 @@
       "tests": [
         "packages/quality-api-engine/test/quality-api-engine.test.ts"
       ],
-      "commits": [],
+      "commits": [
+        "a864478fe610f541ee8954b521a83d62c02f9503"
+      ],
       "review": {
-        "loops": 0,
+        "loops": 3,
         "unresolved": {
           "P0": 0,
           "P1": 0,
           "P2": 0
         },
-        "mergedPR": null
+        "mergedPR": 12
       }
     },
     {
@@ -1427,8 +1429,18 @@
       "tests": [
         "packages/engine-core/test/engine-core.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "a864478fe610f541ee8954b521a83d62c02f9503"
+      ],
+      "review": {
+        "loops": 3,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 12
+      }
     }
   ]
 }
