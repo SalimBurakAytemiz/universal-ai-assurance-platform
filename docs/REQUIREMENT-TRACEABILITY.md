@@ -81,3 +81,13 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-AUTOPILOT-DESKTOP-001 | Desktop autopilot/provider/task/CI/recovery status | user 2026-10-04 | IMPLEMENTED (scaffold-connected) | `apps/desktop/*` | manual |
 
 Legacy agent roles are additionally traced in `docs/AGENT-ROLE-MIGRATION-MAP.md`.
+
+## Executed evidence (Final Audit)
+
+Executed acceptance evidence for the chain **REQUIREMENT → IMPLEMENTATION → TEST → EVIDENCE** is
+indexed in [`.ai/ACCEPTANCE_EVIDENCE.md`](../.ai/ACCEPTANCE_EVIDENCE.md). In particular, the composite
+end-to-end acceptance test `tests/acceptance/e2e-acceptance.test.ts` (14 tests) exercises
+REQ-ENGINE-CORE-001, REQ-QA-WEB-001, REQ-SEC-APPSEC-001, REQ-EVIDENCE-001, REQ-VERIFY-001,
+REQ-REMEDIATION-001 and REQ-RELEASE-001 **together** over a synthetic project — producing both a PASS
+and an intentionally-detected FAIL, proving the composed platform returns a RELEASE_ALLOWED only after a
+real detect→verify→remediate→retest→close→clean-re-run arc (green is earned, not defaulted).

@@ -1,0 +1,2599 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "metadata": {
+    "timestamp": "2026-10-06T00:00:00.000Z",
+    "component": {
+      "type": "application",
+      "name": "universal-ai-assurance-platform",
+      "version": "0.9.0-rc.1"
+    },
+    "note": "Generated offline from package-lock.json (root) + apps/desktop/package-lock.json. 'dev' marks test/build-only dependencies not shipped in the product runtime."
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "@electron/asar",
+      "version": "3.4.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@electron/get",
+      "version": "2.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@electron/get",
+      "version": "3.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@electron/notarize",
+      "version": "2.5.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@electron/osx-sign",
+      "version": "1.3.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-2-Clause"
+    },
+    {
+      "type": "library",
+      "name": "@electron/packager",
+      "version": "18.4.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-2-Clause"
+    },
+    {
+      "type": "library",
+      "name": "@electron/universal",
+      "version": "2.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@electron/windows-sign",
+      "version": "1.2.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-2-Clause"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ia32",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-loong64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-s390x",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/sunos-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-arm64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-ia32",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-x64",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@malept/cross-spawn-promise",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "@sindresorhus/is",
+      "version": "4.6.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@szmarczak/http-timer",
+      "version": "4.0.6",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/cacheable-request",
+      "version": "6.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/http-cache-semantics",
+      "version": "4.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/keyv",
+      "version": "3.1.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/node",
+      "version": "20.19.43",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/responselike",
+      "version": "1.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/yauzl",
+      "version": "2.10.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@xmldom/xmldom",
+      "version": "0.9.12",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "at-least-node",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "author-regex",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "balanced-match",
+      "version": "1.0.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "base64-js",
+      "version": "1.5.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "bluebird",
+      "version": "3.7.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "boolean",
+      "version": "3.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "brace-expansion",
+      "version": "2.1.7",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "brace-expansion",
+      "version": "1.1.21",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "buffer-crc32",
+      "version": "0.2.13",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "cacheable-lookup",
+      "version": "5.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "cacheable-request",
+      "version": "7.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "clone-response",
+      "version": "1.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "commander",
+      "version": "5.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "commander",
+      "version": "9.5.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "compare-version",
+      "version": "0.1.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "concat-map",
+      "version": "0.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "cross-dirname",
+      "version": "0.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "cross-spawn",
+      "version": "7.0.6",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "debug",
+      "version": "4.4.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "debug",
+      "version": "2.6.9",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "decompress-response",
+      "version": "6.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "defer-to-connect",
+      "version": "2.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "define-data-property",
+      "version": "1.1.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "define-properties",
+      "version": "1.2.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "detect-node",
+      "version": "2.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "dir-compare",
+      "version": "4.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "electron",
+      "version": "32.3.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "end-of-stream",
+      "version": "1.4.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "env-paths",
+      "version": "2.2.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "err-code",
+      "version": "2.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "error-ex",
+      "version": "1.3.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "es-errors",
+      "version": "1.3.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "es6-error",
+      "version": "4.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "esbuild",
+      "version": "0.21.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "escape-string-regexp",
+      "version": "4.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "escape-string-regexp",
+      "version": "1.0.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "extract-zip",
+      "version": "2.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-2-Clause"
+    },
+    {
+      "type": "library",
+      "name": "fd-slicer",
+      "version": "1.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "filename-reserved-regex",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "filenamify",
+      "version": "4.3.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "find-up",
+      "version": "2.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "flora-colossus",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "fs-extra",
+      "version": "9.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "fs-extra",
+      "version": "10.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "fs-extra",
+      "version": "8.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "fs-extra",
+      "version": "11.4.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "fs.realpath",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "function-bind",
+      "version": "1.1.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "galactus",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "get-package-info",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "get-stream",
+      "version": "5.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "glob",
+      "version": "7.2.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "global-agent",
+      "version": "3.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-3-Clause"
+    },
+    {
+      "type": "library",
+      "name": "globalthis",
+      "version": "1.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "gopd",
+      "version": "1.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "got",
+      "version": "11.8.6",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "graceful-fs",
+      "version": "4.2.11",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "has-property-descriptors",
+      "version": "1.0.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "hasown",
+      "version": "2.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "hosted-git-info",
+      "version": "2.8.9",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "http-cache-semantics",
+      "version": "4.3.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-2-Clause"
+    },
+    {
+      "type": "library",
+      "name": "http2-wrapper",
+      "version": "1.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "inflight",
+      "version": "1.0.6",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "inherits",
+      "version": "2.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "is-arrayish",
+      "version": "0.2.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "is-core-module",
+      "version": "2.17.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "isbinaryfile",
+      "version": "4.0.10",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "isexe",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "json-buffer",
+      "version": "3.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "json-stringify-safe",
+      "version": "5.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "jsonfile",
+      "version": "6.2.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "jsonfile",
+      "version": "4.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "junk",
+      "version": "3.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "keyv",
+      "version": "4.5.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "load-json-file",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "locate-path",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "lodash.get",
+      "version": "4.4.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "lowercase-keys",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "matcher",
+      "version": "3.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "mimic-response",
+      "version": "3.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "mimic-response",
+      "version": "1.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "minimatch",
+      "version": "9.0.9",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "minimatch",
+      "version": "3.1.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "minimist",
+      "version": "1.2.8",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "ms",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "ms",
+      "version": "2.1.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "normalize-package-data",
+      "version": "2.5.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-2-Clause"
+    },
+    {
+      "type": "library",
+      "name": "normalize-url",
+      "version": "6.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "object-keys",
+      "version": "1.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "once",
+      "version": "1.4.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "p-cancelable",
+      "version": "2.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "p-limit",
+      "version": "3.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "p-limit",
+      "version": "1.3.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "p-locate",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "p-try",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "parse-author",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "parse-json",
+      "version": "2.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "path-exists",
+      "version": "3.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "path-is-absolute",
+      "version": "1.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "path-key",
+      "version": "3.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "path-parse",
+      "version": "1.0.7",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "path-type",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "pe-library",
+      "version": "1.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "pend",
+      "version": "1.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "pify",
+      "version": "2.3.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "plist",
+      "version": "3.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "postject",
+      "version": "1.0.0-alpha.6",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "prettier",
+      "version": "3.9.9",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "progress",
+      "version": "2.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "promise-retry",
+      "version": "2.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "pump",
+      "version": "3.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "quick-lru",
+      "version": "5.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "read-pkg",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "read-pkg-up",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "resedit",
+      "version": "2.0.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "resolve",
+      "version": "1.22.12",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "resolve-alpn",
+      "version": "1.2.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "responselike",
+      "version": "2.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "retry",
+      "version": "0.12.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "roarr",
+      "version": "2.15.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-3-Clause"
+    },
+    {
+      "type": "library",
+      "name": "semver",
+      "version": "6.3.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "semver",
+      "version": "7.8.5",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "semver",
+      "version": "5.7.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "semver-compare",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "serialize-error",
+      "version": "7.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "shebang-command",
+      "version": "2.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "shebang-regex",
+      "version": "3.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "spdx-correct",
+      "version": "3.2.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "spdx-exceptions",
+      "version": "2.5.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "CC-BY-3.0"
+    },
+    {
+      "type": "library",
+      "name": "spdx-expression-parse",
+      "version": "3.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "spdx-license-ids",
+      "version": "3.0.24",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "CC0-1.0"
+    },
+    {
+      "type": "library",
+      "name": "sprintf-js",
+      "version": "1.1.3",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "BSD-3-Clause"
+    },
+    {
+      "type": "library",
+      "name": "strip-bom",
+      "version": "3.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "strip-outer",
+      "version": "1.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "sumchecker",
+      "version": "3.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "supports-preserve-symlinks-flag",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "trim-repeated",
+      "version": "1.0.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "type-fest",
+      "version": "0.13.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "(MIT OR CC0-1.0)"
+    },
+    {
+      "type": "library",
+      "name": "undici-types",
+      "version": "6.21.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "universalify",
+      "version": "2.0.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "universalify",
+      "version": "0.1.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "validate-npm-package-license",
+      "version": "3.0.4",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "which",
+      "version": "2.0.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "wrappy",
+      "version": "1.0.2",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "xmlbuilder",
+      "version": "15.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "yargs-parser",
+      "version": "21.1.1",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "yauzl",
+      "version": "2.10.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "yocto-queue",
+      "version": "0.1.0",
+      "scope": "apps/desktop",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/aix-ppc64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-arm64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/android-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-arm64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/darwin-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-arm64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/freebsd-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-arm64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ia32",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-loong64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-mips64el",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-ppc64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-riscv64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-s390x",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/linux-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/netbsd-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/openbsd-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/sunos-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-arm64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-ia32",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@esbuild/win32-x64",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@napi-rs/lzma-linux-x64-gnu",
+      "version": "1.5.1",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-android-arm-eabi",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-android-arm64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-darwin-arm64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-darwin-x64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-freebsd-arm64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-freebsd-x64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm-gnueabihf",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm-musleabihf",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm64-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-arm64-musl",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-loong64-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-loong64-musl",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-ppc64-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-ppc64-musl",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-riscv64-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-riscv64-musl",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-s390x-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-x64-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-linux-x64-musl",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-openbsd-x64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-openharmony-arm64",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-arm64-msvc",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-ia32-msvc",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-x64-gnu",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@rollup/rollup-win32-x64-msvc",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/estree",
+      "version": "1.0.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@types/node",
+      "version": "22.20.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/expect",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/mocker",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/pretty-format",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/runner",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/snapshot",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/spy",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "@vitest/utils",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "ajv",
+      "version": "8.20.0",
+      "scope": "root",
+      "dev": false,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "ajv-formats",
+      "version": "3.0.1",
+      "scope": "root",
+      "dev": false,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "assertion-error",
+      "version": "2.0.1",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "cac",
+      "version": "6.7.14",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "chai",
+      "version": "5.3.3",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "check-error",
+      "version": "2.1.3",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "debug",
+      "version": "4.4.3",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "deep-eql",
+      "version": "5.0.2",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "es-module-lexer",
+      "version": "1.7.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "esbuild",
+      "version": "0.21.5",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "estree-walker",
+      "version": "3.0.3",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "expect-type",
+      "version": "1.4.0",
+      "scope": "root",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "fast-deep-equal",
+      "version": "3.1.3",
+      "scope": "root",
+      "dev": false,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "fast-uri",
+      "version": "3.1.8",
+      "scope": "root",
+      "dev": false,
+      "license": "BSD-3-Clause"
+    },
+    {
+      "type": "library",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "json-schema-traverse",
+      "version": "1.0.0",
+      "scope": "root",
+      "dev": false,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "loupe",
+      "version": "3.2.1",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "magic-string",
+      "version": "0.30.21",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "ms",
+      "version": "2.1.3",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "nanoid",
+      "version": "3.3.19",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "packages/agent-evaluation",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/agent-events",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/agent-permissions",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/assurance-planner",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/audit",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/authorization-kernel",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/core",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/desktop-viewmodels",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/digital-twin",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/domain-model",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/engine-core",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/evidence-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/knowledge",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/knowledge-graph",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/orchestrator",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/policy-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/project-model",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-accessibility-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-api-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-database-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-performance-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-realtime-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-web-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/quality-web-live-adapter",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/release-gate",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/remediation-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/research-intelligence",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/sandbox-learning",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/security-appsec-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/tool-adapter-registry",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/tool-broker",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "packages/verification-engine",
+      "version": "0.1.0",
+      "scope": "root",
+      "dev": false,
+      "license": "UNKNOWN"
+    },
+    {
+      "type": "library",
+      "name": "pathe",
+      "version": "1.1.2",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "pathval",
+      "version": "2.0.1",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "scope": "root",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "playwright-core",
+      "version": "1.63.0",
+      "scope": "root",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "postcss",
+      "version": "8.5.28",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "scope": "root",
+      "dev": false,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "rollup",
+      "version": "4.64.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "siginfo",
+      "version": "2.0.0",
+      "scope": "root",
+      "dev": true,
+      "license": "ISC"
+    },
+    {
+      "type": "library",
+      "name": "source-map-js",
+      "version": "1.2.2",
+      "scope": "root",
+      "dev": true,
+      "license": "BSD-3-Clause"
+    },
+    {
+      "type": "library",
+      "name": "stackback",
+      "version": "0.0.2",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "std-env",
+      "version": "3.10.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "tinybench",
+      "version": "2.9.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "tinyexec",
+      "version": "0.3.2",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "tinypool",
+      "version": "1.1.1",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "tinyrainbow",
+      "version": "1.2.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "tinyspy",
+      "version": "3.0.2",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "typescript",
+      "version": "5.9.3",
+      "scope": "root",
+      "dev": true,
+      "license": "Apache-2.0"
+    },
+    {
+      "type": "library",
+      "name": "undici-types",
+      "version": "6.21.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "vite",
+      "version": "5.4.21",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "vite-node",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "vitest",
+      "version": "2.1.9",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    },
+    {
+      "type": "library",
+      "name": "why-is-node-running",
+      "version": "2.3.0",
+      "scope": "root",
+      "dev": true,
+      "license": "MIT"
+    }
+  ]
+}

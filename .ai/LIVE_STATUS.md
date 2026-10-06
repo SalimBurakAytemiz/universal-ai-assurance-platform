@@ -1,9 +1,13 @@
 # LIVE STATUS
 
-- Build graph: 64 nodes — **62 DONE, 1 BLOCKED (by design), 1 NOT_STARTED (gated)**.
-- Last verify: **477/477 tests PASS (38 files)**; typecheck OK; validators OK.
-- Active security validation: LOCKED_BY_DESIGN (unchanged, correct).
-- GitHub: PRIVATE; PRs #2–#25 merged.
+- **Release candidate: v0.9.0-rc.1** — ACCEPTED after a final independent system audit
+  (`.ai/FINAL_SYSTEM_ACCEPTANCE_REPORT.md`). RC, not GA: signing / active-validation / license gated.
+- Build graph: 64 nodes — **62 DONE, 1 BLOCKED (by design), 1 NOT_STARTED (gated)**. 0 false DONEs.
+- Last verify: **500/500 tests PASS (39 files)**; typecheck OK; validators OK.
+- Final adversarial review (3 rounds): 20 issues (P0×1, P1×7, P2×7, P3×5) — 19 fixed + regressed, 1
+  accepted + documented. Open: P0 0 / P1 0 / P2 1 (accepted) / P3 0. No gate weakened.
+- Active security validation: LOCKED_BY_DESIGN (unchanged, correct — hardened, never unlocked).
+- GitHub: PRIVATE; PRs #2–#25 merged; RC audit PR in flight on `audit/final-acceptance-rc`.
 - Host runtimes PROVEN this session (`.ai/ENVIRONMENT_PROOF.md`): Electron v32.3.3 (desktop shell +
   views + dev package all runtime-validated headless), Chrome + Edge (Playwright live capture),
   Node-child sandbox (Docker's safe local alternative), npm registry reachable. No native toolchain.

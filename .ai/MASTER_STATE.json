@@ -1,6 +1,12 @@
 {
   "version": "0.1.0",
-  "updatedAt": "2026-10-06T21:20:00.000Z",
+  "updatedAt": "2026-10-07T00:40:00.000Z",
+  "releaseCandidate": {
+    "version": "0.9.0-rc.1",
+    "status": "ACCEPTED_AS_RC",
+    "report": ".ai/FINAL_SYSTEM_ACCEPTANCE_REPORT.md",
+    "notProductionBecause": ["DESKTOP_SIGNING_REQUIRED", "ACTIVE_VALIDATION_LOCKED_BY_DESIGN", "FINAL_LICENSE_DECISION_REQUIRED"]
+  },
   "product": "Universal AI Assurance Platform",
   "model": "ONE_PRODUCT_ONE_REPOSITORY_ONE_DESKTOP",
   "executionModel": "DEPENDENCY_AWARE_CONTINUOUS_BUILD_GRAPH",
@@ -38,7 +44,7 @@
     "implementedDefinitions": 72,
     "certified": 0
   },
-  "currentFocus": "COMPLETE: every technically-buildable node on this host is DONE (62/64). The host was probed and the earlier all-gated conclusion disproven — sandbox-learning, desktop shell+views, dev packaging, and the Playwright live-capture adapter were all built AND runtime-validated here. The only remaining work is PROVEN-blocked: (1) security-active-validation-gate stays LOCKED_BY_DESIGN until a signed, scoped human authorization record exists in .ai/security/; (2) desktop-update-rollback needs production code-signing (cert) + an update-hosting service (DESKTOP_SIGNING_REQUIRED); (3) final license is a legal decision. No further node is technically executable here without one of those external/human inputs. Blocker proofs: .ai/ENVIRONMENT_PROOF.md.",
+  "currentFocus": "RELEASE CANDIDATE v0.9.0-rc.1 accepted after a final independent system audit. All 62 DONE nodes were independently re-verified (0 false DONEs). A new end-to-end acceptance test (tests/acceptance/e2e-acceptance.test.ts) drives the real composed pipeline over a synthetic project (PASS + intentional FAIL; green earned only after a real detect->verify->remediate->retest->close->clean-re-run arc). A 3-round adversarial review found 20 issues (P0x1, P1x7, P2x7, P3x5); 19 fixed + regressed, 1 accepted + documented (full Unicode case folding on the SoD identity sanity-guard). The P0 was a self-asserted-passive authorization bypass in the trust kernel — fixed by binding the action class to the trusted catalog; no security gate was weakened. verify: 500/500 across 39 files. Remaining work stays PROVEN-blocked (see humanActionRequired): active validation LOCKED_BY_DESIGN, desktop signing/update gated, final license legal. Evidence: .ai/FINAL_SYSTEM_ACCEPTANCE_REPORT.md, .ai/ACCEPTANCE_EVIDENCE.md.",
   "humanActionRequired": [
     {
       "id": "HAR-LICENSE",
@@ -54,8 +60,8 @@
     }
   ],
   "lastCheckpoint": {
-    "commit": "6714b383d0422f835f8c5d19d7ac7f5be3c955db",
-    "verifiedAt": "2026-10-06T21:20:00.000Z",
-    "note": "PR #25 merged: Playwright live-capture adapter (local-only, SSRF-safe). ALL technically-buildable nodes on this host are now DONE (62). Remaining non-DONE nodes have PROVEN blockers: security-active-validation-gate (BLOCKED, LOCKED_BY_DESIGN — signed scoped human authorization) and desktop-update-rollback (NOT_STARTED — signed update channel needs a code-signing cert + update-hosting service). Post-merge verify: 477/477 across 38 files."
+    "commit": "a80694299c0f292793e7efd46a16ff88e4e8dbe9",
+    "verifiedAt": "2026-10-07T00:40:00.000Z",
+    "note": "Final system audit + RC v0.9.0-rc.1 on branch audit/final-acceptance-rc (base a806942). Independent re-verification of all 62 DONE nodes (0 false DONEs); added the 14-test E2E acceptance suite; 3-round adversarial review (20 issues: P0x1/P1x7/P2x7/P3x5) with 19 fixed+regressed and 1 accepted+documented. Trust kernel, broker, release-gate, SoD identity, autopilot, and desktop renderer hardened — no gate weakened. Pre-merge verify: 500/500 across 39 files. The post-merge checkpoint will record the merge SHA."
   }
 }
