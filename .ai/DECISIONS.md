@@ -66,3 +66,12 @@
   (baseline vs current snapshot hash). OFFLINE (a Playwright capture transport would feed live
   snapshots later). Hardened: array guards, per-page/per-element isolation, duplicate-page
   fail-closed, malformed-color/element surfaced.
+- **2026-10-06** `@uaap/security-appsec-engine` (engine G, security) is DETECTION-ONLY static analysis
+  over LOCAL fixtures (source/config/headers/deps/TLS): hardcoded secrets (values REDACTED, never
+  echoed), injection-prone patterns, insecure config, missing/permissive security headers,
+  vulnerable deps (from PROVIDED advisories — never fetched), weak TLS. It executes nothing, sends
+  no request, touches no live target — no Agent→Target path, nothing to authorize. Every finding is
+  a detection SIGNAL that REQUIRES independent verification (detector is NOT a closure authority).
+  Active validation against a real target remains a SEPARATE capability, security-active-validation-
+  gate, LOCKED_BY_DESIGN. Test secret-like strings are assembled from fragments so no verbatim
+  secret is committed (keeps the repo's own secret scanner green).
