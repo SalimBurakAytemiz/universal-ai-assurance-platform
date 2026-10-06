@@ -199,3 +199,27 @@ describe("QualityApiEngine — re-review regressions (array/request empty-field,
     expect(kinds).toContain("schema-drift"); // the valid exchange was still validated
   });
 });
+
+describe("QualityApiEngine — empty-field heuristic covers untyped + allOf schemas (final re-review)", () => {
+  const drive = (input: unknown) => driveEngine(new QualityApiEngine(), ctx(input));
+
+  it("catches a nested empty required string even when the subschema omits `type`", async () => {
+    const input: ApiEngineInput = {
+      spec: { endpoints: [{ id: "a", method: "GET", path: "/a", responses: { "200": { schema: { type: "object", required: ["profile"], properties: { profile: { required: ["name"], properties: { name: { type: "string" } } } } } } } }] },
+      exchanges: [{ endpointId: "a", response: { status: 200, body: { profile: { name: "" } } } }],
+    };
+    const r = await drive(input);
+    const empty = r.findings.find((f) => f.kind === "null-or-empty-required-field");
+    expect(empty).toBeDefined();
+    expect(empty?.detail).toMatch(/profile\.name/);
+  });
+
+  it("catches an empty required string composed via allOf", async () => {
+    const input: ApiEngineInput = {
+      spec: { endpoints: [{ id: "a", method: "GET", path: "/a", responses: { "200": { schema: { type: "object", allOf: [{ required: ["name"], properties: { name: { type: "string" } } }] } } } }] },
+      exchanges: [{ endpointId: "a", response: { status: 200, body: { name: "" } } }],
+    };
+    const r = await drive(input);
+    expect(r.findings.map((f) => f.kind)).toContain("null-or-empty-required-field");
+  });
+});

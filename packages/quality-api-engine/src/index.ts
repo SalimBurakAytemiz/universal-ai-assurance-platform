@@ -267,31 +267,72 @@ export class QualityApiEngine implements ExecutionEngine {
   }
 }
 
+interface SchemaView {
+  type?: string;
+  properties: Record<string, unknown>;
+  required: string[];
+  items?: object;
+}
+
 /**
- * Required-string property names (dotted path) that are present but equal to "". Recurses into nested
- * object schemas so a nested required empty string is caught too (consistent with api.null-empty).
+ * Collapse a schema node to an effective view, flattening `allOf` members (shallow + recursive) and
+ * NOT depending on an explicit `type` keyword — a node with `properties`/`items`/`required` is an
+ * object/array schema in JSON Schema whether or not `type` is stated, matching how Ajv treats it.
+ */
+function schemaView(schema: unknown): SchemaView {
+  const s = (schema && typeof schema === "object" ? schema : {}) as {
+    type?: string;
+    properties?: Record<string, unknown>;
+    required?: unknown;
+    items?: unknown;
+    allOf?: unknown[];
+  };
+  let properties: Record<string, unknown> = { ...(s.properties ?? {}) };
+  let required: string[] = Array.isArray(s.required) ? s.required.filter((r): r is string => typeof r === "string") : [];
+  let items = (s.items && typeof s.items === "object" ? s.items : undefined) as object | undefined;
+  let type = s.type;
+  if (Array.isArray(s.allOf)) {
+    for (const member of s.allOf) {
+      const mv = schemaView(member);
+      properties = { ...properties, ...mv.properties };
+      required = [...required, ...mv.required];
+      items = items ?? mv.items;
+      type = type ?? mv.type;
+    }
+  }
+  return { ...(type !== undefined ? { type } : {}), properties, required, ...(items ? { items } : {}) };
+}
+
+/**
+ * Required-string property names (dotted/bracketed path) that are present but equal to "". Recurses
+ * into nested objects and arrays-of-objects, infers structure WITHOUT needing an explicit `type`, and
+ * flattens `allOf`. It is a heuristic augmentation over Ajv (JSON Schema has no "required AND
+ * non-empty" without minLength). LIMITATION: it does not resolve `$ref` or branch `oneOf`/`anyOf`
+ * composition — for guaranteed non-empty enforcement across any schema shape use `minLength: 1`,
+ * which Ajv validates natively everywhere (and is reported as a normal contract violation here).
  */
 function emptyRequiredStrings(schema: object, body: unknown, prefix = ""): string[] {
-  const s = schema as { type?: string; properties?: Record<string, { type?: string } & object>; required?: string[]; items?: object };
-  if (!s || body === null || body === undefined) return [];
+  if (!schema || typeof schema !== "object" || body === null || body === undefined) return [];
+  const eff = schemaView(schema);
   const join = (p: string, k: string): string => (p ? `${p}.${k}` : k);
+  const has = (o: Record<string, unknown>, k: string): boolean => Object.prototype.hasOwnProperty.call(o, k);
   const out: string[] = [];
-  // Array of objects: recurse into each element (the most common REST list shape).
-  if (s.type === "array" && s.items && Array.isArray(body)) {
-    body.forEach((el, i) => out.push(...emptyRequiredStrings(s.items as object, el, `${prefix}[${i}]`)));
+  // Array shape: `items` present and the body is an array — recurse into each element.
+  if (eff.items && Array.isArray(body)) {
+    body.forEach((el, i) => out.push(...emptyRequiredStrings(eff.items as object, el, `${prefix}[${i}]`)));
     return out;
   }
   if (typeof body !== "object") return out;
   const rec = body as Record<string, unknown>;
-  for (const key of Array.isArray(s.required) ? s.required : []) {
-    const prop = s.properties?.[key];
-    if (prop?.type === "string" && Object.prototype.hasOwnProperty.call(rec, key) && rec[key] === "") out.push(join(prefix, key));
+  for (const key of eff.required) {
+    const prop = eff.properties[key] as { type?: string } | undefined;
+    if (prop?.type === "string" && has(rec, key) && rec[key] === "") out.push(join(prefix, key));
   }
-  for (const [key, prop] of Object.entries(s.properties ?? {})) {
-    const pt = (prop as { type?: string })?.type;
-    if (prop && (pt === "object" || pt === "array") && Object.prototype.hasOwnProperty.call(rec, key)) {
-      out.push(...emptyRequiredStrings(prop, rec[key], join(prefix, key)));
-    }
+  for (const [key, prop] of Object.entries(eff.properties)) {
+    if (!prop || typeof prop !== "object" || !has(rec, key)) continue;
+    const cv = schemaView(prop);
+    const structural = Object.keys(cv.properties).length > 0 || cv.items !== undefined || cv.required.length > 0;
+    if (structural) out.push(...emptyRequiredStrings(prop as object, rec[key], join(prefix, key)));
   }
   return out;
 }
