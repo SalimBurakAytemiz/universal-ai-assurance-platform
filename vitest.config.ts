@@ -28,6 +28,7 @@ export default defineConfig({
       "@uaap/knowledge-graph": r("./packages/knowledge-graph/src/index.ts"),
       "@uaap/engine-core": r("./packages/engine-core/src/index.ts"),
       "@uaap/quality-api-engine": r("./packages/quality-api-engine/src/index.ts"),
+      "@uaap/quality-database-engine": r("./packages/quality-database-engine/src/index.ts"),
     },
   },
   test: {
