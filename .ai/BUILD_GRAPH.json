@@ -885,16 +885,29 @@
       "family": "security",
       "dependencies": [
         "orchestrator",
-        "tool-adapter-registry"
+        "tool-adapter-registry",
+        "engine-core"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-SEC-APPSEC-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/security-appsec-engine/src/index.ts"
+      ],
+      "tests": [
+        "packages/security-appsec-engine/test/security-appsec-engine.test.ts"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     },
     {
       "id": "security-active-validation-gate",
