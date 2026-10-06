@@ -1286,14 +1286,26 @@
       "dependencies": [
         "desktop-shell"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-PACKAGING-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "apps/desktop/package.json",
+        "apps/desktop/scripts/verify-package.mjs",
+        "apps/desktop/src/main.js (UAAP_SMOKE startup mode)"
+      ],
+      "tests": [
+        "apps/desktop: npm run package:dir && npm run verify:package (packaged UAAP.exe startup smoke, exit 0)"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "kind": "DEV_UNSIGNED",
+        "mergedPR": null,
+        "note": "DEV/UNSIGNED build via @electron/packager; packaged exe runs + renders real state (startup smoke). PRODUCTION CODE-SIGNING = DESKTOP_SIGNING_REQUIRED (no cert).",
+        "evidence": ".ai/PACKAGING_EVIDENCE.json",
+        "startupSmoke": "packaged UAAP.exe exit 0, all view checks true"
+      }
     },
     {
       "id": "autopilot-runtime-states",

@@ -11,9 +11,13 @@
     "smoke": "electron smoke/headless-smoke.cjs",
     "previews": "npm run bundle",
     "views": "electron smoke/views-smoke.cjs",
-    "build": "node -e \"console.error('Desktop packaging (electron-builder) is not configured yet. See build-graph node desktop-packaging and .ai/KNOWN_ISSUES.md.'); process.exit(1)\""
+    "prepackage:dir": "npm run bundle",
+    "package:dir": "electron-packager . UAAP --platform=win32 --arch=x64 --out=dist --overwrite --prune=true --ignore=\"/dist($|/)\" --ignore=\"/scripts($|/)\"",
+    "verify:package": "node scripts/verify-package.mjs",
+    "build": "npm run package:dir"
   },
   "devDependencies": {
+    "@electron/packager": "^18.3.6",
     "electron": "^32.1.2",
     "esbuild": "^0.21.5"
   }

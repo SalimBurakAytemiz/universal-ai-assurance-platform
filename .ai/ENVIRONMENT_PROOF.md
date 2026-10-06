@@ -35,10 +35,12 @@ recorded. This file is the evidence. "Runtime missing" is not, by itself, a prov
    state (`apps/desktop`, `npm run views`, committed at `apps/desktop/smoke/views-smoke.cjs`, exit 0):
    home 56/62 done, agents 72 (real registry), security LOCKED (fail-closed), knowledge/learning real.
    desktop-shell + the three views are DONE (runtime-validated).
-7. Scope note (honest): **dev packaging is NOT yet proven** — `apps/desktop`'s `build` script is still a
-   deliberate stub that exits 1. An electron-builder/packager dev build is ATTEMPTED and its exact
-   result recorded in the desktop-packaging PR. PRODUCTION CODE-SIGNING (`DESKTOP_SIGNING_REQUIRED`)
-   is a separate credential blocker — no signing cert is present and none can be safely synthesized.
+7. Packaging — **dev/unsigned build PROVEN** (`.ai/PACKAGING_EVIDENCE.json`): `@electron/packager`
+   produced `dist/UAAP-win32-x64/UAAP.exe` (186 MB, electron 32.3.3, unsigned) on this host, and the
+   PACKAGED binary was launched in startup-smoke mode (`UAAP_SMOKE=1 UAAP_REPO_ROOT=<repo>`) and
+   rendered the real repo state (exit 0, all view checks true, agents 72, security LOCKED). PRODUCTION
+   CODE-SIGNING + a signed auto-update channel remain `DESKTOP_SIGNING_REQUIRED` — no code-signing
+   certificate is present and none can be safely synthesized.
 
 ### sandbox-learning — Docker absent → safe local alternative used: RESOLVED
 1. Required: an isolated execution runtime.

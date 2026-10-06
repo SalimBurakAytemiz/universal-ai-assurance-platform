@@ -46,3 +46,4 @@ test-results/
 .ai/autopilot/*.acq.*
 .ai/autopilot/*.steal.*
 apps/desktop/vendor/
+apps/desktop/dist/
