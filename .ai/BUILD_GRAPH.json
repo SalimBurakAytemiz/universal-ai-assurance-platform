@@ -1553,8 +1553,18 @@
       "tests": [
         "packages/quality-accessibility-engine/test/quality-accessibility-engine.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "b0654c0e3469476015512b487e679c836ad77929"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 17
+      }
     }
   ]
 }
