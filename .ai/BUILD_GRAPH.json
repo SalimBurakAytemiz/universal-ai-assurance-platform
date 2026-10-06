@@ -783,15 +783,17 @@
       "tests": [
         "packages/knowledge-graph/test/knowledge-graph.test.ts"
       ],
-      "commits": [],
+      "commits": [
+        "3e3aa5dd847e8fb7e7b32f79a978bc442b20130b"
+      ],
       "review": {
-        "loops": 1,
+        "loops": 3,
         "unresolved": {
           "P0": 0,
           "P1": 0,
           "P2": 0
         },
-        "mergedPR": null
+        "mergedPR": 10
       }
     },
     {
@@ -1358,6 +1360,23 @@
         },
         "mergedPR": 6
       }
+    },
+    {
+      "id": "autopilot-ci-pr-monitor",
+      "name": "Durable CI/PR monitor in autopilot (session-independent)",
+      "family": "autopilot",
+      "dependencies": [
+        "autopilot-service",
+        "autopilot-provider-monitor"
+      ],
+      "status": "READY",
+      "requirements": [
+        "REQ-AUTOPILOT-CI-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
     }
   ]
 }
