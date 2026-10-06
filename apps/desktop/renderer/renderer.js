@@ -1,14 +1,17 @@
 "use strict";
-// Renderer: honest control plane. Only Home, Build Graph, Agents(count), System Health and
-// Release Center read real state. Everything whose backend is not built shows NOT AVAILABLE.
+// Renderer: honest control plane. The green "live" badge marks ONLY views that render real, present
+// backend state (Home, System Health, Security, Agents, Knowledge, Learning, Authorization, Build
+// Graph, Autopilot). Views that are wired but currently have no data to show (Release Center, Audit)
+// render NOT AVAILABLE / empty and are NOT badged live — the badge must never claim green over a
+// NOT AVAILABLE view. Everything whose backend is not built shows NOT AVAILABLE.
 
 const MENU = [
-  ["Overview", [["home", "Home", "live"], ["system-health", "System Health", "live"], ["audit", "Audit", "live"]]],
+  ["Overview", [["home", "Home", "live"], ["system-health", "System Health", "live"], ["audit", "Audit"]]],
   ["Project", [["organizations", "Organizations"], ["projects", "Projects"], ["architecture", "Architecture"], ["digital-twin", "Digital Twin"], ["domains", "Domains"], ["capabilities", "Capabilities"], ["journeys", "Critical Journeys"]]],
   ["Assurance", [["quality", "Quality"], ["security", "Security", "live"], ["data", "Data"], ["performance", "Performance"], ["reliability", "Reliability"], ["privacy", "Privacy"], ["accessibility", "Accessibility"]]],
   ["Agents & Knowledge", [["agents", "Agents", "live"], ["agent-teams", "Agent Teams"], ["evaluations", "Agent Evaluations"], ["knowledge", "Knowledge", "live"], ["learning", "Learning", "live"]]],
   ["Operations", [["runs", "Runs"], ["schedules", "Schedules"], ["automation", "Automation"], ["findings", "Findings"], ["risks", "Risks"], ["evidence", "Evidence"], ["reports", "Reports"]]],
-  ["Governance", [["approvals", "Approvals"], ["policies", "Policies"], ["authorization", "Authorization", "live"], ["release", "Release Center", "live"]]],
+  ["Governance", [["approvals", "Approvals"], ["policies", "Policies"], ["authorization", "Authorization", "live"], ["release", "Release Center"]]],
   ["Build", [["buildgraph", "Build Graph", "live"], ["autopilot", "Autopilot", "live"]]],
 ];
 
@@ -90,11 +93,21 @@ function home(main) {
     <p class="foot">Derived from the reviewed @uaap/desktop-viewmodels over real .ai/ state${vm ? "" : " (bundle not built — run npm run bundle)"}. Read at ${STATE.readAt || "?"}. ${STATE.error ? "ERROR: " + STATE.error : ""}</p>`));
 }
 
-// Color derives from the VALUE — green only for a healthy/implemented status, muted for unknown,
-// warn otherwise. Never a hardcoded green on a missing or non-healthy value (no fake green).
+// Color derives from the VALUE — green ONLY for a genuinely healthy/implemented status, muted for
+// unknown, warn otherwise. Tokenized (not substring) matching so a NEGATED value can never show a
+// false green: "NOT_IMPLEMENTED", "UNHEALTHY", "NOT OK" all contain a healthy word as a substring but
+// must render warn. Any negation/degradation token forces warn (fail-closed); green requires a
+// recognized healthy token AND no negative token.
+const HEALTH_GOOD = new Set(["IMPLEMENTED", "HEALTHY", "TESTED", "OK", "DONE", "PASS", "PASSED", "ACTIVE", "VALIDATED"]);
+const HEALTH_BAD = new Set([
+  "NOT", "NON", "UN", "NO", "FAIL", "FAILED", "DEGRADED", "UNAVAILABLE", "UNHEALTHY", "BLOCKED",
+  "MISSING", "ERROR", "STALE", "PENDING", "UNKNOWN", "UNVALIDATED", "SCAFFOLD", "SCAFFOLDED", "DOCUMENTED",
+]);
 function healthColor(v) {
   if (!v) return "var(--na)";
-  return /IMPLEMENTED|HEALTHY|TESTED|\bOK\b/i.test(String(v)) ? "var(--ok)" : "var(--warn)";
+  const tokens = String(v).toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean);
+  if (tokens.some((t) => HEALTH_BAD.has(t))) return "var(--warn)";
+  return tokens.some((t) => HEALTH_GOOD.has(t)) ? "var(--ok)" : "var(--warn)";
 }
 function systemHealth(main) {
   const av = STATE.activeSecurityValidation || {};

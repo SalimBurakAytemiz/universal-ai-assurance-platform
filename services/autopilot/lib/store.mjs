@@ -19,7 +19,7 @@
 import {
   closeSync, copyFileSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, writeSync,
 } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 const VERSION = "1";
 
@@ -29,12 +29,27 @@ function isParseableFile(file) {
 
 function atomicWrite(file, data) {
   const dir = dirname(file);
+  const base = basename(file);
   mkdirSync(dir, { recursive: true });
-  const tmp = join(dir, `.${process.pid}.${Math.floor(performance.now())}.tmp`);
-  const fd = openSync(tmp, "w");
-  try { writeSync(fd, data); fsyncSync(fd); } finally { closeSync(fd); }
-  try { if (existsSync(file) && isParseableFile(file)) copyFileSync(file, `${file}.bak`); } catch { /* best effort */ }
-  renameSync(tmp, file); // atomic on same filesystem
+  // Per-write unique tmp name (own pid + monotonic counter). We deliberately do NOT sweep other
+  // tmp files in the directory: several files here (jobs.json by the loop process, control.json by a
+  // separate lock-free pause/resume/stop CLI process) are written concurrently, and deleting another
+  // writer's in-flight tmp would make its rename fail. In-process failures are cleaned by the catch
+  // below; a hard process-kill between open and rename may leave one harmless, never-read orphan tmp
+  // (a cosmetic residue, documented in .ai/KNOWN_ISSUES.md), which is strictly safer than a
+  // cross-writer sweep race.
+  const tmp = join(dir, `.${base}.${process.pid}.${Math.floor(performance.now())}.tmp`);
+  // Any failure after the tmp is created (writeSync, fsyncSync, or rename) unlinks the tmp so this
+  // process never leaves its own orphan; the error still propagates.
+  try {
+    const fd = openSync(tmp, "w");
+    try { writeSync(fd, data); fsyncSync(fd); } finally { closeSync(fd); }
+    try { if (existsSync(file) && isParseableFile(file)) copyFileSync(file, `${file}.bak`); } catch { /* best effort */ }
+    renameSync(tmp, file); // atomic on same filesystem
+  } catch (e) {
+    try { rmSync(tmp); } catch { /* best effort */ }
+    throw e;
+  }
   try { const dfd = openSync(dir, "r"); try { fsyncSync(dfd); } finally { closeSync(dfd); } } catch { /* dir fsync unsupported on some FS */ }
 }
 

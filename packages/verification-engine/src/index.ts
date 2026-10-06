@@ -1,4 +1,4 @@
-import { FindingStatus, type Finding } from "@uaap/core";
+import { canonicalIdentity, FindingStatus, type Finding } from "@uaap/core";
 
 export const Verdict = { CONFIRM: "CONFIRM", REJECT: "REJECT" } as const;
 export type Verdict = (typeof Verdict)[keyof typeof Verdict];
@@ -45,8 +45,9 @@ export class VerificationEngine {
     if (!detectedBy) {
       return { ok: false, reason: "Finding has no detectedBy; separation of duties cannot be established." };
     }
-    // Canonical (case-insensitive) identity comparison so a case variant cannot bypass SoD.
-    if (verifierId.toLowerCase() === detectedBy.toLowerCase()) {
+    // Canonical identity comparison (NFKC + trim + case-fold) so neither a case variant nor a Unicode
+    // re-encoding of the same identity can bypass SoD.
+    if (canonicalIdentity(verifierId) === canonicalIdentity(detectedBy)) {
       return { ok: false, reason: "Separation of duties: the detector cannot verify its own finding." };
     }
     if (!VERIFIABLE.has(finding.status)) {

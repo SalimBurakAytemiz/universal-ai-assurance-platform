@@ -45,6 +45,12 @@ export interface ToolBrokerDeps {
   readonly audit: AuditLedger;
   /** Adapters keyed by capability id. Kept private to the broker. */
   readonly adapters: ReadonlyMap<string, TargetAdapter>;
+  /**
+   * Trusted wall-clock source (epoch ms) for lease-expiry decisions. Defaults to the real clock.
+   * Expiry is evaluated against THIS, never the caller-supplied request.now (which an agent could
+   * backdate to keep using an expired lease). Injectable for deterministic tests.
+   */
+  readonly clock?: () => number;
 }
 
 /**
@@ -56,7 +62,10 @@ export interface ToolBrokerDeps {
  */
 export class ToolBroker {
   private readonly leases = new Map<string, ToolLease>();
-  constructor(private readonly deps: ToolBrokerDeps) {}
+  private readonly clock: () => number;
+  constructor(private readonly deps: ToolBrokerDeps) {
+    this.clock = deps.clock ?? (() => Date.now());
+  }
 
   issueLease(input: {
     runId: string;
@@ -68,15 +77,20 @@ export class ToolBroker {
   }): ToolLease {
     const lease: ToolLease = { id: newId("LEASE"), ...input, scope: [...input.scope] };
     this.leases.set(lease.id, lease);
-    this.deps.audit.append(AuditEventType.LEASE_ISSUED, "tool-broker", lease, input.issuedAt);
+    // Audit `at` is stamped from the TRUSTED clock, never a caller-supplied time, so the tamper-evident
+    // ledger's event times cannot be forged by an agent. (The lease's own issuedAt field remains the
+    // declared lease metadata; expiry is enforced against the trusted clock in execute().)
+    this.deps.audit.append(AuditEventType.LEASE_ISSUED, "tool-broker", lease, this.nowIso());
     return lease;
   }
 
-  revokeLease(leaseId: string, at: string): void {
+  // `at` is accepted for backward compatibility but intentionally NOT used for the audit timestamp —
+  // the ledger `at` is the trusted clock (see nowIso), not a caller-supplied value.
+  revokeLease(leaseId: string, _at?: string): void {
     const lease = this.leases.get(leaseId);
     if (lease) {
       this.leases.delete(leaseId);
-      this.deps.audit.append(AuditEventType.LEASE_REVOKED, "tool-broker", { leaseId }, at);
+      this.deps.audit.append(AuditEventType.LEASE_REVOKED, "tool-broker", { leaseId }, this.nowIso());
     }
   }
 
@@ -90,9 +104,18 @@ export class ToolBroker {
     if (!lease) return this.deny(request, "No such lease (expired or never issued).");
     if (lease.runId !== request.runId) return this.deny(request, "Lease does not belong to this run.");
     if (lease.targetId !== request.target.id) return this.deny(request, "Lease target does not match request target.");
-    if (Date.parse(request.now) >= Date.parse(lease.expiresAt)) {
+    // Expiry is checked against the TRUSTED clock, not the caller-supplied request.now.
+    if (this.clock() >= Date.parse(lease.expiresAt)) {
       this.revokeLease(leaseId, request.now);
       return this.deny(request, "Lease has expired.");
+    }
+    // Lease scope is ENFORCED (not merely stored): every requested target identifier must fall
+    // within the lease's declared scope. This makes a per-run scope-narrowing real — a lease issued
+    // for a subset of the broad authorization cannot be used against identifiers outside that subset.
+    const leaseScope = new Set(lease.scope);
+    const outOfScope = request.target.identifiers.filter((id) => !leaseScope.has(id));
+    if (outOfScope.length > 0) {
+      return this.deny(request, `Target identifier(s) outside the lease scope: ${outOfScope.join(", ")}.`);
     }
 
     // 2) Kernel decision (applies policy). Always recorded.
@@ -120,7 +143,7 @@ export class ToolBroker {
         AuditEventType.TOOL_EXECUTION,
         request.requestedBy,
         { action: request.action, capability: lease.capability, error: reason },
-        request.now,
+        this.nowIso(),
       );
       return { ok: false, decision, reason };
     }
@@ -128,9 +151,14 @@ export class ToolBroker {
       AuditEventType.TOOL_EXECUTION,
       request.requestedBy,
       { action: request.action, capability: lease.capability, evidenceRef: result.evidenceRef },
-      request.now,
+      this.nowIso(),
     );
     return { ok: true, decision, output: result.output, evidenceRef: result.evidenceRef };
+  }
+
+  /** Trusted decision/record timestamp (ISO) — never the caller-supplied request.now. */
+  private nowIso(): string {
+    return new Date(this.clock()).toISOString();
   }
 
   private deny(request: ActionRequest, reason: string): BrokerResult {
@@ -140,7 +168,7 @@ export class ToolBroker {
       reason: "DEFAULT_DENY",
       explanation: reason,
       evaluated: ["BROKER_LEASE_CHECK"],
-      decidedAt: request.now,
+      decidedAt: this.nowIso(),
     };
     this.deps.audit.recordDecision("tool-broker", decision);
     return { ok: false, decision, reason };

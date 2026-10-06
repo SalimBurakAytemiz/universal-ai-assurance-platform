@@ -1,4 +1,4 @@
-import { AssuranceDomain, FindingStatus, Severity, type Finding } from "@uaap/core";
+import { AssuranceDomain, canonicalIdentity, FindingStatus, Severity, type Finding } from "@uaap/core";
 
 export const GateStatus = { PASS: "PASS", FAIL: "FAIL", NOT_RUN: "NOT_RUN" } as const;
 export type GateStatus = (typeof GateStatus)[keyof typeof GateStatus];
@@ -62,7 +62,10 @@ function acceptanceValidFor(f: Finding, acceptances: readonly RiskAcceptance[], 
   const a = acceptances.find((x) => x.findingId === f.id);
   if (!a) return false;
   if (!a.reason?.trim() || !a.owner?.trim() || !a.approver?.trim()) return false;
-  if (a.owner.trim() === a.approver.trim()) return false; // no self-approval (SoD)
+  // No self-approval (SoD). Identities are compared in canonical form (NFKC + trim + case-fold,
+  // shared with the verification/remediation engines) so neither a case variant ("Alice"/"alice")
+  // nor a Unicode re-encoding of the same identity can bypass the guard.
+  if (canonicalIdentity(a.owner) === canonicalIdentity(a.approver)) return false;
   if (!ISO_8601.test(a.expiry) || !ISO_8601.test(now)) return false; // reject lenient/garbage dates
   const exp = Date.parse(a.expiry);
   const t = Date.parse(now);

@@ -1,4 +1,4 @@
-import { FindingStatus, type Finding } from "@uaap/core";
+import { canonicalIdentity, FindingStatus, type Finding } from "@uaap/core";
 
 /**
  * Remediation lifecycle with STRICT separation of duties:
@@ -46,8 +46,10 @@ export type Outcome =
   | { readonly ok: false; readonly reason: string };
 
 const norm = (s: string | undefined): string => (s ?? "").trim();
-/** Canonical form for SoD identity comparison: trimmed + case-folded (ids are case-insensitive). */
-const canon = (s: string | undefined): string => norm(s).toLowerCase();
+/** Canonical form for SoD identity comparison: NFKC + trim + case-fold (shared platform-wide), so
+ * neither a case variant nor a Unicode re-encoding of the same identity can bypass separation of
+ * duties. */
+const canon = (s: string | undefined): string => canonicalIdentity(s);
 
 export class RemediationEngine {
   private readonly cases = new Map<string, RemediationCase>();

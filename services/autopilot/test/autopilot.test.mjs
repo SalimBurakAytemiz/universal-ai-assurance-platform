@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { JobStore } from "../lib/store.mjs";
@@ -210,6 +210,23 @@ describe("autopilot — durability + control", () => {
     svc.resume();
     await svc.tick();
     expect(store.get("J").state).toBe(RuntimeState.DONE);
+  });
+
+  it("REGRESSION (P2): a save NEVER deletes a concurrent writer's in-flight .tmp (race-free)", () => {
+    const store = new JobStore(jobsPath);
+    // A different file's in-flight tmp, as a separate lock-free pause/resume/stop process writing
+    // control.json would hold mid-write. atomicWrite must not sweep ANY foreign tmp — a sweep would
+    // make that process's rename fail (ENOENT), dropping the control write. It also must not touch a
+    // concurrent same-basename writer's tmp.
+    const foreignOther = join(dir, ".control.json.88888.1.tmp");
+    const foreignSame = join(dir, ".jobs.json.77777.2.tmp"); // another process mid-writing jobs.json
+    writeFileSync(foreignOther, "other writer's in-flight data");
+    writeFileSync(foreignSame, "another jobs.json writer's in-flight data");
+    store.upsert({ id: "J", name: "t", kind: "deterministic", dependsOn: [], state: RuntimeState.READY, attempts: 0, maxAttempts: 5, nextRetryAt: null, createdAt: "t", updatedAt: "t" });
+    store.save(); // writes its own uniquely-named tmp and renames — touching no other tmp
+    const remaining = readdirSync(dir).filter((f) => f.endsWith(".tmp")).sort();
+    expect(remaining).toEqual([".control.json.88888.1.tmp", ".jobs.json.77777.2.tmp"]); // both preserved
+    expect(new JobStore(jobsPath).get("J")).toBeDefined(); // real document intact
   });
 });
 
