@@ -27,7 +27,7 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-STATE-001 | Persistent `.ai` state survives restart | M1 §55,§93 | IMPLEMENTED | `.ai/**` | `validate-state.mjs` |
 | REQ-CI-VALIDATE-001 | Policy/graph/state validators | M1 §68 | IMPLEMENTED | `scripts/validate-*.mjs` | run in `verify` |
 | REQ-CI-001 | CI pipeline | M1 §68 | IMPLEMENTED+TESTED (green across PRs #10–#21) | `.github/workflows/ci.yml` (validate+typecheck+test on Node 20/22 + secret-scan) | CI runs |
-| REQ-DESKTOP-001 | Desktop control plane, no fake green | M1 §7 | SCAFFOLDED | `apps/desktop` | manual launch |
+| REQ-DESKTOP-001 | Desktop control plane, no fake green | M1 §7 | IMPLEMENTED+TESTED (Electron shell; headless BrowserWindow + full-app views runtime smoke, exit 0) | `apps/desktop` (consumes bundled @uaap/desktop-viewmodels) | `smoke/headless-smoke.cjs`, `smoke/views-smoke.cjs` |
 | REQ-GITHUB-001 | GitHub lifecycle automation | M1 §58 | IMPLEMENTED (operationally proven across PRs #10–#21: branch→commit→push→PR→CI→head-pinned safe-merge→sync) | `.ai/GITHUB_STATE.json`, scripts | — |
 | REQ-AGENT-72-001 | 72 canonical agents (9×8) | M2 §2 | IMPLEMENTED+TESTED | `agents/registry/agents.json` | `agent-registry.test.ts` (4) |
 | REQ-AGENT-REGISTRY-001 | Versioned, schema-validated registry | M2 §6 | IMPLEMENTED+TESTED | `schemas/agent.schema.json`, validator | `agent-registry.test.ts` |
@@ -63,10 +63,10 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-REMEDIATION-001 | Remediation lifecycle (SoD + retest) | SEC §5, M1 §45 | IMPLEMENTED+TESTED | `packages/remediation-engine` | `remediation.test.ts` (11) |
 | REQ-RELEASE-001 | Release gate on real results | M1 §46 | IMPLEMENTED+TESTED | `packages/release-gate` (fail-closed, decision ledger) | `release-gate.test.ts` (10) |
 | REQ-PACKAGING-001 | Windows packaging + update/rollback | M1 §80,§81 | NOT_STARTED | build script stub | — |
-| REQ-DESKTOP-VM-001 | Desktop real-state view-model data layer (no fake green) | M2 §47 | IMPLEMENTED+TESTED | `packages/desktop-viewmodels` (derives views from real `.ai/*` state; fail-closed security posture; honest "unknown" defaults) | `desktop-viewmodels.test.ts` (15) |
-| REQ-DESKTOP-AGENTS-001 | Desktop Agents view | M2 §48 | SCAFFOLDED (counts; needs Electron runtime to render) | `apps/desktop`, consumes `@uaap/desktop-viewmodels` | — |
-| REQ-DESKTOP-KNOWLEDGE-001 | Desktop Knowledge view | M2 §49 | NOT_STARTED | — | — |
-| REQ-DESKTOP-LEARNING-001 | Desktop Learning view | M2 §50 | NOT_STARTED | — | — |
+| REQ-DESKTOP-VM-001 | Desktop real-state view-model data layer (no fake green) | M2 §47 | IMPLEMENTED+TESTED (also consumed at runtime by the desktop shell) | `packages/desktop-viewmodels` (fail-closed; bundled into apps/desktop) | `desktop-viewmodels.test.ts` (15) + apps/desktop views smoke |
+| REQ-DESKTOP-AGENTS-001 | Desktop Agents view | M2 §48 | IMPLEMENTED+TESTED (renders the real 72-role registry via the view-model; runtime smoke asserts it) | `apps/desktop` renderer | `smoke/views-smoke.cjs` |
+| REQ-DESKTOP-KNOWLEDGE-001 | Desktop Knowledge view | M2 §49 | IMPLEMENTED+TESTED (knowledge-family nodes + skill registry, real state) | `apps/desktop` renderer | `smoke/views-smoke.cjs` |
+| REQ-DESKTOP-LEARNING-001 | Desktop Learning view | M2 §50 | IMPLEMENTED+TESTED (evaluation/certification/sandbox nodes + certification state, real) | `apps/desktop` renderer | `smoke/views-smoke.cjs` |
 
 | REQ-AUTOPILOT-STATES-001 | Runtime states (WAITING_PROVIDER/RETRY_SCHEDULED/...) | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/states.mjs` | `autopilot.test.mjs` |
 | REQ-AUTOPILOT-STORE-001 | Durable job store (survives restart, atomic writes) | user 2026-10-04 | IMPLEMENTED+TESTED | `services/autopilot/lib/store.mjs` | `autopilot.test.mjs` |
