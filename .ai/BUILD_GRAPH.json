@@ -1281,7 +1281,7 @@
     },
     {
       "id": "desktop-packaging",
-      "name": "Windows desktop packaging + update/rollback",
+      "name": "Windows desktop packaging (dev/unsigned build)",
       "family": "packaging",
       "dependencies": [
         "desktop-shell"
@@ -1301,10 +1301,8 @@
       "commits": [],
       "review": {
         "kind": "DEV_UNSIGNED",
-        "mergedPR": null,
-        "note": "DEV/UNSIGNED build via @electron/packager; packaged exe runs + renders real state (startup smoke). PRODUCTION CODE-SIGNING = DESKTOP_SIGNING_REQUIRED (no cert).",
-        "evidence": ".ai/PACKAGING_EVIDENCE.json",
-        "startupSmoke": "packaged UAAP.exe exit 0, all view checks true"
+        "note": "dev/unsigned dir build + packaged-exe startup smoke (exit 0). Auto-update + rollback are tracked separately as desktop-update-rollback (NOT_STARTED, gated).",
+        "evidence": ".ai/PACKAGING_EVIDENCE.json"
       }
     },
     {
@@ -1801,6 +1799,22 @@
         "confirmedDefectsFixed": 12,
         "mergedPR": 20
       }
+    },
+    {
+      "id": "desktop-update-rollback",
+      "name": "Desktop auto-update + rollback",
+      "family": "packaging",
+      "dependencies": [
+        "desktop-packaging"
+      ],
+      "status": "NOT_STARTED",
+      "requirements": [
+        "REQ-DESKTOP-UPDATE-001"
+      ],
+      "files": [],
+      "tests": [],
+      "commits": [],
+      "review": {}
     }
   ]
 }

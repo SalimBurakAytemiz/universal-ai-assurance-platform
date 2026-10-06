@@ -2,20 +2,15 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T20:05:00.000Z",
+    "at": "2026-10-06T20:25:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #23 desktop shell + views (round 1)",
-    "agents": 17,
-    "reported": 5,
-    "confirmed": 5,
+    "scope": "PR #24 desktop-packaging (round 1)",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
     "distinctDefectsFixed": [
-      "P2 fake-green: learningView summed only P0-P3 of reviewUnresolved and rendered green 0 even when REVIEW_STATE was ABSENT (null=>{}=>0). Now uses the guarded reviews view-model, sums ALL severities, and shows unknown (muted) when review state is absent.",
-      "P3 fake-green: systemHealth hardcoded green and ? fallback. Color now derives from the value (green only for IMPLEMENTED/HEALTHY/TESTED/OK); missing => unknown (muted).",
-      "P3 fake-green: home() bundle-absent fallback echoed the raw master security state word (bypassing the auth gate). Now fail-closed LOCKED_BY_DESIGN text when the view-model bundle is absent.",
-      "P2 weak smoke: agentsCertified check was satisfied by static footer copy containing 0. Now reads the Certified CARD (scoped DOM) and compares to vm.agents.certified.",
-      "P2 weak smoke: knowledgeRendered was tautological (title always present + self-referential count). Now asserts the card-scoped node count AND that a known knowledge node id (knowledge-store) actually renders in the table; fails if the view collapses to empty."
+      "P1 scope overstatement (no-fake honesty): REQ-PACKAGING-001 and the desktop-packaging node were titled packaging + update/rollback and marked IMPLEMENTED+TESTED/DONE, but update/rollback is NOT built (only dev/unsigned packaging + startup smoke). Fixed: packaging node narrowed to Windows desktop packaging (dev/unsigned build) (genuinely DONE); auto-update + rollback split into a new desktop-update-rollback node (NOT_STARTED, gated on signing + update infra) + its own traceability row; docs/DESKTOP-UX.md corrected. The packaging + startup-smoke claim itself was accurate and stays."
     ],
-    "runtimeValidation": "npm run views exit 0 after fixes; all card-scoped checks true.",
     "boundedLoop": {
       "count": 1,
       "max": 3
@@ -606,5 +601,31 @@
     },
     "mergedPR": 22,
     "outcome": "6 rounds; both public functions total by construction; merged 59f2c2c"
+  },
+  "pr23": {
+    "lastReview": {
+      "at": "2026-10-06T20:05:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #23 desktop shell + views (round 1)",
+      "agents": 17,
+      "reported": 5,
+      "confirmed": 5,
+      "distinctDefectsFixed": [
+        "P2 fake-green: learningView summed only P0-P3 of reviewUnresolved and rendered green 0 even when REVIEW_STATE was ABSENT (null=>{}=>0). Now uses the guarded reviews view-model, sums ALL severities, and shows unknown (muted) when review state is absent.",
+        "P3 fake-green: systemHealth hardcoded green and ? fallback. Color now derives from the value (green only for IMPLEMENTED/HEALTHY/TESTED/OK); missing => unknown (muted).",
+        "P3 fake-green: home() bundle-absent fallback echoed the raw master security state word (bypassing the auth gate). Now fail-closed LOCKED_BY_DESIGN text when the view-model bundle is absent.",
+        "P2 weak smoke: agentsCertified check was satisfied by static footer copy containing 0. Now reads the Certified CARD (scoped DOM) and compares to vm.agents.certified.",
+        "P2 weak smoke: knowledgeRendered was tautological (title always present + self-referential count). Now asserts the card-scoped node count AND that a known knowledge node id (knowledge-store) actually renders in the table; fails if the view collapses to empty."
+      ],
+      "runtimeValidation": "npm run views exit 0 after fixes; all card-scoped checks true.",
+      "boundedLoop": {
+        "count": 1,
+        "max": 3
+      },
+      "allResolved": true
+    },
+    "reReview": null,
+    "mergedPR": 23,
+    "outcome": "2 rounds; 5 defects fixed (3 fake-green, 2 weak-smoke); round 2 clean; merged 5923fa6"
   }
 }

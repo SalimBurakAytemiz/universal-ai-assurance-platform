@@ -24,8 +24,13 @@ Desktop packaging (dev/unsigned) — REAL build + startup validation on this Win
 - Shared startup-smoke logic (`src/views-check.js`) is reused by the dev views smoke (`npm run views`,
   exit 0) and the packaged-app `UAAP_SMOKE` mode — one assertion source, no divergence.
 
-Build graph: 62 nodes — **DONE 61, BLOCKED 1** (security-active-validation-gate, LOCKED_BY_DESIGN).
-Every technically-buildable node on this host is now DONE. Remaining: the by-design security gate
-(signed scoped authorization), production code-signing (certificate), final license (legal).
+Build graph: 63 nodes — **DONE 61, BLOCKED 1, NOT_STARTED 1**. The packaging node is now narrowed to
+"packaging (dev/unsigned build)" (DONE); auto-update + rollback is split into `desktop-update-rollback`
+(NOT_STARTED — a signed update channel needs a code-signing cert + an update-hosting service). Remaining
+genuine blockers: security-active-validation-gate (LOCKED_BY_DESIGN), production code-signing +
+auto-update/rollback (certificate + external infra), final license (legal).
 
-P0/P1/P2/P3 open on this change: 0 / 0 / 0 / 0 (pre-PR; adversarial review runs on the PR).
+Adversarial review round 1 (PR #24, 4 agents) confirmed 1 P1: the requirement/node claimed
+"update/rollback" IMPLEMENTED+TESTED while only dev packaging was built. Fixed by narrowing the
+packaging scope to DONE and splitting update/rollback into a separate NOT_STARTED/gated node + row.
+P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Re-review runs on the fix commit.
