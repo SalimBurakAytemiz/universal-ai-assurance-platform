@@ -52,7 +52,23 @@
     "resolution": "ARCHITECTURE CHANGE (beyond the 3-round cap, deliberately): replaced the hand-rolled string parser with the WHATWG URL parser (render host+path only; a scheme'd URL the parser rejects is REDACTED to its scheme, never echoed; a relative URL echoes its clean path). This eliminates the entire hand-rolled-parser leak class by construction. Justified beyond the cap because a confirmed secret-leak into evidence violates a NON-NEGOTIABLE hard rule ('No secrets in evidence'), which overrides the review-loop-count convention — same precedent as PR #6 (concurrency class eliminated by switching to the correct mechanism rather than patching).",
     "regressionTests": "1 new round-3 test (no-path @-in-query keeps real host + no mask; leading-whitespace stripped; /-in-userinfo redacted; navigation does not falsely match two hosts sharing a post-@ tail). 18 in-package, 449/449 repo-wide.",
     "boundedLoop": { "count": 3, "max": 3 },
-    "round4": "focused verification of the WHATWG-based safeUrl runs on the fix commit before merge.",
+    "allResolved": true
+  },
+  "reReview3": {
+    "at": "2026-10-06T16:34:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #21 fix commit 2d4badd (round 4 — focused safeUrl verification)",
+    "agents": 11,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P1 (round-3 WHATWG rewrite still leaked): for an OPAQUE-path scheme (foo:user:pass@host/path, custom:...) the parser leaves userinfo INSIDE pathname (host empty, origin null), so origin+pathname re-emitted 'user:pass@'.",
+      "P1: a blob: URL carrying an authenticated inner URL (blob:https://user:pass@host/uuid) has origin derived from the inner URL (not null) and pathname = the whole inner URL text, so origin+pathname concatenated and leaked the inner userinfo.",
+      "P3: blob:/data:/about: were mangled (origin duplicated; ':' -> '://')."
+    ],
+    "resolution": "Final invariant: render `protocol//host/pathname` ONLY when url.host is non-empty (a true authority — the parser then isolates userinfo into username/password and never into host/pathname); REDACT every opaque-path or parser-rejected scheme to its scheme. Provably complete: userinfo is parser-isolable ONLY with an authority, so host!=='' is exactly the safe-to-render set; query/fragment are never included (we use host+pathname, never search/hash).",
+    "regressionTests": "1 new round-4 test (foo:/custom:/blob: opaque schemes with embedded userinfo are redacted, never re-emitted). 19 in-package, 450/450 repo-wide.",
+    "boundedLoop": { "count": 4, "max": 3 },
     "allResolved": true
   },
   "unresolved": {
@@ -62,9 +78,9 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
+    "count": 4,
     "max": 3,
-    "note": "exceeded to 4 deliberately for a hard-rule secret-safety fix (WHATWG URL parser); not another patch of the same hand-rolled logic."
+    "note": "exceeded deliberately: rounds 3-4 are a hard-rule secret-safety fix for safeUrl (switch to the WHATWG parser + the host!=='' render invariant), not repeated patches of the same logic. A secret-leak into evidence is a non-negotiable DENY that overrides the review-loop-count convention."
   },
   "pr20": {
     "round1": {

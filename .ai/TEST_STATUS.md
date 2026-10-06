@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **449 passed / 449** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-3 fixes)
+- vitest: **450 passed / 450** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-4 fixes)
 
 New this change — `@uaap/quality-web-engine` (`packages/quality-web-engine/test/`): **9 tests**
 - Functional web/UI assurance on the @uaap/engine-core lifecycle over RECORDED web-interaction
@@ -42,5 +42,8 @@ fully removed. Round 3 (11 agents, the bounded cap) confirmed 3 MORE safeUrl edg
 (no-path `@`-in-query over-strip; leading-whitespace bypass; `/`-in-userinfo). Because a secret-leak
 into evidence violates a non-negotiable hard rule (overriding the 3-round convention), safeUrl was
 rewritten to use the WHATWG `URL` parser (host+path only; malformed authority => redacted) —
-eliminating the hand-rolled-parser class by construction. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. A focused
-round-4 verification runs on the fix commit.
+eliminating the hand-rolled-parser class by construction. Round 4 (focused verification) found that
+`origin+pathname` still leaked userinfo for OPAQUE-path schemes (foo:user:pass@…, blob:…@…), where
+the parser leaves userinfo inside pathname. Final invariant: render `protocol//host/path` ONLY when
+host is non-empty (true authority — parser isolates userinfo); REDACT every opaque/rejected scheme
+to its scheme. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. A final round-5 verification runs on the fix commit.

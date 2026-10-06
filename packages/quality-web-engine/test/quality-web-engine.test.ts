@@ -195,6 +195,20 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
     expect(kinds(nav.findings)).toContain("navigation-mismatch");
   });
 
+  it("REGRESSION (round 4): opaque-path / non-authority schemes never leak userinfo (redacted, not re-emitted)", async () => {
+    for (const url of [
+      "foo:user:pass@host/path", // opaque-path scheme: WHATWG keeps 'user:pass@' inside pathname
+      "custom:alice:SECRET@host", // same class
+      "blob:https://user:pass@example.com:8443/uuid?token=SECRET", // blob inner URL carries userinfo in pathname
+    ]) {
+      const r = await drive({ flows: [{ id: "f", steps: [{ network: [{ url, failed: true }] }] }] });
+      const blob = JSON.stringify(r.findings);
+      expect(blob, url).not.toContain("user:pass");
+      expect(blob, url).not.toContain("SECRET");
+      expect(blob, url).not.toContain("alice:SECRET");
+    }
+  });
+
   it("REGRESSION: a cancellation yields CANCELLED, never a swallowed engine-error finding", async () => {
     const tok = new CancellationToken();
     tok.cancel("test-cancel");

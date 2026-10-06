@@ -99,35 +99,34 @@ const CONSOLE_BENIGN_LEVELS = new Set([
 ]);
 
 /** Echo a URL with its userinfo (basic-auth `user:pass@`), query and fragment removed — all three
- * can carry tokens/PII. SECRET-SAFE BY CONSTRUCTION: it uses the WHATWG URL parser (host/port and
- * path only — the parser excludes userinfo, query and fragment by construction, for any conformant
- * absolute URL, regardless of what delimiters a credential contains). A relative URL has no userinfo,
- * so its path is echoed (query/fragment dropped). If a string DECLARES a scheme but the parser
- * rejects it (a malformed authority where a credential could hide), it is REDACTED to the scheme
- * rather than echoed — fail-closed, never a leak. */
+ * can carry tokens/PII. SECRET-SAFE BY CONSTRUCTION via the WHATWG URL parser, with one invariant:
+ * the parser isolates userinfo into username/password ONLY for an authority-based URL (non-empty
+ * host); for an opaque-path scheme (foo:…, data:…, blob:…, mailto:…) the userinfo stays INSIDE
+ * `pathname`. So we render `protocol//host/path` ONLY when host is non-empty (then userinfo/query/
+ * fragment are all excluded by construction, for any delimiters a credential may contain), and
+ * REDACT anything else — an opaque scheme, or a scheme the parser rejects — to its scheme. A
+ * relative URL has no userinfo, so its clean path is echoed (query/fragment dropped). Fail-closed:
+ * a credential can never reach a finding. */
 function safeUrl(u: unknown): string {
   if (typeof u !== "string") return "(no url)";
   const raw = u.trim();
   if (raw === "") return "(no url)";
-  const render = (p: URL): string => {
-    const base = p.origin && p.origin !== "null" ? p.origin : `${p.protocol}//${p.host}`;
-    const out = `${base}${p.pathname || ""}`;
-    return out.length > 0 ? out : "(empty url)";
-  };
   const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw);
+  const redactScheme = (): string => {
+    const m = /^([a-z][a-z0-9+.-]*:)/i.exec(raw);
+    return `${m ? m[1] : ""}//(redacted)`;
+  };
+  // host+path only. Safe ONLY when host is non-empty (true authority): the parser then keeps userinfo
+  // in username/password, never in host or pathname. An empty host means an opaque-path scheme whose
+  // pathname can still contain a credential — redact it instead.
+  const renderAuthority = (p: URL): string => (p.host === "" ? redactScheme() : `${p.protocol}//${p.host}${p.pathname || ""}`);
   try {
-    if (hasScheme) return render(new URL(raw)); // absolute: host+path only, credentials excluded
-    // Relative: a dummy base lets the parser extract a clean path; a relative URL cannot carry
-    // userinfo. If it is protocol-relative ("//host/..."), the parser resolves a host we can show.
+    if (hasScheme) return renderAuthority(new URL(raw));
     const rel = new URL(raw, "http://host.invalid");
-    return raw.startsWith("//") ? render(rel) : (rel.pathname || "/");
+    if (raw.startsWith("//") && rel.host && rel.host !== "host.invalid") return `${rel.protocol}//${rel.host}${rel.pathname || ""}`;
+    return rel.pathname || "/"; // bare relative path: no userinfo; query/fragment dropped
   } catch {
-    // Unparseable. If it declares an authority, a credential could be hiding in a malformed segment,
-    // so redact to the scheme — never echo it. A bare relative path has no userinfo: drop query/frag.
-    if (hasScheme) {
-      const m = /^([a-z][a-z0-9+.-]*:)/i.exec(raw);
-      return `${m ? m[1] : ""}//(redacted)`;
-    }
+    if (hasScheme) return redactScheme(); // malformed authority where a credential could hide
     const s = raw.split("#")[0]!.split("?")[0]!;
     return s.length > 0 ? s : "(empty url)";
   }
