@@ -107,3 +107,46 @@ describe("QualityRealtimeEngine — stream validation against the local fixture"
     expect(caps.capabilities).toContain("realtime.ordering");
   });
 });
+
+describe("QualityRealtimeEngine — review-fix regressions (ordering/ack correctness)", () => {
+  const drive2 = (input: unknown) => driveEngine(new QualityRealtimeEngine(), ctx(input));
+
+  it("honors channel.orderKey: a multi-partition stream keyed by a non-'key' field passes clean", async () => {
+    const input = {
+      contracts: { channels: [{ name: "c", ordering: "per-key", orderKey: "customerId", events: [{ type: "e" }] }] },
+      streams: { c: [{ type: "e", customerId: "A", seq: 1 }, { type: "e", customerId: "B", seq: 1 }, { type: "e", customerId: "A", seq: 2 }, { type: "e", customerId: "B", seq: 2 }] },
+    };
+    const r = await drive2(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(r.findings).toHaveLength(0); // each partition is in-order — no false positives
+  });
+
+  it("fails closed when an ordered channel's messages carry no seq (ordering unverifiable)", async () => {
+    const input = { contracts: { channels: [{ name: "c", ordering: "total", events: [{ type: "e" }] }] }, streams: { c: [{ type: "e" }, { type: "e" }] } };
+    const r = await drive2(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(r.findings.filter((f) => f.kind === "missing-sequence")).toHaveLength(2); // not a silent pass
+  });
+
+  it("checks the ack requirement even for an unknown event type", async () => {
+    const input = { contracts: { channels: [{ name: "c", requireAck: true, events: [{ type: "known" }] }] }, streams: { c: [{ type: "mystery", acked: false }] } };
+    const r = await drive2(input);
+    const k = kinds(r.findings);
+    expect(k).toContain("unacked-message"); // ack is channel-level, not skipped by the unknown-type continue
+    expect(k).toContain("unknown-event-type");
+  });
+
+  it("a non-string requiredHeaders entry does not crash the run", async () => {
+    const input = { contracts: { channels: [{ name: "c", events: [{ type: "e", requiredHeaders: [123] }] }] }, streams: { c: [{ type: "e", headers: {} }] } };
+    const r = await drive2(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).not.toContain("engine-error");
+    expect(kinds(r.findings)).toContain("missing-message-header");
+  });
+
+  it("type-preserving partition keys: numeric 1 and string '1' are not merged (no false duplicate)", async () => {
+    const input = { contracts: { channels: [{ name: "c", ordering: "per-key", events: [{ type: "e" }] }] }, streams: { c: [{ type: "e", key: 1, seq: 1 }, { type: "e", key: "1", seq: 1 }] } };
+    const r = await drive2(input);
+    expect(r.findings.filter((f) => f.kind === "duplicate-sequence")).toHaveLength(0);
+  });
+});

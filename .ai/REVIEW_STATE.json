@@ -2,18 +2,17 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T10:27:00.000Z",
+    "at": "2026-10-06T11:02:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #13 quality-database-engine",
-    "agents": 29,
-    "reported": 13,
-    "confirmed": 13,
+    "scope": "PR #14 quality-realtime-engine",
+    "agents": 19,
+    "reported": 8,
+    "confirmed": 8,
     "distinctDefectsFixed": [
-      "P1 a null/non-object row threw (Object.keys(null)) and aborted ALL of a table's PK/UNIQUE/FK checks, masking real P1 violations while status stayed DONE. Rows are now isolated into validRows (malformed-row finding + continue); all checks run over the valid rows.",
-      "P1 typeOk() default returned true, so an unrecognized column type silently disabled type validation (fail-open false green). Default is now false AND an unknown-column-type finding is surfaced per such column.",
-      "P1/P2 migration gating failed open on any kind not literally in the denylist (e.g. 'DROP TABLE' with a space, or an unknown kind). Kinds are now normalized (space/hyphen->underscore) and anything not known-safe/destructive/lossy is surfaced as unknown-migration-op (fail-closed).",
-      "P2 a schema table absent from the dataset was silently skipped yet counted as validated. Now surfaced as table-not-in-dataset and the summary reports inspected/declared.",
-      "P2/P3 the migration loop had no isolation; a null migration (and plan() deref) crashed the run. plan() guards null; the migration loop isolates malformed entries (malformed-migration + continue)."
+      "P1 per-key ordering ignored channel.orderKey (hardcoded to m.key) -> correctly-partitioned multi-key streams produced false duplicate/ordering violations. Now partitions on the orderKey field (fallback m.key), keyed type-preservingly (JSON.stringify) so numeric 1 and string '1' never collide.",
+      "P1 false green: a channel declaring total/per-key ordering whose messages carry no seq passed clean (ordering never verified). Now an unsequenced message on an ordered channel is a missing-sequence finding (fail-closed).",
+      "P2 the ack requirement was skipped for unknown event types (the unknown-event-type `continue` short-circuited it). Ack is channel-level and now checked for every message before the event lookup.",
+      "P3 a non-string requiredHeaders entry threw inside the per-channel try (masked as engine-error). Header names are now coerced with String()."
     ],
     "allResolved": true
   },
@@ -24,21 +23,12 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
+    "count": 1,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T10:36:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #13 fix commit 06f90b0",
-    "agents": 6,
-    "reported": 2,
-    "confirmed": 2,
-    "distinctDefectsFixed": [
-      "P1 a table admitted on name alone but with no columns array crashed table.columns.map() into a masked P2 engine-error (false negative under DONE). Admission now requires Array.isArray(columns); such a table is surfaced as malformed-table and skipped.",
-      "P2 a non-array top-level `migrations` (or non-array schema.tables) crashed discover()/plan() (run before prereqs) -> FAILED, zero findings. discover/plan now Array.isArray-guard both; a present-but-non-array migrations is a malformed-migrations-input finding and table validation still runs."
-    ],
-    "allResolved": true
+    "at": null,
+    "note": "re-review of the realtime-engine fixes pending before merge"
   },
   "pr2": {
     "loop1": {

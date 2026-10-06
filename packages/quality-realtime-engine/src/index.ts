@@ -178,9 +178,13 @@ export class QualityRealtimeEngine implements ExecutionEngine {
           else add(finding({ severity: SEV.P1, kind: "malformed-message", title: "Malformed message", detail: `Message ${i} on "${channel.name}" is null or not an object.`, locator: `${loc} msg[${i}]` }));
         });
 
-        // Per-message: event coverage, payload contract, required headers.
+        // Per-message: delivery ack (channel-level — checked for EVERY message, independent of the
+        // event type), then event coverage, payload contract, required headers.
         for (const { m, i } of valid) {
           const mloc = `${loc} msg[${i}]`;
+          if (channel.requireAck && m.acked !== true) {
+            add(finding({ severity: SEV.P1, kind: "unacked-message", title: "Unacknowledged message", detail: `Channel "${channel.name}" requires acknowledgement but message ${i} is not acked.`, locator: mloc }));
+          }
           const ev = typeof m.type === "string" ? eventByType.get(m.type) : undefined;
           if (!ev) {
             add(finding({ severity: SEV.P2, kind: "unknown-event-type", title: "Undeclared event type", detail: `Message type "${String(m.type)}" is not declared on channel "${channel.name}".`, locator: mloc }));
@@ -197,32 +201,34 @@ export class QualityRealtimeEngine implements ExecutionEngine {
             }
           }
           const present = lc(m.headers);
-          for (const h of ev.requiredHeaders ?? []) {
-            if (!present.has(h.toLowerCase())) add(finding({ severity: SEV.P2, kind: "missing-message-header", title: "Missing required message header", detail: `Message is missing required header "${h}".`, locator: mloc }));
-          }
-          if (channel.requireAck && m.acked !== true) {
-            add(finding({ severity: SEV.P1, kind: "unacked-message", title: "Unacknowledged message", detail: `Channel "${channel.name}" requires acknowledgement but message ${i} is not acked.`, locator: mloc }));
+          for (const h of Array.isArray(ev.requiredHeaders) ? ev.requiredHeaders : []) {
+            const name = String(h); // tolerate a non-string header name without throwing
+            if (!present.has(name.toLowerCase())) add(finding({ severity: SEV.P2, kind: "missing-message-header", title: "Missing required message header", detail: `Message is missing required header "${name}".`, locator: mloc }));
           }
         }
 
-        // Ordering invariants (fail-closed on an unrecognized mode).
+        // Ordering invariants (fail-closed on an unrecognized mode AND on a declared-but-unordered
+        // channel: a total/per-key channel whose messages carry no seq is NOT silently passed).
         const mode = channel.ordering ?? "none";
         if (!ORDERING_MODES.has(mode)) {
           add(finding({ severity: SEV.P2, kind: "unknown-ordering-mode", title: "Unknown ordering mode", detail: `Channel "${channel.name}" declares ordering "${String(mode)}" which is not one of none/total/per-key.`, locator: loc }));
         } else if (mode === "total") {
-          this.checkSequence(valid.map((v) => v.m), valid, loc, add);
+          this.checkSequence(valid, loc, add);
         } else if (mode === "per-key") {
+          // Partition on the field named by channel.orderKey (falling back to "key"), keyed by a
+          // TYPE-PRESERVING representation so numeric 1 and string "1" never collide.
+          const field = typeof channel.orderKey === "string" && channel.orderKey ? channel.orderKey : "key";
           const groups = new Map<string, { m: StreamMessage; i: number }[]>();
           for (const v of valid) {
-            const key = String(v.m.key ?? "");
-            let arr = groups.get(key);
+            const gk = JSON.stringify((v.m as unknown as Record<string, unknown>)[field] ?? null);
+            let arr = groups.get(gk);
             if (!arr) {
               arr = [];
-              groups.set(key, arr);
+              groups.set(gk, arr);
             }
             arr.push(v);
           }
-          for (const g of groups.values()) this.checkSequence(g.map((v) => v.m), g, loc, add);
+          for (const g of groups.values()) this.checkSequence(g, loc, add);
         }
 
         collector.evidence({
@@ -245,17 +251,25 @@ export class QualityRealtimeEngine implements ExecutionEngine {
     });
   }
 
-  /** Strictly-increasing sequence check + duplicate detection over messages that carry a numeric seq. */
-  private checkSequence(messages: readonly StreamMessage[], located: { i: number }[], loc: string, add: (f: EngineFinding) => void): void {
+  /**
+   * Strictly-increasing sequence check + duplicate detection over an ORDERED group. Because the
+   * channel declares an ordering invariant, a message WITHOUT a finite numeric seq is unorderable and
+   * is flagged (missing-sequence) rather than silently skipped — an ordered channel can never pass
+   * without its ordering actually being verified.
+   */
+  private checkSequence(items: readonly { m: StreamMessage; i: number }[], loc: string, add: (f: EngineFinding) => void): void {
     let prev: number | undefined;
     const seenSeq = new Set<number>();
-    messages.forEach((m, idx) => {
-      if (typeof m.seq !== "number" || !Number.isFinite(m.seq)) return; // seq is optional; only ordered messages are checked
-      const at = `${loc} msg[${located[idx]?.i ?? idx}]`;
+    for (const { m, i } of items) {
+      const at = `${loc} msg[${i}]`;
+      if (typeof m.seq !== "number" || !Number.isFinite(m.seq)) {
+        add(finding({ severity: SEV.P2, kind: "missing-sequence", title: "Missing sequence on ordered channel", detail: `Message has no numeric seq but its channel declares an ordering invariant; ordering cannot be verified.`, locator: at }));
+        continue;
+      }
       if (seenSeq.has(m.seq)) add(finding({ severity: SEV.P1, kind: "duplicate-sequence", title: "Duplicate sequence number", detail: `seq ${m.seq} occurs more than once.`, locator: at }));
       seenSeq.add(m.seq);
       if (prev !== undefined && m.seq <= prev) add(finding({ severity: SEV.P1, kind: "ordering-violation", title: "Out-of-order message", detail: `seq ${m.seq} is not strictly greater than the previous ${prev}.`, locator: at }));
       prev = m.seq;
-    });
+    }
   }
 }
