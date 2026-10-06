@@ -23,7 +23,8 @@
       "@uaap/knowledge": ["packages/knowledge/src/index.ts"],
       "@uaap/agent-evaluation": ["packages/agent-evaluation/src/index.ts"],
       "@uaap/domain-model": ["packages/domain-model/src/index.ts"],
-      "@uaap/assurance-planner": ["packages/assurance-planner/src/index.ts"]
+      "@uaap/assurance-planner": ["packages/assurance-planner/src/index.ts"],
+      "@uaap/knowledge-graph": ["packages/knowledge-graph/src/index.ts"]
     }
   },
   "include": [

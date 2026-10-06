@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uaap.local/schemas/knowledge-graph.schema.json",
+  "title": "Assurance Knowledge Graph Document",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nodes", "edges"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "type", "key"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "type": {
+            "type": "string",
+            "enum": [
+              "REQUIREMENT", "FEATURE", "BUSINESS_FLOW", "CODE", "COMPONENT", "SERVICE",
+              "API", "DATABASE", "EVENT", "QUEUE", "TEST", "FINDING", "EVIDENCE", "RISK", "RELEASE"
+            ]
+          },
+          "key": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "attrs": { "type": "object" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "type", "from", "to"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "type": {
+            "type": "string",
+            "enum": [
+              "IMPLEMENTS", "CONTAINS", "DEPENDS_ON", "EXPOSES", "PERSISTS_TO", "EMITS",
+              "CONSUMES", "COVERS", "VALIDATES", "PRODUCES", "AFFECTS", "SUPPORTS", "THREATENS", "SHIPS"
+            ]
+          },
+          "from": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "attrs": { "type": "object" }
+        }
+      }
+    }
+  }
+}
