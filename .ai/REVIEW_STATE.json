@@ -23,12 +23,20 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the realtime-engine fixes pending before merge"
+    "at": "2026-10-06T11:10:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #14 fix commit 47d2fe8",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
+    "distinctDefectsFixed": [
+      "P1 the realtime engine's Ajv instance did not register ajv-formats, so declared `format` constraints (email/uuid/date-time/...) were silently ignored -> a false green on the payload contract (and classifyAjvError's format branch was dead code). Registered addFormats(); format violations are now reported. The 8 ordering/ack fixes were re-verified correct."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

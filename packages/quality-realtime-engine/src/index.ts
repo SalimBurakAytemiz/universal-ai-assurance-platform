@@ -7,6 +7,7 @@
 // path and nothing to authorize. Fail-closed and total: malformed structural input is surfaced as a
 // finding and never crashes the run or masks a real violation; a clean stream yields zero findings.
 import Ajv2020 from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 import type { ErrorObject, ValidateFunction } from "ajv";
 import type { Severity } from "@uaap/core";
 import {
@@ -74,7 +75,9 @@ function lc(headers: Readonly<Record<string, unknown>> | undefined): Set<string>
 }
 
 export class QualityRealtimeEngine implements ExecutionEngine {
-  private readonly ajv = new Ajv2020({ allErrors: true, strict: false });
+  // ajv-formats is registered so declared `format` constraints (email/uuid/date-time/…) are actually
+  // validated — without it Ajv silently ignores `format` (a false green on the payload contract).
+  private readonly ajv = addFormats(new Ajv2020({ allErrors: true, strict: false }));
 
   capabilities(): EngineCapabilities {
     return {

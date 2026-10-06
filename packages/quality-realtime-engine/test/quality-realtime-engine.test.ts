@@ -150,3 +150,23 @@ describe("QualityRealtimeEngine — review-fix regressions (ordering/ack correct
     expect(r.findings.filter((f) => f.kind === "duplicate-sequence")).toHaveLength(0);
   });
 });
+
+describe("QualityRealtimeEngine — payload format constraints are validated (re-review fix)", () => {
+  it("flags a payload field that violates a declared format (email)", async () => {
+    const input = {
+      contracts: { channels: [{ name: "c", events: [{ type: "e", schema: { type: "object", required: ["email"], properties: { email: { type: "string", format: "email" } } } }] }] },
+      streams: { c: [{ type: "e", payload: { email: "definitely-not-an-email" } }] },
+    };
+    const r = await driveEngine(new QualityRealtimeEngine(), ctx(input));
+    expect(kinds(r.findings)).toContain("payload-format-violation");
+  });
+
+  it("accepts a valid format value (no false positive)", async () => {
+    const input = {
+      contracts: { channels: [{ name: "c", events: [{ type: "e", schema: { type: "object", required: ["email"], properties: { email: { type: "string", format: "email" } } } }] }] },
+      streams: { c: [{ type: "e", payload: { email: "a@b.com" } }] },
+    };
+    const r = await driveEngine(new QualityRealtimeEngine(), ctx(input));
+    expect(r.findings).toHaveLength(0);
+  });
+});
