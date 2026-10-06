@@ -69,3 +69,24 @@ Proven by `services/autopilot/test/ci-monitor.test.mjs` (6 durability proofs):
 1. `WAITING_CI` survives restart; 2. CI GREEN resumes safe-merge; 3. CI FAILURE resumes the fix
 workflow; 4. a changed PR HEAD invalidates the prior review (no merge); 5. a duplicate CI event
 does not duplicate the merge; 6. with NO notification ever, the poll loop still resolves.
+
+## Provider-resume (why a usage-limit reset resumes WITHOUT a chat message)
+Session-independent resumption is a property of the **autopilot daemon process** (`node
+services/autopilot/cli.mjs start`), NOT of the Claude chat session. Each scheduler tick re-probes
+provider availability (`ProviderGate` reads `.ai/autopilot/provider.json` `{"available":true}` or
+`UAAP_PROVIDER_AVAILABLE=1`). The moment the provider is available again, a persisted
+`WAITING_PROVIDER` job becomes `READY` and runs on that tick — no user message and no chat-UI
+notification are involved. If the daemon is not running as a persistent background process, nothing
+resumes; the daemon is the mechanism, so it must be started (via `scripts/start-full-auto.ps1`) for
+24/7 resumption.
+
+All runtime states are durable (persisted in `jobs.json`): `READY`, `RUNNING`, `WAITING_PROVIDER`,
+`WAITING_CI`, `WAITING_APPROVAL`, `BLOCKED`, `RETRY_SCHEDULED`, `DONE`, `FAILED` (plus the reserved
+`VALIDATING`/`REVIEWING`). A job's state round-trips through `jobs.json` across restart.
+
+Proven by `services/autopilot/test/autopilot.test.mjs` and `ci-monitor.test.mjs` (runtime tests, not
+claims): provider-unavailable → `WAITING_PROVIDER` persisted; restart → preserved on disk; provider
+available → auto-runs on the next tick, exactly once, from its checkpoint; repeated ticks never
+re-run a `DONE` job (no duplicate execution/commit/PR/merge); `WAITING_CI` survives restart; a
+RUNNING-crash job reconciles without a duplicate side effect. The consolidated end-to-end chain is
+the "provider-resume end-to-end durability proof" test.
