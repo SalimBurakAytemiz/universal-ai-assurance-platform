@@ -2,19 +2,20 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T08:40:00.000Z",
+    "at": "2026-10-06T09:37:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #11 auto/autopilot-ci-monitor (durable CI/PR monitor)",
-    "agents": 23,
-    "reported": 10,
-    "confirmed": 9,
+    "scope": "PR #12 engine-core + quality-api-engine",
+    "agents": 41,
+    "reported": 19,
+    "confirmed": 19,
     "distinctDefectsFixed": [
-      "P1 merge() FAILED OPEN: fell through to `gh pr merge` when the pre-merge `gh pr view` errored, JSON parse failed, or headRefOid was null — could merge a closed PR or an UNREVIEWED head. Now positively confirms OPEN + headRefOid===reviewedHead before merging, else refuses.",
-      "P1 transient/retryable merge failure permanently BLOCKED the job (stall). merge() now returns typed {retryable}; _tickCiWait re-queues retryable failures to WAITING_CI backoff, BLOCKs only on definitive safety refusal.",
-      "P1 ci-wait job BLOCKED by an unsatisfied dependency never recovered. Auto-unblock now suppressed ONLY for needsFix/reviewInvalidated ci-wait jobs; a dep-blocked ci-wait returns to READY when deps complete.",
-      "P2 TOCTOU: merge now pinned with --match-head-commit <reviewedHead> so GitHub atomically rejects a last-moment head change.",
-      "P2 reduceRollup FAILED OPEN: an unknown COMPLETED conclusion was treated SUCCESS. Now a success allowlist {SUCCESS,NEUTRAL,SKIPPED}; unknown completed conclusion => FAILURE; empty => PENDING.",
-      "P2 _tickCiWait merged on SUCCESS even when poll.head was null; now stays WAITING_CI when head is unverifiable."
+      "P1 FALSE NEGATIVE: request-body contract was gated on body!==undefined — a missing required request body passed clean. Now validated whenever a request schema exists.",
+      "P1 FALSE NEGATIVE: request requiredHeaders were declared+advertised but never checked. Now a missing-request-header finding is emitted.",
+      "P1 engine-core driveEngine silently DROPPED findings/evidence collected before a cancel/timeout/throw. Introduced an EngineCollector the driver owns; partials are now preserved in the result.",
+      "P1 one invalid caller schema or one malformed exchange aborted the ENTIRE run (FAILED, 0 findings). Per-exchange try/catch + safe compile + malformed-exchange guard + plan() null-guard; one bad input no longer voids the rest.",
+      "P2 driveEngine not total: capabilities()/health()/first now() ran outside try/catch. Moved inside with defensive fallbacks.",
+      "P2 timeout ineffective for a synchronous engine. Added a wall-clock DEADLINE on the token (throwIfCancelled enforces it) + post-run remap; cooperative engines (incl. this one, which checkpoints per exchange) are now bounded.",
+      "P3 emptyRequiredStrings was top-level only. Now recurses into nested object schemas (dotted path)."
     ],
     "allResolved": true
   },
@@ -25,18 +26,20 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
+    "count": 3,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T08:50:00.000Z",
+    "at": "2026-10-06T09:52:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #11 fix commit 915db0d",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
+    "scope": "PR #12 fix commit b5fa681",
+    "agents": 8,
+    "reported": 3,
+    "confirmed": 3,
     "distinctDefectsFixed": [
-      "P1: reduceRollup gated pass-recognition on status===COMPLETED, so a passing legacy StatusContext (state:SUCCESS, used by Vercel/Netlify/codecov/commit-status) was reduced to PENDING forever -> a green PR never merged (stall). Pass-recognition now applied to the normalized token uniformly across CheckRun and StatusContext shapes; fail-closed on unknown/empty COMPLETED conclusions preserved."
+      "P2 empty-required-string recursion skipped ARRAYS of objects (list responses) — now recurses into array items with [i] paths.",
+      "P2 empty-required-string ran on responses only — now also on the request body (symmetry).",
+      "P2 byId endpoint-map build sat OUTSIDE the per-exchange isolation; a malformed endpoint voided the whole run. Now built defensively (skip + malformed-endpoint finding) so one bad endpoint cannot void others."
     ],
     "allResolved": true
   },
@@ -309,15 +312,17 @@
     }
   },
   "finalReReview": {
-    "at": "2026-10-06T07:50:00.000Z",
+    "at": "2026-10-06T10:03:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "fix commit 4cb2889 (the 2 newest fixes)",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
+    "scope": "PR #12 fix commit 25c571c",
+    "agents": 8,
+    "reported": 3,
+    "confirmed": 3,
     "distinctDefectsFixed": [
-      "P2: isFailingEvidence was a failure DENYLIST (FAIL/FAILED/ERROR) that missed common tokens (FAILURE/ERRORED/KO/REGRESSION/TIMEOUT); a non-standard failure coexisting with a PASS faked ASSURED on the untrusted load path. Replaced with a vocabulary-CLOSED evidenceVerdict: only recognized PASS synonyms assure; ANY explicit non-pass verdict fails; missing/blank verdict is neutral."
+      "P2 (x2) emptyRequiredStrings skipped nested subschemas that omit an explicit `type` keyword and did not flatten allOf — untyped/composed nested empty required strings slipped through. Rewrote as schemaView() which infers object/array shape structurally (properties/items/required) and flattens allOf; recursion no longer depends on `type`."
     ],
+    "documentedLimitation": "The empty-required-string heuristic does not resolve $ref or branch oneOf/anyOf; minLength:1 (enforced natively by Ajv everywhere) is the robust path and is documented in the function. This is a documented bounded heuristic, not a silent false green — Ajv structural validation remains authoritative.",
+    "boundedLoopCapReached": true,
     "allResolved": true
   }
 }
