@@ -927,15 +927,18 @@
       "name": "Quality: web automation engine",
       "family": "quality",
       "dependencies": [
-        "orchestrator",
-        "tool-adapter-registry"
+        "engine-core"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-QA-WEB-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/quality-web-engine/src/index.ts"
+      ],
+      "tests": [
+        "packages/quality-web-engine/test/quality-web-engine.test.ts"
+      ],
       "commits": [],
       "review": {}
     },
