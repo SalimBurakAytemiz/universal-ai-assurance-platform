@@ -251,3 +251,42 @@ describe("autopilot — AI retry / unavailable backoff", () => {
     expect(store.get("AI").attempts).toBe(2);
   });
 });
+
+describe("autopilot — provider-resume end-to-end durability proof", () => {
+  it("provider down -> WAITING_PROVIDER persisted -> restart -> provider up -> runs EXACTLY once from checkpoint, no duplicate", async () => {
+    const providerGate = gate(false);
+    let aiCalls = 0;
+    const mk = (s) => new AutopilotService({ store: s, providerGate, clock: makeClock(), aiExecutor: async () => { aiCalls++; return { status: "ok", result: "analysis" }; } });
+
+    // 1) provider unavailable: repeated ticks keep the job WAITING_PROVIDER and NEVER fake-execute it.
+    const store1 = new JobStore(jobsPath);
+    const svc1 = mk(store1);
+    svc1.addJob({ id: "AI", name: "analyze", kind: "ai" });
+    await svc1.tick();
+    await svc1.tick();
+    await svc1.tick();
+    expect(store1.get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
+    expect(aiCalls).toBe(0);
+
+    // 2) the WAITING_PROVIDER job is durably persisted (survives a process/session restart).
+    expect(new JobStore(jobsPath).get("AI").state).toBe(RuntimeState.WAITING_PROVIDER);
+
+    // 3) provider access returns; a FRESH process starts (recover() resolves any interrupted RUNNING
+    //    jobs; it is a no-op for a WAITING_PROVIDER job) and then, with NO user message / UI event,
+    //    the next scheduler TICK re-evaluates the provider gate, makes the job eligible, and runs it
+    //    to completion from its persisted WAITING_PROVIDER queued state.
+    providerGate.set(true);
+    const store2 = new JobStore(jobsPath);
+    const svc2 = mk(store2);
+    await svc2.recover();
+    await svc2.tick();
+    expect(store2.get("AI").state).toBe(RuntimeState.DONE);
+    expect(store2.get("AI").result).toBe("analysis"); // resumed from the persisted queued state
+    expect(aiCalls).toBe(1); // ran exactly once — no duplicate execution
+
+    // 4) further ticks do NOT re-run the completed job (no duplicate execution / commit / PR / merge).
+    await svc2.tick();
+    await svc2.tick();
+    expect(aiCalls).toBe(1);
+  });
+});
