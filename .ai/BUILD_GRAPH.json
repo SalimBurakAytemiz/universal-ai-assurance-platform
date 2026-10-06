@@ -1118,7 +1118,8 @@
       "family": "desktop",
       "dependencies": [
         "desktop-shell",
-        "agent-definitions-72"
+        "agent-definitions-72",
+        "desktop-viewmodels"
       ],
       "status": "NOT_STARTED",
       "requirements": [
@@ -1135,7 +1136,8 @@
       "family": "desktop",
       "dependencies": [
         "desktop-shell",
-        "knowledge-store"
+        "knowledge-store",
+        "desktop-viewmodels"
       ],
       "status": "NOT_STARTED",
       "requirements": [
@@ -1152,7 +1154,8 @@
       "family": "desktop",
       "dependencies": [
         "desktop-shell",
-        "knowledge-lifecycle"
+        "knowledge-lifecycle",
+        "desktop-viewmodels"
       ],
       "status": "NOT_STARTED",
       "requirements": [
@@ -1640,6 +1643,27 @@
         },
         "mergedPR": 17
       }
+    },
+    {
+      "id": "desktop-viewmodels",
+      "name": "Desktop view-models (real-state data layer)",
+      "family": "desktop",
+      "dependencies": [
+        "ai-state",
+        "agent-definitions-72"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-DESKTOP-VM-001"
+      ],
+      "files": [
+        "packages/desktop-viewmodels/src/index.ts"
+      ],
+      "tests": [
+        "packages/desktop-viewmodels/test/desktop-viewmodels.test.ts"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }

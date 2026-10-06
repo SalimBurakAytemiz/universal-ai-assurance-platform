@@ -83,3 +83,10 @@
   ALWAYS returns BLOCKED_EXTERNAL_RESEARCH — no finding is ever fabricated; only PROVIDED local
   findings are ingested. Live external fetch stays BLOCKED_EXTERNAL_RESEARCH until a real fetcher is
   authorized/available.
+- **2026-10-06** `@uaap/desktop-viewmodels` builds the REAL-state data layer behind the desktop views
+  (Home/BuildGraph/Agents/Reviews/SecurityPosture) as pure, unit-tested derivations of .ai/* + the
+  registries + the recorded test status — "no fake green dashboard": every value traces to state,
+  absent state reads "unknown" (never "ok"), and security posture is FAIL-CLOSED (active validation
+  reads LOCKED unless the real state says otherwise AND an authorization record exists; an
+  inconsistency is surfaced, not hidden). The Electron window RENDERING of these view-models (the
+  desktop-*-view nodes) still needs the desktop runtime to build/run and is not claimed here.
