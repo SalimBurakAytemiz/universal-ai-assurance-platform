@@ -5,8 +5,8 @@ import {
   EngineStatus,
   finding,
   HealthStatus,
+  type EngineCollector,
   type EngineContext,
-  type EngineExecOutput,
   type ExecutionEngine,
 } from "@uaap/engine-core";
 
@@ -15,27 +15,28 @@ function ctx(input: unknown = {}): EngineContext {
   return { runId: "R1", input, now: () => new Date(Date.UTC(2026, 9, 6, 0, 0, clock++)).toISOString() };
 }
 
-/** Minimal configurable engine for driver tests. */
-function engine(overrides: Partial<ExecutionEngine> & { exec?: () => EngineExecOutput; healthStatus?: string } = {}): ExecutionEngine {
+type Exec = (ctx: EngineContext, plan: unknown, token: CancellationToken, c: EngineCollector) => void | Promise<void>;
+function engine(overrides: Partial<ExecutionEngine> & { exec?: Exec; healthStatus?: string } = {}): ExecutionEngine {
   return {
     capabilities: () => ({ engineId: "test.engine", domain: "QUALITY", version: "0.0.1", capabilities: ["x"], offlineOnly: true }),
     health: () => ({ status: (overrides.healthStatus as HealthStatus) ?? HealthStatus.HEALTHY }),
     discover: () => ({ items: [] }),
     plan: () => ({ steps: [] }),
     validatePrereqs: () => ({ ok: true }),
-    execute: overrides.exec ? () => overrides.exec!() : () => ({ findings: [], artifacts: [], evidence: [] }),
+    execute: overrides.exec ?? (() => {}),
     ...overrides,
   };
 }
 
 describe("engine-core driveEngine — total & deterministic", () => {
-  it("runs the lifecycle and returns DONE with tallied findings", async () => {
+  it("runs the lifecycle and returns DONE with tallied findings from the collector", async () => {
     const e = engine({
-      exec: () => ({
-        findings: [finding({ severity: "P1", kind: "x", title: "a", detail: "b" }), finding({ severity: "P2", kind: "y", title: "c", detail: "d" })],
-        artifacts: [{ kind: "sum" }],
-        evidence: [{ producedBy: "test.engine", action: "t", kind: "TEST_RESULT", classification: "INTERNAL" }],
-      }),
+      exec: (_c, _p, _t, col) => {
+        col.finding(finding({ severity: "P1", kind: "x", title: "a", detail: "b" }));
+        col.finding(finding({ severity: "P2", kind: "y", title: "c", detail: "d" }));
+        col.artifact({ kind: "sum" });
+        col.evidence({ producedBy: "test.engine", action: "t", kind: "TEST_RESULT", classification: "INTERNAL" });
+      },
     });
     const r = await driveEngine(e, ctx());
     expect(r.status).toBe(EngineStatus.DONE);
@@ -55,37 +56,97 @@ describe("engine-core driveEngine — total & deterministic", () => {
 
   it("maps an UNAVAILABLE engine to FAILED without executing", async () => {
     let executed = false;
-    const e = engine({ healthStatus: HealthStatus.UNAVAILABLE, exec: () => { executed = true; return { findings: [], artifacts: [], evidence: [] }; } });
+    const e = engine({ healthStatus: HealthStatus.UNAVAILABLE, exec: () => { executed = true; } });
     const r = await driveEngine(e, ctx());
     expect(r.status).toBe(EngineStatus.FAILED);
     expect(r.error).toMatch(/unavailable/);
     expect(executed).toBe(false);
   });
 
-  it("maps a thrown error in execute to FAILED (caller never sees the exception)", async () => {
-    const e = engine({ execute: () => { throw new Error("boom"); } });
+  it("maps a thrown error in execute to FAILED and PRESERVES findings collected before the throw", async () => {
+    const e = engine({
+      exec: (_c, _p, _t, col) => {
+        col.finding(finding({ severity: "P0", kind: "found", title: "pre-throw", detail: "d" }));
+        throw new Error("boom");
+      },
+    });
     const r = await driveEngine(e, ctx());
     expect(r.status).toBe(EngineStatus.FAILED);
     expect(r.error).toBe("boom");
+    expect(r.findings.map((f) => f.kind)).toContain("found"); // not silently dropped
   });
 
-  it("honors a pre-cancelled token -> CANCELLED", async () => {
+  it("a mid-execute cancellation -> CANCELLED, preserving the partial findings already collected", async () => {
+    const e = engine({
+      exec: (_c, _p, t, col) => {
+        col.finding(finding({ severity: "P0", kind: "partial", title: "p", detail: "d" }));
+        t.cancel("user stop"); // cancelled partway through the work
+        t.throwIfCancelled();
+        col.finding(finding({ severity: "P0", kind: "after", title: "q", detail: "d" }));
+      },
+    });
+    const r = await driveEngine(e, ctx());
+    expect(r.status).toBe(EngineStatus.CANCELLED);
+    expect(r.findings.map((f) => f.kind)).toContain("partial");
+    expect(r.findings.map((f) => f.kind)).not.toContain("after");
+  });
+
+  it("an already-cancelled token aborts BEFORE execute (nothing to preserve)", async () => {
     const token = new CancellationToken();
-    token.cancel("user stop");
-    const e = engine({ execute: (_c, _p, t) => { t.throwIfCancelled(); return { findings: [], artifacts: [], evidence: [] }; } });
+    token.cancel("stop");
+    let executed = false;
+    const e = engine({ exec: () => { executed = true; } });
     const r = await driveEngine(e, ctx(), { token });
     expect(r.status).toBe(EngineStatus.CANCELLED);
+    expect(executed).toBe(false); // the pre-execute checkpoint correctly refuses to start
   });
 
-  it("times out a slow engine -> TIMED_OUT (cooperative)", async () => {
+  it("CancellationToken deadline: a past deadline throws TIMED_OUT and reads as cancelled", () => {
+    const t = new CancellationToken();
+    t.setDeadline(Date.now() - 1);
+    expect(t.cancelled).toBe(true);
+    expect(t.reason).toBe("timeout");
+    expect(() => t.throwIfCancelled()).toThrow(/deadline/);
+  });
+
+  it("times out a slow async engine -> TIMED_OUT (async race)", async () => {
     const e = engine({
-      execute: async (_c, _p, t) => {
+      exec: async (_c, _p, t) => {
         await new Promise((res) => setTimeout(res, 50));
-        t.throwIfCancelled(); // the timeout cancels the token
-        return { findings: [], artifacts: [], evidence: [] };
+        t.throwIfCancelled();
       },
     });
     const r = await driveEngine(e, ctx(), { timeoutMs: 5 });
     expect(r.status).toBe(EngineStatus.TIMED_OUT);
+  });
+
+  it("a deadline reached mid-execute -> TIMED_OUT (cooperative), partials preserved", async () => {
+    const e = engine({
+      exec: (_c, _p, t, col) => {
+        col.finding(finding({ severity: "P1", kind: "before-deadline", title: "x", detail: "d" }));
+        t.setDeadline(Date.now() - 1); // time elapsed past the budget during the work
+        t.throwIfCancelled(); // deadline exceeded => throws TIMED_OUT here
+        col.finding(finding({ severity: "P1", kind: "after-deadline", title: "y", detail: "d" }));
+      },
+    });
+    const r = await driveEngine(e, ctx());
+    expect(r.status).toBe(EngineStatus.TIMED_OUT);
+    expect(r.findings.map((f) => f.kind)).toContain("before-deadline");
+    expect(r.findings.map((f) => f.kind)).not.toContain("after-deadline");
+  });
+
+  it("is TOTAL even if capabilities()/health() throw -> FAILED (no exception to the caller)", async () => {
+    const bad: ExecutionEngine = {
+      capabilities: () => { throw new Error("caps boom"); },
+      health: () => ({ status: HealthStatus.HEALTHY }),
+      discover: () => ({ items: [] }),
+      plan: () => ({ steps: [] }),
+      validatePrereqs: () => ({ ok: true }),
+      execute: () => {},
+    };
+    const r = await driveEngine(bad, ctx());
+    expect(r.status).toBe(EngineStatus.FAILED);
+    expect(r.error).toBe("caps boom");
+    expect(r.engineId).toBe("unknown"); // defensive fallback id
   });
 });

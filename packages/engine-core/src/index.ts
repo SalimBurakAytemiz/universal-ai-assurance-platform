@@ -69,6 +69,16 @@ export interface EngineExecOutput {
   readonly evidence: readonly EngineEvidence[];
 }
 
+/**
+ * The sink an engine pushes results into AS it works. The driver owns it, so anything collected
+ * before a cancellation / timeout / throw is PRESERVED in the final result (never silently dropped).
+ */
+export interface EngineCollector {
+  finding(f: EngineFinding): void;
+  artifact(a: EngineArtifact): void;
+  evidence(e: EngineEvidence): void;
+}
+
 export interface Discovery {
   readonly items: readonly unknown[];
   readonly summary?: string;
@@ -95,15 +105,29 @@ export interface EngineContext {
   now(): string;
 }
 
-/** Cooperative cancellation token. Engines check it between units of work. */
+/**
+ * Cooperative cancellation + deadline token. Engines MUST call throwIfCancelled() between units of
+ * work; that is the ONLY way a CPU-bound (synchronous) engine can be interrupted — the deadline is
+ * enforced there (Date.now based) as well as by the driver's async timeout race. An engine that never
+ * checkpoints cannot be interrupted (documented contract).
+ */
 export class CancellationToken {
   private _cancelled = false;
   private _reason: string | undefined;
+  private _deadlineMs: number | undefined;
   get cancelled(): boolean {
-    return this._cancelled;
+    return this._cancelled || this._deadlineExceeded();
   }
   get reason(): string | undefined {
-    return this._reason;
+    if (this._reason) return this._reason;
+    return this._deadlineExceeded() ? "timeout" : undefined;
+  }
+  /** Absolute wall-clock deadline (epoch ms). Past it, throwIfCancelled() throws TIMED_OUT. */
+  setDeadline(epochMs: number): void {
+    this._deadlineMs = epochMs;
+  }
+  private _deadlineExceeded(): boolean {
+    return this._deadlineMs !== undefined && Date.now() >= this._deadlineMs;
   }
   cancel(reason = "cancelled"): void {
     if (!this._cancelled) {
@@ -113,6 +137,7 @@ export class CancellationToken {
   }
   throwIfCancelled(): void {
     if (this._cancelled) throw new EngineAbort(this._reason ?? "cancelled", "CANCELLED");
+    if (this._deadlineExceeded()) throw new EngineAbort("deadline exceeded", "TIMED_OUT");
   }
 }
 
@@ -129,7 +154,9 @@ export interface ExecutionEngine {
   discover(ctx: EngineContext): Promise<Discovery> | Discovery;
   plan(ctx: EngineContext, discovery: Discovery): Promise<EnginePlan> | EnginePlan;
   validatePrereqs(ctx: EngineContext, plan: EnginePlan): Promise<PrereqResult> | PrereqResult;
-  execute(ctx: EngineContext, plan: EnginePlan, token: CancellationToken): Promise<EngineExecOutput> | EngineExecOutput;
+  /** Perform the checks, pushing each result into `collector` as it is produced (so partial results
+   * survive an abort). Check `token.throwIfCancelled()` between units of work. */
+  execute(ctx: EngineContext, plan: EnginePlan, token: CancellationToken, collector: EngineCollector): Promise<void> | void;
 }
 
 export interface EngineResult {
@@ -178,56 +205,88 @@ async function withTimeout<T>(p: Promise<T>, timeoutMs: number, token: Cancellat
 
 /**
  * Drive one engine through the full lifecycle and return a structured result. Deterministic and
- * total: a thrown error, a cancellation, a timeout, an UNAVAILABLE health check, or a failed
- * prerequisite all map to an EngineResult with the right status — the caller never gets an
- * exception and findings/evidence collected before the stop are preserved.
+ * TOTAL: a throw from ANY step (capabilities/health/discover/plan/prereqs/execute, or ctx.now),
+ * a cancellation, a timeout, an UNAVAILABLE health check, or a failed prerequisite all map to an
+ * EngineResult with the right status — the caller never gets an exception. Findings/evidence the
+ * engine pushed into the collector BEFORE the stop are preserved (not silently dropped).
+ *
+ * Timeout is enforced two ways: the async race (for engines that await I/O) AND a wall-clock deadline
+ * on the token (so a cooperative CPU-bound engine that calls throwIfCancelled() is also bounded). An
+ * engine that never checkpoints and never yields cannot be interrupted — that is an engine-author bug.
  */
 export async function driveEngine(engine: ExecutionEngine, ctx: EngineContext, opts: DriveOptions = {}): Promise<EngineResult> {
-  const caps = engine.capabilities();
-  const startedAt = ctx.now();
+  const findings: EngineFinding[] = [];
+  const artifacts: EngineArtifact[] = [];
+  const evidence: EngineEvidence[] = [];
+  const collector: EngineCollector = {
+    finding: (f) => findings.push(f),
+    artifact: (a) => artifacts.push(a),
+    evidence: (e) => evidence.push(e),
+  };
   const token = opts.token ?? new CancellationToken();
-  const finalize = (status: EngineStatus, out: Partial<EngineExecOutput> & { error?: string }): EngineResult => ({
-    engineId: caps.engineId,
+  const nowSafe = (): string => {
+    try {
+      return ctx.now();
+    } catch {
+      return new Date(0).toISOString();
+    }
+  };
+  let engineId = "unknown";
+  let domain: AssuranceDomain = "QUALITY";
+  let startedAt = nowSafe();
+  const finalize = (status: EngineStatus, error?: string): EngineResult => ({
+    engineId,
     runId: ctx.runId,
-    domain: caps.domain,
+    domain,
     status,
-    findings: out.findings ?? [],
-    artifacts: out.artifacts ?? [],
-    evidence: out.evidence ?? [],
+    findings: [...findings],
+    artifacts: [...artifacts],
+    evidence: [...evidence],
     startedAt,
-    finishedAt: ctx.now(),
-    ...(out.error !== undefined ? { error: out.error } : {}),
-    counts: tally(out.findings ?? []),
+    finishedAt: nowSafe(),
+    ...(error !== undefined ? { error } : {}),
+    counts: tally(findings),
   });
 
-  const health = engine.health();
-  if (health.status === HealthStatus.UNAVAILABLE) {
-    return finalize(EngineStatus.FAILED, { error: `engine unavailable${health.detail ? `: ${health.detail}` : ""}` });
-  }
+  try {
+    const caps = engine.capabilities(); // inside try: a throwing engine still yields a FAILED result
+    engineId = caps.engineId;
+    domain = caps.domain;
+    startedAt = nowSafe();
+    const health = engine.health();
+    if (health.status === HealthStatus.UNAVAILABLE) {
+      return finalize(EngineStatus.FAILED, `engine unavailable${health.detail ? `: ${health.detail}` : ""}`);
+    }
+    if (opts.timeoutMs !== undefined) token.setDeadline(Date.now() + Math.max(0, opts.timeoutMs));
 
-  const run = async (): Promise<EngineResult> => {
-    const discovery = await engine.discover(ctx);
-    token.throwIfCancelled();
-    const plan = await engine.plan(ctx, discovery);
-    token.throwIfCancelled();
-    const pre = await engine.validatePrereqs(ctx, plan);
-    if (!pre.ok) {
-      const findings =
-        pre.findings && pre.findings.length > 0
+    const run = async (): Promise<EngineStatus> => {
+      const discovery = await engine.discover(ctx);
+      token.throwIfCancelled();
+      const plan = await engine.plan(ctx, discovery);
+      token.throwIfCancelled();
+      const pre = await engine.validatePrereqs(ctx, plan);
+      if (!pre.ok) {
+        const pf = pre.findings && pre.findings.length > 0
           ? pre.findings
           : [makeFinding({ severity: "P2", kind: "prerequisite-failed", title: "Engine prerequisites not satisfied", detail: (pre.missing ?? ["unspecified"]).join("; ") })];
-      return finalize(EngineStatus.PREREQ_FAILED, { findings });
-    }
-    token.throwIfCancelled();
-    const out = await engine.execute(ctx, plan, token);
-    return finalize(EngineStatus.DONE, out);
-  };
+        for (const f of pf) collector.finding(f);
+        return EngineStatus.PREREQ_FAILED;
+      }
+      token.throwIfCancelled();
+      await engine.execute(ctx, plan, token, collector);
+      return EngineStatus.DONE;
+    };
 
-  try {
-    return opts.timeoutMs ? await withTimeout(run(), opts.timeoutMs, token) : await run();
+    const status = opts.timeoutMs !== undefined ? await withTimeout(run(), opts.timeoutMs, token) : await run();
+    // The deadline/cancel may have fired without the engine throwing (e.g. it finished just after):
+    // reflect it in the status rather than reporting a DONE for a run that was actually cut short.
+    if (status === EngineStatus.DONE && token.cancelled) {
+      return finalize(token.reason === "timeout" ? EngineStatus.TIMED_OUT : EngineStatus.CANCELLED);
+    }
+    return finalize(status);
   } catch (e) {
-    if (e instanceof EngineAbort) return finalize(e.status, { error: e.message });
-    return finalize(EngineStatus.FAILED, { error: e instanceof Error ? e.message : String(e) });
+    if (e instanceof EngineAbort) return finalize(e.status, e.message);
+    return finalize(EngineStatus.FAILED, e instanceof Error ? e.message : String(e));
   }
 }
 

@@ -9,18 +9,16 @@
 // data; it never fabricates a pass.
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
-import type { ErrorObject } from "ajv";
+import type { ErrorObject, ValidateFunction } from "ajv";
 import type { Severity } from "@uaap/core";
 import {
   CancellationToken,
   finding,
   HealthStatus,
   type Discovery,
-  type EngineArtifact,
   type EngineCapabilities,
+  type EngineCollector,
   type EngineContext,
-  type EngineEvidence,
-  type EngineExecOutput,
   type EngineFinding,
   type EngineHealth,
   type EnginePlan,
@@ -116,7 +114,8 @@ export class QualityApiEngine implements ExecutionEngine {
   plan(ctx: EngineContext, _discovery: Discovery): EnginePlan {
     const { exchanges } = this.input(ctx);
     return {
-      steps: (exchanges ?? []).map((x, i) => ({ index: i, endpointId: x.endpointId, status: x.response?.status })),
+      // Guard malformed (null/non-object) elements here too — execute reports them as findings.
+      steps: (exchanges ?? []).map((x, i) => ({ index: i, endpointId: x?.endpointId, status: x?.response?.status })),
       summary: `validate ${exchanges?.length ?? 0} exchange(s) against the contract`,
     };
   }
@@ -132,107 +131,149 @@ export class QualityApiEngine implements ExecutionEngine {
     return missing.length === 0 ? { ok: true } : { ok: false, missing };
   }
 
-  execute(ctx: EngineContext, _plan: EnginePlan, token: CancellationToken): EngineExecOutput {
+  /** Compile a caller-supplied schema without letting an invalid one throw out of the engine. */
+  private compile(schema: object): { validate: ValidateFunction } | { error: string } {
+    try {
+      return { validate: this.ajv.compile(schema) };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
+  execute(ctx: EngineContext, _plan: EnginePlan, token: CancellationToken, collector: EngineCollector): void {
     const { spec, exchanges } = this.input(ctx);
     const byId = new Map(spec.endpoints.map((e) => [e.id, e]));
-    const findings: EngineFinding[] = [];
-    const evidence: EngineEvidence[] = [];
     let checked = 0;
     let violationExchanges = 0;
+    let totalFindings = 0;
 
     exchanges.forEach((x, i) => {
-      token.throwIfCancelled(); // cooperative cancellation / timeout between exchanges
-      const loc = `exchange[${i}] ${x.endpointId}`;
-      const ep = byId.get(x.endpointId);
-      if (!ep) {
-        findings.push(finding({ severity: SEV.P2, kind: "unknown-endpoint", title: "Exchange references an unknown endpoint", detail: `No endpoint "${x.endpointId}" in the spec; coverage cannot be asserted.`, locator: loc }));
-        return;
-      }
-      checked++;
-      const before = findings.length;
-      const statusKey = String(x.response?.status);
-      const contract = ep.responses[statusKey];
-
-      // Negative case: an intentionally-invalid request must be rejected (4xx).
-      if (x.negative) {
-        const s = x.response?.status ?? 0;
-        if (!(s >= 400 && s < 500)) {
-          findings.push(finding({ severity: SEV.P1, kind: "negative-case-accepted", title: "Invalid request was not rejected", detail: `Negative exchange returned status ${s}; expected a 4xx client error.`, locator: loc }));
+      token.throwIfCancelled(); // cooperative cancellation / deadline between exchanges
+      const loc0 = `exchange[${i}]`;
+      // Per-exchange isolation: one malformed exchange or one invalid schema must NOT void the run.
+      try {
+        if (!x || typeof x !== "object") {
+          collector.finding(finding({ severity: SEV.P2, kind: "malformed-exchange", title: "Malformed exchange", detail: "Exchange is null or not an object.", locator: loc0 }));
+          return;
         }
-      }
+        const loc = `${loc0} ${x.endpointId}`;
+        const ep = byId.get(x.endpointId);
+        if (!ep) {
+          collector.finding(finding({ severity: SEV.P2, kind: "unknown-endpoint", title: "Exchange references an unknown endpoint", detail: `No endpoint "${x.endpointId}" in the spec; coverage cannot be asserted.`, locator: loc }));
+          return;
+        }
+        checked++;
+        let v = 0;
+        const add = (f: EngineFinding) => {
+          v++;
+          totalFindings++;
+          collector.finding(f);
+        };
+        const statusKey = String(x.response?.status);
+        const contract = ep.responses[statusKey];
 
-      // Status coverage: the returned status must be documented.
-      if (!contract) {
-        findings.push(finding({ severity: SEV.P2, kind: "undocumented-status", title: "Undocumented response status", detail: `${ep.method} ${ep.path} returned status ${statusKey}, which is not declared in the contract.`, locator: loc }));
-      } else {
-        // Required response headers.
-        const present = lc(x.response?.headers);
-        for (const h of contract.requiredHeaders ?? []) {
-          if (!present.has(h.toLowerCase())) {
-            findings.push(finding({ severity: SEV.P2, kind: "missing-response-header", title: "Missing required response header", detail: `Response is missing required header "${h}".`, locator: loc }));
+        // Negative case: an intentionally-invalid request must be rejected (4xx).
+        if (x.negative) {
+          const s = x.response?.status ?? 0;
+          if (!(s >= 400 && s < 500)) {
+            add(finding({ severity: SEV.P1, kind: "negative-case-accepted", title: "Invalid request was not rejected", detail: `Negative exchange returned status ${s}; expected a 4xx client error.`, locator: loc }));
           }
         }
-        // Response body against the response schema.
-        if (contract.schema) {
-          const validate = this.ajv.compile(contract.schema);
-          const ok = validate(x.response?.body) as boolean;
-          if (!ok) {
-            for (const e of validate.errors ?? []) {
-              const { kind, severity } = classifyAjvError(e);
-              findings.push(finding({ severity, kind, title: "Response contract violation", detail: `${e.instancePath || "/"} ${e.message ?? ""}`.trim(), locator: loc }));
+
+        // Status coverage: the returned status must be documented.
+        if (!contract) {
+          add(finding({ severity: SEV.P2, kind: "undocumented-status", title: "Undocumented response status", detail: `${ep.method} ${ep.path} returned status ${statusKey}, which is not declared in the contract.`, locator: loc }));
+        } else {
+          // Required response headers.
+          const present = lc(x.response?.headers);
+          for (const h of contract.requiredHeaders ?? []) {
+            if (!present.has(h.toLowerCase())) {
+              add(finding({ severity: SEV.P2, kind: "missing-response-header", title: "Missing required response header", detail: `Response is missing required header "${h}".`, locator: loc }));
             }
           }
-          // Null/empty required-field check (beyond type errors): a required string that is "".
-          for (const f of emptyRequiredStrings(contract.schema, x.response?.body)) {
-            findings.push(finding({ severity: SEV.P2, kind: "null-or-empty-required-field", title: "Required field is empty", detail: `Required field "${f}" is present but empty.`, locator: loc }));
+          // Response body against the response schema.
+          if (contract.schema) {
+            const c = this.compile(contract.schema);
+            if ("error" in c) {
+              add(finding({ severity: SEV.P2, kind: "invalid-contract-schema", title: "Response contract schema is invalid", detail: c.error, locator: loc }));
+            } else {
+              if (!(c.validate(x.response?.body) as boolean)) {
+                for (const e of c.validate.errors ?? []) {
+                  const { kind, severity } = classifyAjvError(e);
+                  add(finding({ severity, kind, title: "Response contract violation", detail: `${e.instancePath || "/"} ${e.message ?? ""}`.trim(), locator: loc }));
+                }
+              }
+              // Null/empty required-field check (nested-aware): a required string that is "".
+              for (const f of emptyRequiredStrings(contract.schema, x.response?.body)) {
+                add(finding({ severity: SEV.P2, kind: "null-or-empty-required-field", title: "Required field is empty", detail: `Required field "${f}" is present but empty.`, locator: loc }));
+              }
+            }
           }
         }
-      }
 
-      // Request contract (positive exchanges only — a negative one is invalid by design).
-      if (!x.negative && ep.request?.schema && x.request?.body !== undefined) {
-        const validate = this.ajv.compile(ep.request.schema);
-        if (!(validate(x.request.body) as boolean)) {
-          for (const e of validate.errors ?? []) {
-            findings.push(finding({ severity: SEV.P2, kind: "request-contract-violation", title: "Request contract violation", detail: `${e.instancePath || "/"} ${e.message ?? ""}`.trim(), locator: loc }));
+        // Request contract (positive exchanges only — a negative one is invalid by design). The body
+        // is validated even when absent: a missing-but-required request body is a real defect.
+        if (!x.negative && ep.request?.schema) {
+          const c = this.compile(ep.request.schema);
+          if ("error" in c) {
+            add(finding({ severity: SEV.P2, kind: "invalid-contract-schema", title: "Request contract schema is invalid", detail: c.error, locator: loc }));
+          } else if (!(c.validate(x.request?.body) as boolean)) {
+            for (const e of c.validate.errors ?? []) {
+              add(finding({ severity: SEV.P2, kind: "request-contract-violation", title: "Request contract violation", detail: `${e.instancePath || "/"} ${e.message ?? ""}`.trim(), locator: loc }));
+            }
           }
         }
-      }
+        // Required request headers (positive exchanges).
+        if (!x.negative && ep.request?.requiredHeaders?.length) {
+          const present = lc(x.request?.headers);
+          for (const h of ep.request.requiredHeaders) {
+            if (!present.has(h.toLowerCase())) {
+              add(finding({ severity: SEV.P2, kind: "missing-request-header", title: "Missing required request header", detail: `Request is missing required header "${h}".`, locator: loc }));
+            }
+          }
+        }
 
-      const violations = findings.length - before;
-      if (violations > 0) violationExchanges++;
-      // One evidence record per exchange — ties the verdict to real inspected data (no secrets).
-      evidence.push({
-        producedBy: "qa.api-contract-engine",
-        action: "api.contract.validate",
-        kind: "TEST_RESULT",
-        classification: "INTERNAL",
-        summary: `${ep.method} ${ep.path} -> ${statusKey}: ${violations} violation(s)`,
-        data: { endpointId: x.endpointId, status: x.response?.status, negative: !!x.negative, violations, at: ctx.now() },
-      });
+        if (v > 0) violationExchanges++;
+        // One evidence record per exchange — ties the verdict to real inspected data (no secrets).
+        collector.evidence({
+          producedBy: "qa.api-contract-engine",
+          action: "api.contract.validate",
+          kind: "TEST_RESULT",
+          classification: "INTERNAL",
+          summary: `${ep.method} ${ep.path} -> ${statusKey}: ${v} violation(s)`,
+          data: { endpointId: x.endpointId, status: x.response?.status, negative: !!x.negative, violations: v, at: ctx.now() },
+        });
+      } catch (e) {
+        // Totality: never let one exchange abort the rest. Record the engine error as a finding.
+        collector.finding(finding({ severity: SEV.P2, kind: "engine-error", title: "Engine error while checking exchange", detail: e instanceof Error ? e.message : String(e), locator: loc0 }));
+      }
     });
 
-    const artifacts: EngineArtifact[] = [
-      {
-        kind: "api-contract-summary",
-        summary: `${checked} exchange(s) checked against ${spec.endpoints.length} endpoint(s); ${violationExchanges} with violations`,
-        data: { endpoints: spec.endpoints.length, exchangesChecked: checked, exchangesWithViolations: violationExchanges, totalFindings: findings.length },
-      },
-    ];
-
-    return { findings, artifacts, evidence };
+    collector.artifact({
+      kind: "api-contract-summary",
+      summary: `${checked} exchange(s) checked against ${spec.endpoints.length} endpoint(s); ${violationExchanges} with violations`,
+      data: { endpoints: spec.endpoints.length, exchangesChecked: checked, exchangesWithViolations: violationExchanges, totalFindings },
+    });
   }
 }
 
-/** Return required-string property names that are present in `body` but equal to "". */
-function emptyRequiredStrings(schema: object, body: unknown): string[] {
-  const s = schema as { properties?: Record<string, { type?: string }>; required?: string[] };
-  if (!s || typeof body !== "object" || body === null || !Array.isArray(s.required)) return [];
-  const out: string[] = [];
+/**
+ * Required-string property names (dotted path) that are present but equal to "". Recurses into nested
+ * object schemas so a nested required empty string is caught too (consistent with api.null-empty).
+ */
+function emptyRequiredStrings(schema: object, body: unknown, prefix = ""): string[] {
+  const s = schema as { properties?: Record<string, { type?: string } & object>; required?: string[] };
+  if (!s || typeof body !== "object" || body === null) return [];
   const rec = body as Record<string, unknown>;
-  for (const key of s.required) {
+  const out: string[] = [];
+  for (const key of Array.isArray(s.required) ? s.required : []) {
     const prop = s.properties?.[key];
-    if (prop?.type === "string" && Object.prototype.hasOwnProperty.call(rec, key) && rec[key] === "") out.push(key);
+    if (prop?.type === "string" && Object.prototype.hasOwnProperty.call(rec, key) && rec[key] === "") out.push(prefix + key);
+  }
+  for (const [key, prop] of Object.entries(s.properties ?? {})) {
+    if (prop && (prop as { type?: string }).type === "object" && Object.prototype.hasOwnProperty.call(rec, key)) {
+      out.push(...emptyRequiredStrings(prop, rec[key], `${prefix}${key}.`));
+    }
   }
   return out;
 }

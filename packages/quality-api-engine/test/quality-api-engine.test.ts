@@ -93,3 +93,71 @@ describe("QualityApiEngine — contract validation against the local fixture", (
     expect(caps.capabilities).toContain("api.schema-drift");
   });
 });
+
+describe("QualityApiEngine — review-fix regressions (no false negatives, total execution)", () => {
+  const drive = (input: unknown) => driveEngine(new QualityApiEngine(), ctx(input));
+
+  it("flags a missing-but-required request body (request contract no longer gated on body presence)", async () => {
+    const input: ApiEngineInput = {
+      spec: { endpoints: [{ id: "createUser", method: "POST", path: "/users", request: { schema: { type: "object", required: ["email", "name"], properties: { email: { type: "string" }, name: { type: "string" } } } }, responses: { "201": {} } }] },
+      exchanges: [{ endpointId: "createUser", request: {}, response: { status: 201, body: {} } }],
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(r.findings.map((f) => f.kind)).toContain("request-contract-violation");
+  });
+
+  it("flags a missing required REQUEST header", async () => {
+    const input: ApiEngineInput = {
+      spec: { endpoints: [{ id: "createUser", method: "POST", path: "/users", request: { requiredHeaders: ["authorization"] }, responses: { "201": {} } }] },
+      exchanges: [{ endpointId: "createUser", request: { headers: {}, body: { x: 1 } }, response: { status: 201, body: {} } }],
+    };
+    const r = await drive(input);
+    expect(r.findings.map((f) => f.kind)).toContain("missing-request-header");
+  });
+
+  it("a single invalid contract schema does NOT void the whole run — other exchanges still validated", async () => {
+    const input: ApiEngineInput = {
+      spec: {
+        endpoints: [
+          { id: "a", method: "GET", path: "/a", responses: { "200": { schema: { type: "object", additionalProperties: false, properties: { id: { type: "integer" } } } } } },
+          { id: "b", method: "GET", path: "/b", responses: { "200": { schema: { type: "object", properties: "not-an-object" } as unknown as object } } },
+        ],
+      },
+      exchanges: [
+        { endpointId: "a", response: { status: 200, body: { id: 1, leak: "secret" } } }, // real schema-drift
+        { endpointId: "b", response: { status: 200, body: {} } }, // invalid schema
+      ],
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE); // not FAILED
+    const kinds = r.findings.map((f) => f.kind);
+    expect(kinds).toContain("schema-drift"); // exchange a was still checked
+    expect(kinds).toContain("invalid-contract-schema"); // exchange b reported, not thrown
+  });
+
+  it("a malformed (null) exchange is reported and the rest still run", async () => {
+    const input = {
+      spec: { endpoints: [{ id: "a", method: "GET", path: "/a", responses: { "200": { schema: { type: "object", required: ["id"], properties: { id: { type: "integer" } } } } } }] },
+      exchanges: [null, { endpointId: "a", response: { status: 200, body: {} } }],
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    const kinds = r.findings.map((f) => f.kind);
+    expect(kinds).toContain("malformed-exchange");
+    expect(kinds).toContain("missing-required-field"); // the valid exchange was still checked
+  });
+
+  it("detects a NESTED required empty string (api.null-empty is not top-level only)", async () => {
+    const input: ApiEngineInput = {
+      spec: {
+        endpoints: [{ id: "a", method: "GET", path: "/a", responses: { "200": { schema: { type: "object", required: ["profile"], properties: { profile: { type: "object", required: ["name"], properties: { name: { type: "string" } } } } } } } }],
+      },
+      exchanges: [{ endpointId: "a", response: { status: 200, body: { profile: { name: "" } } } }],
+    };
+    const r = await drive(input);
+    const empty = r.findings.find((f) => f.kind === "null-or-empty-required-field");
+    expect(empty).toBeDefined();
+    expect(empty?.detail).toMatch(/profile\.name/);
+  });
+});
