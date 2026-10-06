@@ -161,3 +161,41 @@ describe("QualityApiEngine — review-fix regressions (no false negatives, total
     expect(empty?.detail).toMatch(/profile\.name/);
   });
 });
+
+describe("QualityApiEngine — re-review regressions (array/request empty-field, endpoint isolation)", () => {
+  const drive = (input: unknown) => driveEngine(new QualityApiEngine(), ctx(input));
+
+  it("detects an empty required string inside an ARRAY of objects (list responses)", async () => {
+    const input: ApiEngineInput = {
+      spec: { endpoints: [{ id: "listUsers", method: "GET", path: "/users", responses: { "200": { schema: { type: "object", required: ["users"], properties: { users: { type: "array", items: { type: "object", required: ["name"], properties: { name: { type: "string" } } } } } } } } }] },
+      exchanges: [{ endpointId: "listUsers", response: { status: 200, body: { users: [{ name: "ok" }, { name: "" }] } } }],
+    };
+    const r = await drive(input);
+    const empty = r.findings.find((f) => f.kind === "null-or-empty-required-field");
+    expect(empty).toBeDefined();
+    expect(empty?.detail).toMatch(/users\[1\]\.name/);
+  });
+
+  it("flags an empty required REQUEST field (symmetry with the response side)", async () => {
+    const input: ApiEngineInput = {
+      spec: { endpoints: [{ id: "createUser", method: "POST", path: "/users", request: { schema: { type: "object", required: ["email", "name"], properties: { email: { type: "string" }, name: { type: "string" } } } }, responses: { "201": {} } }] },
+      exchanges: [{ endpointId: "createUser", request: { body: { email: "", name: "x" } }, response: { status: 201, body: {} } }],
+    };
+    const r = await drive(input);
+    const empty = r.findings.find((f) => f.kind === "null-or-empty-required-field");
+    expect(empty).toBeDefined();
+    expect(empty?.title).toMatch(/request/i);
+  });
+
+  it("a malformed ENDPOINT does not void the run — it is skipped/reported and valid exchanges still checked", async () => {
+    const input = {
+      spec: { endpoints: [{ id: "a", method: "GET", path: "/a", responses: { "200": { schema: { type: "object", additionalProperties: false, properties: { id: { type: "integer" } } } } } }, null] },
+      exchanges: [{ endpointId: "a", response: { status: 200, body: { id: 1, leak: "secret" } } }],
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE); // not FAILED
+    const kinds = r.findings.map((f) => f.kind);
+    expect(kinds).toContain("malformed-endpoint");
+    expect(kinds).toContain("schema-drift"); // the valid exchange was still validated
+  });
+});

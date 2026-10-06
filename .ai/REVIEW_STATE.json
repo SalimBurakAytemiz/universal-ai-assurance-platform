@@ -26,12 +26,22 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the engine fixes pending before merge"
+    "at": "2026-10-06T09:52:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #12 fix commit b5fa681",
+    "agents": 8,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P2 empty-required-string recursion skipped ARRAYS of objects (list responses) — now recurses into array items with [i] paths.",
+      "P2 empty-required-string ran on responses only — now also on the request body (symmetry).",
+      "P2 byId endpoint-map build sat OUTSIDE the per-exchange isolation; a malformed endpoint voided the whole run. Now built defensively (skip + malformed-endpoint finding) so one bad endpoint cannot void others."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

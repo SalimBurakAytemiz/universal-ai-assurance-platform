@@ -142,7 +142,13 @@ export class QualityApiEngine implements ExecutionEngine {
 
   execute(ctx: EngineContext, _plan: EnginePlan, token: CancellationToken, collector: EngineCollector): void {
     const { spec, exchanges } = this.input(ctx);
-    const byId = new Map(spec.endpoints.map((e) => [e.id, e]));
+    // Build the endpoint map DEFENSIVELY: a malformed endpoint entry must not throw out of execute()
+    // and void every exchange — it is skipped and reported, mirroring the per-exchange isolation.
+    const byId = new Map<string, EndpointSpec>();
+    for (const e of spec.endpoints) {
+      if (e && typeof e === "object" && typeof (e as EndpointSpec).id === "string") byId.set((e as EndpointSpec).id, e as EndpointSpec);
+      else collector.finding(finding({ severity: SEV.P2, kind: "malformed-endpoint", title: "Malformed endpoint in spec", detail: "Spec endpoint is null or has no string id; skipped.", locator: "spec.endpoints" }));
+    }
     let checked = 0;
     let violationExchanges = 0;
     let totalFindings = 0;
@@ -222,6 +228,10 @@ export class QualityApiEngine implements ExecutionEngine {
               add(finding({ severity: SEV.P2, kind: "request-contract-violation", title: "Request contract violation", detail: `${e.instancePath || "/"} ${e.message ?? ""}`.trim(), locator: loc }));
             }
           }
+          // Null/empty required-field check on the REQUEST too (symmetry with the response side).
+          for (const f of emptyRequiredStrings(ep.request.schema, x.request?.body)) {
+            add(finding({ severity: SEV.P2, kind: "null-or-empty-required-field", title: "Required request field is empty", detail: `Required request field "${f}" is present but empty.`, locator: loc }));
+          }
         }
         // Required request headers (positive exchanges).
         if (!x.negative && ep.request?.requiredHeaders?.length) {
@@ -262,17 +272,25 @@ export class QualityApiEngine implements ExecutionEngine {
  * object schemas so a nested required empty string is caught too (consistent with api.null-empty).
  */
 function emptyRequiredStrings(schema: object, body: unknown, prefix = ""): string[] {
-  const s = schema as { properties?: Record<string, { type?: string } & object>; required?: string[] };
-  if (!s || typeof body !== "object" || body === null) return [];
-  const rec = body as Record<string, unknown>;
+  const s = schema as { type?: string; properties?: Record<string, { type?: string } & object>; required?: string[]; items?: object };
+  if (!s || body === null || body === undefined) return [];
+  const join = (p: string, k: string): string => (p ? `${p}.${k}` : k);
   const out: string[] = [];
+  // Array of objects: recurse into each element (the most common REST list shape).
+  if (s.type === "array" && s.items && Array.isArray(body)) {
+    body.forEach((el, i) => out.push(...emptyRequiredStrings(s.items as object, el, `${prefix}[${i}]`)));
+    return out;
+  }
+  if (typeof body !== "object") return out;
+  const rec = body as Record<string, unknown>;
   for (const key of Array.isArray(s.required) ? s.required : []) {
     const prop = s.properties?.[key];
-    if (prop?.type === "string" && Object.prototype.hasOwnProperty.call(rec, key) && rec[key] === "") out.push(prefix + key);
+    if (prop?.type === "string" && Object.prototype.hasOwnProperty.call(rec, key) && rec[key] === "") out.push(join(prefix, key));
   }
   for (const [key, prop] of Object.entries(s.properties ?? {})) {
-    if (prop && (prop as { type?: string }).type === "object" && Object.prototype.hasOwnProperty.call(rec, key)) {
-      out.push(...emptyRequiredStrings(prop, rec[key], `${prefix}${key}.`));
+    const pt = (prop as { type?: string })?.type;
+    if (prop && (pt === "object" || pt === "array") && Object.prototype.hasOwnProperty.call(rec, key)) {
+      out.push(...emptyRequiredStrings(prop, rec[key], join(prefix, key)));
     }
   }
   return out;
