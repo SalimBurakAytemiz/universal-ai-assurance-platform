@@ -76,25 +76,46 @@ const SECRET_RULES: readonly LineRule[] = [
   { kind: "hardcoded-secret", severity: SEV.P1, title: "Private key material", re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----/, redact: true },
   { kind: "hardcoded-secret", severity: SEV.P1, title: "Potential Slack token", re: /xox[baprs]-[0-9A-Za-z-]{10,}/, redact: true },
   { kind: "hardcoded-secret", severity: SEV.P2, title: "Potential JWT literal", re: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{6,}/, redact: true },
-  // Assigned credential with a concrete (non env-reference) value.
-  { kind: "hardcoded-secret", severity: SEV.P2, title: "Hardcoded credential assignment", re: /\b(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|client[_-]?secret)\b\s*[:=]\s*["'][^"'$<{][^"']{4,}["']/i, redact: true },
+  // Assigned credential with a concrete (non env-reference) value. Tolerate a quoted key ("password":)
+  // so JSON config is covered, not just bare `password =`.
+  { kind: "hardcoded-secret", severity: SEV.P2, title: "Hardcoded credential assignment", re: /\b(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|client[_-]?secret)\b["']?\s*[:=]\s*["'][^"'$<{][^"']{4,}["']/i, redact: true },
 ];
 const INJECTION_RULES: readonly LineRule[] = [
   { kind: "sql-injection-pattern", severity: SEV.P2, title: "Potential SQL injection (string interpolation into SQL)", re: /["'`](?:select|insert|update|delete)\b[^"'`]*\$\{/i },
-  { kind: "sql-injection-pattern", severity: SEV.P2, title: "Potential SQL injection (string concatenation into SQL)", re: /(?:select|insert|update|delete|where)\b[^;"'`]*["'`]\s*\+\s*\w/i },
+  // Concatenation: require a QUOTED string literal that contains a SQL verb AND a clause keyword,
+  // immediately followed by `+` — high-signal, avoids flagging ordinary English prose like
+  // "update the record " + name.
+  { kind: "sql-injection-pattern", severity: SEV.P2, title: "Potential SQL injection (string concatenation into SQL)", re: /["'`](?:select|insert|update|delete)\b[^"'`]*\b(?:from|into|where|values|set|join)\b[^"'`]*["'`]\s*\+/i },
   { kind: "command-injection-pattern", severity: SEV.P1, title: "Potential command injection (interpolated exec)", re: /\b(?:exec|execSync|spawn|spawnSync)\s*\(\s*[`'"][^`'"]*\$\{/ },
   { kind: "code-eval", severity: SEV.P2, title: "Use of eval()", re: /\beval\s*\(/ },
-  { kind: "xss-sink", severity: SEV.P2, title: "Potential XSS sink", re: /\.innerHTML\s*=|dangerouslySetInnerHTML/ },
+  // Assignment (=), NOT a comparison (==/===): `.innerHTML = x` is a sink; `.innerHTML === y` is not.
+  { kind: "xss-sink", severity: SEV.P2, title: "Potential XSS sink", re: /\.innerHTML\s*=(?!=)|dangerouslySetInnerHTML/ },
 ];
+// Config rules tolerate an optional closing quote before the separator so JSON (`"debug": true`) is
+// covered as well as env/JS (`debug=true` / `debug: true`).
 const CONFIG_RULES: readonly LineRule[] = [
-  { kind: "insecure-tls-verification-disabled", severity: SEV.P1, title: "TLS certificate verification disabled", re: /rejectUnauthorized\s*[:=]\s*false|NODE_TLS_REJECT_UNAUTHORIZED\s*[:=]\s*["']?0/i },
-  { kind: "debug-enabled", severity: SEV.P2, title: "Debug mode enabled in configuration", re: /\bdebug\b\s*[:=]\s*true/i },
-  { kind: "ssl-disabled", severity: SEV.P2, title: "SSL/TLS disabled in configuration", re: /\bssl\b\s*[:=]\s*false/i },
+  { kind: "insecure-tls-verification-disabled", severity: SEV.P1, title: "TLS certificate verification disabled", re: /(?:rejectUnauthorized|NODE_TLS_REJECT_UNAUTHORIZED)["']?\s*[:=]\s*["']?(?:false|0)\b/i },
+  { kind: "debug-enabled", severity: SEV.P2, title: "Debug mode enabled in configuration", re: /\bdebug\b["']?\s*[:=]\s*true/i },
+  { kind: "ssl-disabled", severity: SEV.P2, title: "SSL/TLS disabled in configuration", re: /\bssl\b["']?\s*[:=]\s*false/i },
 ];
 
 const REQUIRED_SECURITY_HEADERS = ["content-security-policy", "x-content-type-options", "strict-transport-security", "x-frame-options"] as const;
 const WEAK_TLS_PROTOCOLS = new Set(["ssl", "sslv2", "sslv3", "tls1", "tls1.0", "tlsv1", "tlsv1.0", "tls1.1", "tlsv1.1"]);
-const WEAK_CIPHER_RE = /\b(?:rc4|null|export|des|md5|anon)\b/i;
+const WEAK_CIPHER_RE = /\b(?:rc4|null|export|3?des|tripledes|triple|md5|anon)\b/i;
+
+/**
+ * Mask every SECRET_RULE match in a line with [REDACTED]. Redaction is a property of the LINE, not of
+ * the individual rule: a non-redacting rule (injection/config) that echoes a line must NEVER emit a
+ * secret that happens to sit on that same line. Applied to every echoed snippet unconditionally.
+ */
+function redactSecretsInLine(line: string): string {
+  let safe = line;
+  for (const r of SECRET_RULES) {
+    const g = r.re.flags.includes("g") ? r.re : new RegExp(r.re.source, r.re.flags + "g");
+    safe = safe.replace(g, "[REDACTED]");
+  }
+  return safe;
+}
 
 function scanLines(artifact: SourceArtifact, rules: readonly LineRule[], add: (f: EngineFinding) => void, catLoc: string): void {
   const lines = String(artifact.content ?? "").split(/\r?\n/);
@@ -103,7 +124,9 @@ function scanLines(artifact: SourceArtifact, rules: readonly LineRule[], add: (f
       if (rule.re.test(line)) {
         const detail = rule.redact
           ? `${rule.title} detected at ${artifact.path}:${i + 1} (value REDACTED). Detection signal — requires independent verification.`
-          : `${rule.title} detected at ${artifact.path}:${i + 1}: ${line.trim().slice(0, 160)}. Detection signal — requires independent verification.`;
+          : // Echo a snippet with ALL secret matches masked, so a secret co-located with an
+            // injection/config pattern never leaks through the non-redacting rule's echo.
+            `${rule.title} detected at ${artifact.path}:${i + 1}: ${redactSecretsInLine(line).trim().slice(0, 160)}. Detection signal — requires independent verification.`;
         add(finding({ severity: rule.severity, kind: rule.kind, title: rule.title, detail, locator: `${catLoc} ${artifact.path}:${i + 1}` }));
       }
     }

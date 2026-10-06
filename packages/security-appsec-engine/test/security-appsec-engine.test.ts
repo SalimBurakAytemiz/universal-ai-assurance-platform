@@ -103,3 +103,48 @@ describe("SecurityAppsecEngine — detection-only static scan", () => {
     expect(caps.capabilities).toContain("sec.secrets");
   });
 });
+
+describe("SecurityAppsecEngine — review-fix regressions (no secret leak, JSON keys, rule precision)", () => {
+  const LEAK_KEY = "AKIA" + "LEAKTEST9012ABCD";
+  it("P0: a secret co-located with a non-redacted rule match NEVER leaks (per-line redaction)", async () => {
+    const inputs = [
+      { sources: [{ path: "x.ts", content: `el.innerHTML = "${LEAK_KEY}";` }] }, // xss-sink echoes the line
+      { sources: [{ path: "y.ts", content: `eval("${LEAK_KEY}")` }] }, // code-eval echoes the line
+      { config: [{ path: "c.js", content: `module.exports = { debug: true, password: "${LEAK_KEY}" };` }] }, // debug-enabled echoes the line
+    ];
+    for (const input of inputs) {
+      const r = await drive(input);
+      expect(JSON.stringify(r)).not.toContain(LEAK_KEY); // the key is masked everywhere, incl. the echoing sibling rule
+      expect(kinds(r.findings)).toContain("hardcoded-secret"); // still detected (redacted)
+    }
+  });
+
+  it("detects insecure config + credentials in JSON (quoted keys), not just env/JS", async () => {
+    const r = await drive({ config: [{ path: "prod.json", content: `{ "rejectUnauthorized": false, "debug": true, "ssl": false, "password": "hunter2longpw" }` }] });
+    const k = kinds(r.findings);
+    expect(k).toContain("insecure-tls-verification-disabled");
+    expect(k).toContain("debug-enabled");
+    expect(k).toContain("ssl-disabled");
+    expect(k).toContain("hardcoded-secret");
+    expect(JSON.stringify(r)).not.toContain("hunter2longpw"); // credential value masked even via debug-enabled echo
+  });
+
+  it("SQL-concat rule requires real SQL structure (no cry-wolf on English prose)", async () => {
+    const benign = await drive({ sources: [{ path: "a.ts", content: `const msg = "please update the record " + name;` }] });
+    expect(kinds(benign.findings)).not.toContain("sql-injection-pattern");
+    const real = await drive({ sources: [{ path: "b.ts", content: `const q = "SELECT name FROM users WHERE id=" + id;` }] });
+    expect(kinds(real.findings)).toContain("sql-injection-pattern");
+  });
+
+  it("XSS sink flags assignment, not comparison", async () => {
+    const cmp = await drive({ sources: [{ path: "a.ts", content: `if (node.innerHTML === "") return;` }] });
+    expect(kinds(cmp.findings)).not.toContain("xss-sink");
+    const asn = await drive({ sources: [{ path: "b.ts", content: `node.innerHTML = userInput;` }] });
+    expect(kinds(asn.findings)).toContain("xss-sink");
+  });
+
+  it("weak-TLS cipher detection includes 3DES", async () => {
+    const r = await drive({ tls: [{ host: "h", protocol: "TLSv1.2", cipher: "ECDHE-RSA-3DES-EDE-CBC-SHA" }] });
+    expect(kinds(r.findings)).toContain("weak-tls-cipher");
+  });
+});

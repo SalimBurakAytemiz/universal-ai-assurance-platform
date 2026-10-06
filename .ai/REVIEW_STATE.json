@@ -2,16 +2,18 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T13:11:00.000Z",
+    "at": "2026-10-06T13:36:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #17 quality-accessibility-engine",
-    "agents": 8,
-    "reported": 3,
-    "confirmed": 3,
+    "scope": "PR #18 security-appsec-engine",
+    "agents": 21,
+    "reported": 9,
+    "confirmed": 9,
     "distinctDefectsFixed": [
-      "P2 image name-rule ignored `title` (a valid accname source) -> title-named image falsely flagged image-missing-alt. Now title counts.",
-      "P2 control/interactive name checks omitted name-requiring ARIA roles searchbox / menuitemcheckbox / menuitemradio -> unnamed such controls audited clean (false negative). Added to the role sets.",
-      "P3 whitespace-only aria-label/accessibleName accepted as a name -> genuinely unnamed element passed. All name checks now use a trimmed hasName() / accName()."
+      "P0 SECRET LEAK: redaction was per-RULE not per-LINE, so a secret on a line that also matched a non-redacted rule (injection/eval/xss/config) leaked verbatim via the echoed line. Now every echoed snippet is passed through redactSecretsInLine() which masks ALL secret matches — a secret can never leak regardless of which rule echoes the line.",
+      "P1/P2 insecure-config + hardcoded-credential rules missed JSON quoted keys (\"debug\": true) — false negatives on the dominant config format. Rules now tolerate an optional closing quote before the separator.",
+      "P3 SQL-concat rule over-matched English prose; now requires a quoted SQL string with a verb AND a clause keyword before the concat.",
+      "P3 xss-sink flagged `.innerHTML ===` comparisons; now requires assignment (=, not ==).",
+      "P3 weak-cipher regex missed 3DES; added."
     ],
     "allResolved": true
   },
@@ -27,7 +29,7 @@
   },
   "reReview": {
     "at": null,
-    "note": "re-review of the a11y fixes pending before merge"
+    "note": "re-review of the appsec fixes (esp. the P0 secret-leak) pending before merge"
   },
   "pr2": {
     "loop1": {
