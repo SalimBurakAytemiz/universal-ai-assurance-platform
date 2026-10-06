@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { driveEngine, EngineStatus, type EngineContext } from "@uaap/engine-core";
+import { CancellationToken, driveEngine, EngineStatus, type EngineContext } from "@uaap/engine-core";
 import { QualityWebEngine, type WebEngineInput } from "@uaap/quality-web-engine";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -98,5 +98,64 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
     expect(caps.offlineOnly).toBe(true);
     expect(caps.domain).toBe("QUALITY");
     expect(caps.capabilities).toContain("web.navigation-correctness");
+  });
+
+  // ---- Review round-1 regressions (adversarial findings, all fixed with a test) ----
+
+  it("REGRESSION: a network request recorded ok:false is flagged even with a success/redirect status", async () => {
+    for (const status of [200, 204, 302, 0]) {
+      const r = await drive({ flows: [{ id: "n", steps: [{ network: [{ url: "/api/x", method: "POST", status, ok: false }] }] }] });
+      expect(kinds(r.findings), `status ${status}`).toContain("network-request-not-ok");
+    }
+    // a 5xx ok:false is the harder P1 failure
+    const r5 = await drive({ flows: [{ id: "n", steps: [{ network: [{ url: "/api/x", status: 503, ok: false }] }] }] });
+    expect(kinds(r5.findings)).toContain("network-request-failed");
+  });
+
+  it("REGRESSION: a required/forbidden element with null or non-boolean `present` is surfaced, never a silent pass", async () => {
+    const reqNull = await drive({ flows: [{ id: "f", steps: [{ requires: [{ selector: "#x", present: null as unknown as boolean }] }] }] });
+    expect(kinds(reqNull.findings)).toContain("requirement-unverifiable");
+    const reqBad = await drive({ flows: [{ id: "f", steps: [{ requires: [{ selector: "#x", present: 0 as unknown as boolean }] }] }] });
+    expect(kinds(reqBad.findings)).toContain("malformed-requirement");
+    const forbidUnrecorded = await drive({ flows: [{ id: "f", steps: [{ forbids: [{ selector: ".error-banner" }] }] }] });
+    expect(kinds(forbidUnrecorded.findings)).toContain("forbidden-unverifiable");
+    // an explicitly-absent forbidden element (present:false) is the desired state — no finding
+    const forbidAbsent = await drive({ flows: [{ id: "f", steps: [{ forbids: [{ selector: ".error-banner", present: false }] }] }] });
+    expect(forFlow(forbidAbsent, "f")).toHaveLength(0);
+  });
+
+  it("REGRESSION: SECRET-SAFE — strips URL userinfo (basic-auth) credentials from echoed URLs", async () => {
+    const r = await drive({ flows: [{ id: "f", steps: [{ network: [{ url: "https://alice:SUPERSECRET@api.host/login", method: "POST", status: 500 }] }] }] });
+    const blob = JSON.stringify(r.findings);
+    expect(kinds(r.findings)).toContain("network-request-failed");
+    expect(blob).not.toContain("SUPERSECRET");
+    expect(blob).not.toContain("alice:");
+    expect(blob).toContain("https://api.host/login");
+  });
+
+  it("REGRESSION: isolates a throwing flow-identity getter and still audits the following good flow", async () => {
+    const hostile: unknown = { get id() { throw new Error("boom"); }, steps: [] };
+    const r = await drive({ flows: [hostile, { id: "good", steps: [{ ok: false }] }] });
+    expect(r.status).toBe(EngineStatus.DONE); // the run did not crash
+    expect(forFlow(r, "good")).toContain("step-failed"); // the good flow was still audited
+  });
+
+  it("REGRESSION: standard console types are benign; only a truly-unknown level is surfaced", async () => {
+    for (const level of ["table", "dir", "group", "groupEnd", "count", "timeEnd", "assert", "debug"]) {
+      const r = await drive({ flows: [{ id: "f", steps: [{ console: [{ level }] }] }] });
+      expect(forFlow(r, "f"), level).toHaveLength(0);
+    }
+    const weird = await drive({ flows: [{ id: "f", steps: [{ console: [{ level: "bananas" }] }] }] });
+    expect(kinds(weird.findings)).toContain("unknown-console-level");
+    const errs = await drive({ flows: [{ id: "f", steps: [{ console: [{ level: "error" }] }] }] });
+    expect(kinds(errs.findings)).toContain("console-error");
+  });
+
+  it("REGRESSION: a cancellation yields CANCELLED, never a swallowed engine-error finding", async () => {
+    const tok = new CancellationToken();
+    tok.cancel("test-cancel");
+    const r = await driveEngine(new QualityWebEngine(), ctx({ flows: [{ id: "f", steps: [{ ok: false }, { ok: false }] }] }), { token: tok });
+    expect(r.status).toBe(EngineStatus.CANCELLED);
+    expect(kinds(r.findings)).not.toContain("engine-error");
   });
 });

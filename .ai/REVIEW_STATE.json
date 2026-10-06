@@ -2,39 +2,23 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T14:40:00.000Z",
+    "at": "2026-10-06T15:55:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #20 desktop-viewmodels",
-    "agents": 27,
-    "reported": 8,
-    "confirmed": 8,
+    "scope": "PR #21 quality-web-engine (round 1)",
+    "agents": 24,
+    "reported": 7,
+    "confirmed": 7,
     "distinctDefectsFixed": [
-      "P1 FAIL-OPEN: securityPostureViewModel.locked used a DENY-LIST (=== LOCKED_BY_DESIGN); any non-sentinel/unknown/typo state + any auth array read as UNLOCKED. Now an ALLOW-LIST: locked unless state is explicitly ENABLED AND a genuine scoped authorization exists; unknown states surface an inconsistency.",
-      "P1 FAIL-OPEN: authorizationsPresent was `Array.isArray && length>0`, so [{}]/[null]/[0]/[\"\"]/id-only stubs masqueraded as a real authorization. Now each entry is structurally validated against @uaap/core AuthorizationRecord (non-empty id + targetId + >=1 allowedIdentifiers).",
-      "P2 FAKE-GREEN: homeViewModel.activeSecurityValidation passed the raw master state string through (home badge showed ENABLED with no auth while securityPosture correctly said locked). Now auth-gated: LOCKED_BY_DESIGN unless the posture is genuinely unlocked; exposes securityLocked + securityInconsistency.",
-      "P2 CRASH-NOT-DEGRADE: loadRepoState's findRepoRoot() was outside try/catch -> a packaged/relocated build (no marker) threw and crashed the data layer. Now returns all-defaults honest state on an unlocatable root.",
-      "P2 CRASH-NOT-DEGRADE: readFileSync(TEST_STATUS.md) was unguarded (EISDIR/EACCES/TOCTOU) -> crash. Now wrapped -> testStatus=null (unknown).",
-      "P3 STALE-COUNT: parseTestStatus returned the FIRST doc match (non-global exec); an earlier aspirational/stale line could be shown. Now anchored to the authoritative '## Last local run' section (last match within scope).",
-      "Hardening: buildGraph.nodes / agents.agents coerced to arrays + per-node/per-agent status/guild guards in loadRepoState & the grouping fns (malformed state degrades to honest zero, never a crash)."
+      "P1 FALSE-NEGATIVE: a network request recorded ok:false was silently passed whenever it also carried a status < 500 that was present (the `!hasStatus` guard), so a 2xx/3xx flagged not-ok was fake green. Now ok:false is a recorded failure regardless of status.",
+      "P1 SECRET-LEAK: safeUrl stripped query + fragment but NOT basic-auth userinfo, so a URL like https://user:SECRET@host leaked the password verbatim into findings. safeUrl now also strips a leading authority userinfo segment.",
+      "P2 FALSE-NEGATIVE: a required element with null/non-boolean `present` (null is the natural JSON for 'not recorded') fell through all branches and passed silently. Now null => requirement-unverifiable, non-boolean => malformed-requirement.",
+      "P2 FALSE-NEGATIVE: a forbidden element with unrecorded presence passed silently (couldn't confirm absence). Now surfaces forbidden-unverifiable, symmetric with required.",
+      "P2 CRASH-NOT-ISOLATE: flow identity was read outside the per-flow try/catch, so a throwing id getter aborted the whole run. The id read is now inside try (EngineAbort re-thrown so cancellation still reaches the driver), and discover/plan read ids defensively.",
+      "P3 FALSE-POSITIVE: the benign-console allowlist omitted standard console types (table/dir/group/count/timeEnd/assert/…), so a clean flow using them was flagged unknown-console-level. Allowlist now covers the full console API; only a truly-unknown level is surfaced.",
+      "P3 CANCELLATION-GRANULARITY: execute() checkpointed token.throwIfCancelled() only per-flow; now also between steps (a long single flow is interruptible)."
     ],
     "boundedLoop": { "count": 1, "max": 3 },
-    "regressionTests": "5 new (allow-list unknown-state; placeholder-auth rejection incl. id-only; home auth-gated no-fake-green; parseTestStatus section-anchoring; loadRepoState honest-defaults on unlocatable root).",
-    "allResolved": true
-  },
-  "reReview": {
-    "at": "2026-10-06T14:58:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #20 fix commit d011b3e",
-    "agents": 14,
-    "reported": 3,
-    "confirmed": 3,
-    "distinctDefectsFixed": [
-      "P1 RESIDUAL fake-green: the genuineness check validated only id/targetId/allowedIdentifiers, ignoring the kernel's window/mode/scope gates — an EXPIRED (or wrong-mode/missing-domain) record still read ENABLED. Replaced with an IN-FORCE check: complete @uaap/core AuthorizationRecord + active mode (CLIENT_AUTHORIZED/INTERNAL_OWNED) + non-empty identifier/domain/environment scope + current [notBefore,notAfter) window (now threaded through securityPostureViewModel/homeViewModel/allViewModels). Expired/future/malformed => not in force => LOCKED, inconsistency surfaced.",
-      "P2 REGRESSION (fix-introduced): buildGraphViewModel's families map still dereferenced a null node and crashed, despite the null-safe status loop added in round 1. Now the node is guarded before reading .family, and the byStatus loop skips un-renderable entries (still counted).",
-      "P2 REGRESSION (fix-introduced): the malformed/missing-status fallback was 'NOT_STARTED' (a real status, inflating that bucket) and inconsistent with agentsViewModel. Now 'UNKNOWN' via a shared statusOf() helper, so an unknown status is never reported as a definite NOT_STARTED."
-    ],
-    "regressionTests": "2 new (expired/future/wrong-mode/missing-scope/bad-window auth never unlocks + home badge; null/malformed node never crashes + UNKNOWN-not-NOT_STARTED). 15 in-package, 431/431 repo-wide.",
-    "boundedLoop": { "count": 2, "max": 3, "outcome": "CONVERGED" },
+    "regressionTests": "6 new (ok:false-with-success-status; null/non-boolean/unrecorded required+forbidden present; userinfo-stripped; throwing-id-getter isolation; standard-console-types benign; cancellation yields CANCELLED not engine-error). 15 in-package, 446/446 repo-wide.",
     "allResolved": true
   },
   "unresolved": {
@@ -44,23 +28,30 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
-    "max": 3,
-    "outcome": "CAP_REACHED"
+    "count": 1,
+    "max": 3
   },
-  "reReview2": {
-    "at": "2026-10-06T15:10:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #20 fix commit 0a3f6cc (round 3 — bounded cap)",
-    "agents": 14,
-    "reported": 1,
-    "confirmed": 1,
-    "distinctDefectsFixed": [
-      "P2 residual fake-green: the in-force check ignored maxActionClass, so a record capped at R0_PASSIVE (which authorizes ZERO active actions — kernel Gate 7 denies R1/R2) still read as ENABLED. Fixed to mirror the kernel EXACTLY: reject only an explicit R0_PASSIVE ceiling (rank 0 < minimal active R1 rank 1); an absent/garbage/R2/R3 ceiling stays in force (kernel's `1 > undefined` is false, so it would permit R1) — avoids introducing a new over-lock. Regression test covers both directions."
-    ],
-    "boundedLoopCapReached": true,
-    "mergedAtCapRationale": "Round 3 is the bounded-review cap (max 3). The round-3 fix is a precise one-line kernel-mirror verified directly against authorization-kernel Gate 7 + ACTION_RANK, with a two-directional regression test (rejects R0_PASSIVE; does not over-lock absent/garbage/R2/R3). 0 P0/P1/P2/P3 open; no architecture change. Merged at cap per the bounded-loop contract.",
-    "allResolved": true
+  "pr20": {
+    "round1": {
+      "at": "2026-10-06T14:40:00.000Z",
+      "agents": 27,
+      "confirmed": 8,
+      "summary": "2xP1 fail-open security posture (deny-list -> allow-list; placeholder-auth rejection), P2 home fake-green auth-gated, 2xP2 loadRepoState crash-not-degrade, P3 parseTestStatus stale-count, +hardening."
+    },
+    "round2": {
+      "at": "2026-10-06T14:58:00.000Z",
+      "agents": 14,
+      "confirmed": 3,
+      "summary": "P1 residual fake-green: structural-only auth check ignored window/mode/scope -> IN-FORCE check (complete AuthorizationRecord + active mode + scope + current window, now threaded); 2xP2 fix-introduced regressions (null-node crash in families map; UNKNOWN-not-NOT_STARTED)."
+    },
+    "round3": {
+      "at": "2026-10-06T15:10:00.000Z",
+      "agents": 14,
+      "confirmed": 1,
+      "boundedLoopCapReached": true,
+      "summary": "P2 residual: in-force check ignored maxActionClass -> reject only an explicit R0_PASSIVE ceiling, mirroring kernel Gate 7 exactly (absent/garbage/R2/R3 stay in force). Merged at cap, 0 open.",
+      "mergedPR": 20
+    }
   },
   "pr19": {
     "lastReview": {

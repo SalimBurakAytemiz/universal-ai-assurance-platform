@@ -20,6 +20,7 @@
 //     bodies are NEVER echoed — only levels, statuses, methods and counts.
 import {
   CancellationToken,
+  EngineAbort,
   finding,
   HealthStatus,
   type Discovery,
@@ -83,14 +84,25 @@ export interface WebEngineInput {
 }
 
 const SEV = { P0: "P0", P1: "P1", P2: "P2", P3: "P3" } as const;
-/** Console levels that count as an error. Anything unknown is surfaced (fail-closed), never assumed benign. */
+/** Console levels that count as an error. A truly unrecognized level is surfaced (fail-closed). */
 const CONSOLE_ERROR_LEVELS = new Set(["error", "severe", "fatal", "critical"]);
-const CONSOLE_BENIGN_LEVELS = new Set(["log", "info", "debug", "trace", "warn", "warning", "verbose", "notice"]);
+/** Non-error console levels — includes every standard console API / Playwright ConsoleMessage.type()
+ * value so a clean flow that merely uses console.table/dir/group/etc. yields ZERO findings. */
+const CONSOLE_BENIGN_LEVELS = new Set([
+  "log", "info", "debug", "trace", "warn", "warning", "verbose", "notice",
+  "dir", "dirxml", "table", "clear", "count", "countreset", "assert",
+  "group", "groupcollapsed", "groupend", "startgroup", "startgroupcollapsed", "endgroup",
+  "profile", "profileend", "time", "timelog", "timeend", "timestamp",
+]);
 
-/** The query string and fragment of a URL may carry tokens/PII — strip them before echoing. */
+/** The query string, fragment AND userinfo (basic-auth `user:pass@`) of a URL may carry tokens/PII —
+ * strip ALL of them before echoing. Secret-safe by construction: a password embedded in a recorded
+ * URL can never reach a finding. */
 function safeUrl(u: unknown): string {
   if (typeof u !== "string" || u.trim() === "") return "(no url)";
-  const path = u.split("#")[0]!.split("?")[0]!;
+  let path = u.split("#")[0]!.split("?")[0]!;
+  // Drop a leading authority userinfo segment: [scheme:]//user:pass@host -> [scheme:]//host.
+  path = path.replace(/^(([a-z][a-z0-9+.-]*:)?\/\/)[^/@]*@/i, "$1");
   return path.length > 0 ? path : "(empty url)";
 }
 function isNonEmptyString(v: unknown): v is string {
@@ -138,13 +150,22 @@ export class QualityWebEngine implements ExecutionEngine {
     return Array.isArray(f) ? (f as WebFlow[]) : [];
   }
 
+  /** Read a flow id defensively — a hostile/throwing accessor yields undefined, never a thrown error
+   * out of discover/plan (which would fail the whole run instead of being isolated in execute). */
+  private safeId(f: unknown): unknown {
+    try {
+      return f && typeof f === "object" ? (f as { id?: unknown }).id : undefined;
+    } catch {
+      return undefined;
+    }
+  }
   discover(ctx: EngineContext): Discovery {
     const flows = this.flowsOf(ctx);
-    return { items: flows.map((f) => f?.id), summary: `${flows.length} recorded web flow(s)` };
+    return { items: flows.map((f) => this.safeId(f)), summary: `${flows.length} recorded web flow(s)` };
   }
   plan(ctx: EngineContext, _d: Discovery): EnginePlan {
     const flows = this.flowsOf(ctx);
-    return { steps: flows.map((f) => ({ flow: f?.id })), summary: `audit ${flows.length} flow(s)` };
+    return { steps: flows.map((f) => ({ flow: this.safeId(f) })), summary: `audit ${flows.length} flow(s)` };
   }
   validatePrereqs(ctx: EngineContext, _p: EnginePlan): PrereqResult {
     const input = this.input(ctx);
@@ -160,17 +181,20 @@ export class QualityWebEngine implements ExecutionEngine {
     const seenFlowIds = new Set<string>();
     for (const flow of flows) {
       token.throwIfCancelled();
-      if (!(flow && typeof flow === "object" && typeof flow.id === "string")) {
-        collector.finding(finding({ severity: SEV.P2, kind: "malformed-flow", title: "Malformed web flow", detail: "A flow is null or has no string id; skipped.", locator: "flows" }));
-        continue;
-      }
-      if (seenFlowIds.has(flow.id)) {
-        collector.finding(finding({ severity: SEV.P2, kind: "duplicate-flow", title: "Duplicate flow id", detail: `Flow id "${flow.id}" appears more than once; the later one is ignored (first kept).`, locator: `flow ${flow.id}` }));
-        continue;
-      }
-      seenFlowIds.add(flow.id);
-      const floc = `flow ${flow.id}`;
+      // The entire per-flow body — INCLUDING the identity/shape read — is inside try/catch so even a
+      // hostile object (e.g. a throwing `id` getter) is isolated to this one flow and never aborts
+      // the run. A genuine cancellation/timeout (EngineAbort) is re-thrown so the driver can finalize.
       try {
+        if (!(flow && typeof flow === "object" && typeof flow.id === "string")) {
+          collector.finding(finding({ severity: SEV.P2, kind: "malformed-flow", title: "Malformed web flow", detail: "A flow is null or has no string id; skipped.", locator: "flows" }));
+          continue;
+        }
+        if (seenFlowIds.has(flow.id)) {
+          collector.finding(finding({ severity: SEV.P2, kind: "duplicate-flow", title: "Duplicate flow id", detail: `Flow id "${flow.id}" appears more than once; the later one is ignored (first kept).`, locator: `flow ${flow.id}` }));
+          continue;
+        }
+        seenFlowIds.add(flow.id);
+        const floc = `flow ${flow.id}`;
         audited++;
         let violations = 0;
         const add = (f: EngineFinding) => {
@@ -182,6 +206,7 @@ export class QualityWebEngine implements ExecutionEngine {
         else if (steps.length === 0) add(finding({ severity: SEV.P2, kind: "empty-flow", title: "Empty web flow", detail: `Flow "${flow.id}" has zero steps; nothing could be verified (not a pass).`, locator: floc }));
 
         steps.forEach((step, i) => {
+          token.throwIfCancelled(); // checkpoint between steps (each step is a unit of work)
           const sloc = `${floc} step[${i}]`;
           if (!step || typeof step !== "object") {
             add(finding({ severity: SEV.P2, kind: "malformed-step", title: "Malformed step", detail: `Step ${i} is null or not an object; skipped.`, locator: sloc }));
@@ -214,8 +239,10 @@ export class QualityWebEngine implements ExecutionEngine {
               return;
             }
             if (ref.present === false) add(finding({ severity: SEV.P1, kind: "required-element-missing", title: "Required element missing", detail: `Step ${i} requires ${describeRef(ref)} but it was not present.`, locator: sloc }));
-            else if (ref.present === undefined) add(finding({ severity: SEV.P2, kind: "requirement-unverifiable", title: "Required element not verifiable", detail: `Step ${i} requires ${describeRef(ref)} but its presence was not recorded; cannot confirm (not a pass).`, locator: sloc }));
-            else if (ref.present === true && ref.visible === false) add(finding({ severity: SEV.P2, kind: "required-element-not-visible", title: "Required element present but not visible", detail: `Step ${i} requires ${describeRef(ref)}; it is present but was recorded as not visible.`, locator: sloc }));
+            else if (ref.present === undefined || ref.present === null) add(finding({ severity: SEV.P2, kind: "requirement-unverifiable", title: "Required element not verifiable", detail: `Step ${i} requires ${describeRef(ref)} but its presence was not recorded; cannot confirm (not a pass).`, locator: sloc }));
+            else if (ref.present === true) {
+              if (ref.visible === false) add(finding({ severity: SEV.P2, kind: "required-element-not-visible", title: "Required element present but not visible", detail: `Step ${i} requires ${describeRef(ref)}; it is present but was recorded as not visible.`, locator: sloc }));
+            } else add(finding({ severity: SEV.P3, kind: "malformed-requirement", title: "Malformed required element presence", detail: `Step ${i} requires ${describeRef(ref)} with a non-boolean \`present\`; cannot confirm (not a pass).`, locator: sloc }));
           });
 
           // Forbidden elements (e.g. an error banner that must not appear).
@@ -227,6 +254,8 @@ export class QualityWebEngine implements ExecutionEngine {
               return;
             }
             if (ref.present === true) add(finding({ severity: SEV.P1, kind: "forbidden-element-present", title: "Forbidden element present", detail: `Step ${i} forbids ${describeRef(ref)} but it was present (e.g. an error/blocked state).`, locator: sloc }));
+            else if (ref.present === undefined || ref.present === null) add(finding({ severity: SEV.P2, kind: "forbidden-unverifiable", title: "Forbidden element absence not verifiable", detail: `Step ${i} forbids ${describeRef(ref)} but its presence was not recorded; cannot confirm absence (not a pass).`, locator: sloc }));
+            else if (ref.present !== false) add(finding({ severity: SEV.P3, kind: "malformed-forbidden", title: "Malformed forbidden element presence", detail: `Step ${i} forbids ${describeRef(ref)} with a non-boolean \`present\`; cannot confirm absence (not a pass).`, locator: sloc }));
           });
 
           // Console errors (level only — message text is never inspected or echoed).
@@ -254,8 +283,10 @@ export class QualityWebEngine implements ExecutionEngine {
               add(finding({ severity: SEV.P1, kind: "network-request-failed", title: "Network request failed", detail: `Step ${i}: ${method} "${safeUrl(req.url)}" ${hasStatus ? `returned HTTP ${req.status}` : "failed"}.`, locator: sloc }));
             } else if (hasStatus && (req.status as number) >= 400) {
               add(finding({ severity: SEV.P2, kind: "network-request-client-error", title: "Network request client error", detail: `Step ${i}: ${method} "${safeUrl(req.url)}" returned HTTP ${req.status}.`, locator: sloc }));
-            } else if (req.ok === false && !hasStatus && req.failed !== false) {
-              add(finding({ severity: SEV.P2, kind: "network-request-not-ok", title: "Network request recorded not-ok", detail: `Step ${i}: ${method} "${safeUrl(req.url)}" was recorded as not ok (no status).`, locator: sloc }));
+            } else if (req.ok === false) {
+              // A recorded not-ok is a failure REGARDLESS of status (a 2xx/3xx flagged not-ok is still
+              // a failure the capturer saw) — never gate this on the absence of a status code.
+              add(finding({ severity: SEV.P2, kind: "network-request-not-ok", title: "Network request recorded not-ok", detail: `Step ${i}: ${method} "${safeUrl(req.url)}" was recorded as not ok${hasStatus ? ` (HTTP ${req.status})` : ""}.`, locator: sloc }));
             }
           });
         });
@@ -269,7 +300,8 @@ export class QualityWebEngine implements ExecutionEngine {
           data: { flow: flow.id, steps: steps.length, violations, at: ctx.now() },
         });
       } catch (e) {
-        collector.finding(finding({ severity: SEV.P2, kind: "engine-error", title: "Engine error while auditing flow", detail: e instanceof Error ? e.message : String(e), locator: floc }));
+        if (e instanceof EngineAbort) throw e; // a real cancellation/timeout must reach the driver, not be swallowed as a finding
+        collector.finding(finding({ severity: SEV.P2, kind: "engine-error", title: "Engine error while auditing flow", detail: e instanceof Error ? e.message : String(e), locator: "flows" }));
       }
     }
 

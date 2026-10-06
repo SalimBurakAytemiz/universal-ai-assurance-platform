@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **440 passed / 440** across 36 files (+ quality-web-engine functional web-flow engine)
+- vitest: **446 passed / 446** across 36 files (+ quality-web-engine functional web-flow engine, review round 1 fixes)
 
 New this change — `@uaap/quality-web-engine` (`packages/quality-web-engine/test/`): **9 tests**
 - Functional web/UI assurance on the @uaap/engine-core lifecycle over RECORDED web-interaction
@@ -30,4 +30,9 @@ performance, accessibility), the security appsec detection engine, the knowledge
 research-intelligence pipeline, the autopilot durability chain, and the desktop real-state
 view-model data layer are all IMPLEMENTED+TESTED and merged (PRs #2–#20).
 
-P0/P1/P2/P3 open on this change: 0 / 0 / 0 / 0 (pre-PR; adversarial review runs on the PR).
+Adversarial review round 1 (PR #21, 24 agents) confirmed 7 defects — ALL fixed with regression
+tests: 2×P1 (network ok:false with a non-5xx status silently passed; safeUrl leaked basic-auth
+userinfo credentials), 4×P2/P3 false-negatives + fail-closed gaps (required/forbidden element with
+null/non-boolean/unrecorded `present` silently passed; throwing flow-identity getter aborted the
+whole run; benign console allowlist flagged standard console.table/dir/group types; step-level
+cancellation checkpoint). P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Re-review runs on the fix commit.
