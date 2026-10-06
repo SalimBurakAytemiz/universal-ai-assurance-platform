@@ -228,6 +228,21 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
     expect(okblob).toContain("cdn.example.com/app.js");
   });
 
+  it("REGRESSION (round 6): a backslash-form malformed authority never echoes userinfo (unparseable => redacted)", async () => {
+    for (const url of [
+      "\\\\user:SECRET@evil.com:999999/p", // two backslashes, bad port -> throws
+      "/\\user:SECRET@evil.com:999999/p", // slash+backslash, bad port -> throws
+      "\\\\alice:SUPERSECRET@xn--a/p", // invalid punycode -> throws
+    ]) {
+      const r = await drive({ flows: [{ id: "f", steps: [{ network: [{ url, failed: true }] }] }] });
+      const blob = JSON.stringify(r.findings);
+      expect(blob, url).not.toContain("SECRET");
+      expect(blob, url).not.toContain("SUPERSECRET");
+      expect(blob, url).not.toContain("user:");
+      expect(blob, url).not.toContain("alice:");
+    }
+  });
+
   it("REGRESSION: a cancellation yields CANCELLED, never a swallowed engine-error finding", async () => {
     const tok = new CancellationToken();
     tok.cancel("test-cancel");

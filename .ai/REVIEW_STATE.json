@@ -82,8 +82,23 @@
       "P1: the catch branch redacted only when hasScheme was true, so a scheme-less protocol-relative URL ('//user:SECRET@host:999999/path') whose malformed authority made new URL throw fell through to the naive split and echoed the userinfo. The catch now redacts any authority-bearing input (hasScheme || raw.startsWith('//')); only a bare relative path (no authority => no userinfo) is echoed."
     ],
     "regressionTests": "1 new round-5 test (malformed protocol-relative //user:SECRET@... redacted; well-formed //user:pw@host/app.js shows host+path, userinfo stripped). 20 in-package, 451/451 repo-wide.",
-    "leakVectorCountByRound": "1 -> 2 -> 3 -> 1 -> 0 (converged)",
+    "leakVectorCountByRound": "1 -> 2 -> 3 -> 1 (round 5)",
     "boundedLoop": { "count": 5, "max": 3 },
+    "allResolved": true
+  },
+  "reReview5": {
+    "at": "2026-10-06T16:55:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #21 fix commit 88a6776 (round 6 — final safeUrl confirmation)",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
+    "distinctDefectsFixed": [
+      "P1: a backslash-form authority (\\\\user:SECRET@evil.com:999999/p) — WHATWG normalizes \\\\ to // for special schemes, parses userinfo, then throws on the bad port — slipped the catch's startsWith('//') prefix check (backslashes, not forward slashes) and was echoed verbatim. ROOT-CAUSE FIX: the catch now REDACTS UNCONDITIONALLY on any parse failure, so no unparsed string is ever echoed. safeUrl is now leak-proof by construction: it returns ONLY parser-rendered protocol//host/pathname (host non-empty => userinfo isolated by the parser, query/fragment excluded), a clean relative pathname (no authority => no userinfo), or a redaction marker."
+    ],
+    "regressionTests": "1 new round-6 test (backslash / slash-backslash malformed authority redacted, no userinfo echoed). 21 in-package, 452/452 repo-wide.",
+    "leakVectorCountByRound": "1 -> 2 -> 3 -> 1 -> 0 (catch no longer enumerates prefixes; always redacts on parse failure)",
+    "boundedLoop": { "count": 6, "max": 3 },
     "allResolved": true
   },
   "unresolved": {
@@ -93,9 +108,9 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 5,
+    "count": 6,
     "max": 3,
-    "note": "exceeded deliberately: rounds 3-5 are ONE hard-rule secret-safety fix for safeUrl (WHATWG parser + the host!=='' render invariant + authority-aware redaction on the unparseable path), converging to zero leak vectors. A secret-leak into evidence is a non-negotiable DENY that overrides the review-loop-count convention (precedent: PR #6 concurrency class)."
+    "note": "exceeded deliberately: rounds 3-6 are ONE hard-rule secret-safety fix for safeUrl, ending in an enumeration-free invariant (render parser host+path/clean-pathname only; redact on ANY parse failure) that is leak-proof by construction. A secret-leak into evidence is a non-negotiable DENY that overrides the review-loop-count convention (precedent: PR #6 concurrency class)."
   },
   "pr20": {
     "round1": {

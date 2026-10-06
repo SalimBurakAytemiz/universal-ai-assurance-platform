@@ -112,26 +112,27 @@ function safeUrl(u: unknown): string {
   const raw = u.trim();
   if (raw === "") return "(no url)";
   const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(raw);
-  const redactScheme = (): string => {
+  // "//", "\\", "/\", "\/" all introduce an authority for a special scheme (WHATWG normalizes
+  // backslashes to forward slashes), so any such prefix may carry userinfo.
+  const startsWithAuthority = /^[/\\]{2}/.test(raw);
+  const redact = (): string => {
     const m = /^([a-z][a-z0-9+.-]*:)/i.exec(raw);
     return `${m ? m[1] : ""}//(redacted)`;
   };
   // host+path only. Safe ONLY when host is non-empty (true authority): the parser then keeps userinfo
   // in username/password, never in host or pathname. An empty host means an opaque-path scheme whose
   // pathname can still contain a credential — redact it instead.
-  const renderAuthority = (p: URL): string => (p.host === "" ? redactScheme() : `${p.protocol}//${p.host}${p.pathname || ""}`);
+  const renderAuthority = (p: URL): string => (p.host === "" ? redact() : `${p.protocol}//${p.host}${p.pathname || ""}`);
   try {
     if (hasScheme) return renderAuthority(new URL(raw));
     const rel = new URL(raw, "http://host.invalid");
-    if (raw.startsWith("//") && rel.host && rel.host !== "host.invalid") return `${rel.protocol}//${rel.host}${rel.pathname || ""}`;
+    if (startsWithAuthority && rel.host && rel.host !== "host.invalid") return `${rel.protocol}//${rel.host}${rel.pathname || ""}`;
     return rel.pathname || "/"; // bare relative path: no userinfo; query/fragment dropped
   } catch {
-    // Unparseable but bearing an AUTHORITY (a scheme, or protocol-relative "//…") where a credential
-    // could hide: redact, never echo. Only a bare relative path (no authority => no userinfo) is
-    // safe to echo with its query/fragment stripped.
-    if (hasScheme || raw.startsWith("//")) return redactScheme();
-    const s = raw.split("#")[0]!.split("?")[0]!;
-    return s.length > 0 ? s : "(empty url)";
+    // UNPARSEABLE: we cannot cleanly separate a credential from the rest, so NEVER echo the raw
+    // string — redact unconditionally. A well-formed bare relative path resolves against the base and
+    // does not reach here; only malformed (typically authority-bearing) inputs do. Fail-closed.
+    return redact();
   }
 }
 function isNonEmptyString(v: unknown): v is string {

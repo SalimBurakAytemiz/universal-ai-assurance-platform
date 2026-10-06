@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **451 passed / 451** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-5 fixes)
+- vitest: **452 passed / 452** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-6 fixes)
 
 New this change — `@uaap/quality-web-engine` (`packages/quality-web-engine/test/`): **9 tests**
 - Functional web/UI assurance on the @uaap/engine-core lifecycle over RECORDED web-interaction
@@ -49,4 +49,7 @@ host is non-empty (true authority — parser isolates userinfo); REDACT every op
 to its scheme. Round 5 found the catch-branch redaction was gated on `hasScheme`, so a malformed
 protocol-relative `//user:SECRET@…` still echoed userinfo; the catch now redacts any authority-bearing
 input (`hasScheme || starts with //`). safeUrl leak-vector count across rounds: 1→2→3→1→0. P0/P1/P2/P3
-open: 0 / 0 / 0 / 0. A final round-6 confirmation runs on the fix commit.
+open: 0 / 0 / 0 / 0. Round 6 found a backslash-form authority (\\user:SECRET@…) slipped the catch's
+prefix check; the catch now REDACTS UNCONDITIONALLY on any parse failure (never echoes an unparsed
+string), making safeUrl leak-proof by construction: it only ever returns parser-rendered host+path,
+a clean relative pathname, or a redaction marker. A final round-7 confirmation runs on the fix commit.
