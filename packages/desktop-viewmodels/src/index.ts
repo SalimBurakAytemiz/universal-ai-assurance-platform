@@ -191,6 +191,13 @@ const ACTIVE_VALIDATION_ENABLED_STATES: ReadonlySet<string> = new Set(["ENABLED"
  * (the kernel denies every active action in that mode) so it never unlocks. */
 const ACTIVE_AUTH_MODES: ReadonlySet<string> = new Set(["CLIENT_AUTHORIZED", "INTERNAL_OWNED"]);
 
+/** Action-class ceilings that permit ZERO active work. The kernel's Gate 7 denies the minimal
+ * active class R1_LOW_IMPACT (rank 1) when `1 > ACTION_RANK[maxActionClass]`, i.e. only when the
+ * ceiling is R0_PASSIVE (rank 0). An absent/garbage ceiling yields `1 > undefined` = false (NOT
+ * denied), so — to stay NO MORE permissive AND NO LESS permissive than the kernel — we reject only
+ * an explicit R0_PASSIVE ceiling. */
+const PASSIVE_ONLY_CEILINGS: ReadonlySet<string> = new Set(["R0_PASSIVE"]);
+
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
@@ -218,6 +225,9 @@ function authorizationNotInForceReason(a: unknown, now: number): string | null {
     isNonEmptyString(r.notBefore) &&
     isNonEmptyString(r.notAfter);
   if (!shaped) return "malformed";
+  // A passive-only ceiling authorizes zero active actions (kernel Gate 7), so it never unlocks
+  // active validation — even though every other field is present and the window is current.
+  if (typeof r.maxActionClass === "string" && PASSIVE_ONLY_CEILINGS.has(r.maxActionClass)) return "passive-only-ceiling";
   const from = Date.parse(r.notBefore as string);
   const until = Date.parse(r.notAfter as string);
   if (!Number.isFinite(from) || !Number.isFinite(until)) return "malformed";
@@ -243,7 +253,7 @@ export function securityPostureViewModel(s: RepoState, now: number = Date.now())
   if (stateClaimsEnabled && !authorizationsPresent) {
     inconsistency =
       recordsPresent > 0
-        ? `state says "${activeValidation}" but no genuine scoped authorization record is currently in force (${recordsPresent} present, 0 in force — expired/not-yet/malformed) — treated as LOCKED`
+        ? `state says "${activeValidation}" but no genuine scoped authorization record is currently in force (${recordsPresent} present, 0 in force — expired/not-yet/malformed/passive-only) — treated as LOCKED`
         : `state says "${activeValidation}" but no genuine scoped authorization record exists`;
   } else if (!stateClaimsEnabled && activeValidation !== "LOCKED_BY_DESIGN") {
     // A value that is neither the locked sentinel nor a recognized enabled signal is ambiguous →

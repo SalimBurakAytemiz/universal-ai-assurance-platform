@@ -104,11 +104,22 @@ describe("desktop view-models — derived from real state", () => {
     const noDomain = { ...GENUINE_AUTH, allowedDomains: [] as string[] };
     const noEnv = { ...GENUINE_AUTH, allowedEnvironments: [] as string[] };
     const badWindow = { ...GENUINE_AUTH, notAfter: "not-a-date" };
-    for (const rec of [expired, future, passiveMode, noDomain, noEnv, badWindow]) {
+    // Round-3 regression: a passive-only ceiling (R0_PASSIVE) authorizes ZERO active actions
+    // (kernel Gate 7), so it must not unlock active validation even though it is otherwise complete.
+    const passiveCeiling = { ...GENUINE_AUTH, maxActionClass: "R0_PASSIVE" };
+    for (const rec of [expired, future, passiveMode, noDomain, noEnv, badWindow, passiveCeiling]) {
       const vm = securityPostureViewModel(state({ master: { activeSecurityValidation: { state: "ENABLED" } }, authorizations: { authorizations: [rec] } }), NOW);
       expect(vm.authorizationsPresent).toBe(false);
       expect(vm.locked).toBe(true);
       expect(vm.inconsistency).toMatch(/no genuine scoped authorization record is currently in force/);
+    }
+    // but the fix mirrors the kernel: an ABSENT or garbage maxActionClass still unlocks (the kernel's
+    // Gate 7 `1 > undefined` is false → R1 permitted), so we must NOT over-lock those.
+    for (const mac of [undefined, "R9_GARBAGE", "R2_ELEVATED", "R3_PROHIBITED"]) {
+      const rec = { ...GENUINE_AUTH, maxActionClass: mac } as Record<string, unknown>;
+      if (mac === undefined) delete rec.maxActionClass;
+      const vm = securityPostureViewModel(state({ master: { activeSecurityValidation: { state: "ENABLED" } }, authorizations: { authorizations: [rec] } }), NOW);
+      expect(vm.locked).toBe(false);
     }
     // and the home badge must not show ENABLED for an expired record either
     const h = homeViewModel(state({ master: { activeSecurityValidation: { state: "ENABLED" } }, authorizations: { authorizations: [expired] } }), NOW);

@@ -44,8 +44,23 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
-    "max": 3
+    "count": 3,
+    "max": 3,
+    "outcome": "CAP_REACHED"
+  },
+  "reReview2": {
+    "at": "2026-10-06T15:10:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #20 fix commit 0a3f6cc (round 3 — bounded cap)",
+    "agents": 14,
+    "reported": 1,
+    "confirmed": 1,
+    "distinctDefectsFixed": [
+      "P2 residual fake-green: the in-force check ignored maxActionClass, so a record capped at R0_PASSIVE (which authorizes ZERO active actions — kernel Gate 7 denies R1/R2) still read as ENABLED. Fixed to mirror the kernel EXACTLY: reject only an explicit R0_PASSIVE ceiling (rank 0 < minimal active R1 rank 1); an absent/garbage/R2/R3 ceiling stays in force (kernel's `1 > undefined` is false, so it would permit R1) — avoids introducing a new over-lock. Regression test covers both directions."
+    ],
+    "boundedLoopCapReached": true,
+    "mergedAtCapRationale": "Round 3 is the bounded-review cap (max 3). The round-3 fix is a precise one-line kernel-mirror verified directly against authorization-kernel Gate 7 + ACTION_RANK, with a two-directional regression test (rejects R0_PASSIVE; does not over-lock absent/garbage/R2/R3). 0 P0/P1/P2/P3 open; no architecture change. Merged at cap per the bounded-loop contract.",
+    "allResolved": true
   },
   "pr19": {
     "lastReview": {
