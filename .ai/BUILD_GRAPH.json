@@ -655,15 +655,17 @@
       "tests": [
         "packages/research-intelligence/test/research-intelligence.test.ts"
       ],
-      "commits": [],
+      "commits": [
+        "474bc9677b3da60da933b1345c8f6f3f62f9b3e2"
+      ],
       "review": {
-        "loops": 0,
+        "loops": 2,
         "unresolved": {
           "P0": 0,
           "P1": 0,
           "P2": 0
         },
-        "mergedPR": null
+        "mergedPR": 19
       }
     },
     {
@@ -683,15 +685,17 @@
       "tests": [
         "packages/research-intelligence/test/research-intelligence.test.ts"
       ],
-      "commits": [],
+      "commits": [
+        "474bc9677b3da60da933b1345c8f6f3f62f9b3e2"
+      ],
       "review": {
-        "loops": 0,
+        "loops": 2,
         "unresolved": {
           "P0": 0,
           "P1": 0,
           "P2": 0
         },
-        "mergedPR": null
+        "mergedPR": 19
       }
     },
     {
@@ -711,15 +715,17 @@
       "tests": [
         "packages/research-intelligence/test/research-intelligence.test.ts"
       ],
-      "commits": [],
+      "commits": [
+        "474bc9677b3da60da933b1345c8f6f3f62f9b3e2"
+      ],
       "review": {
-        "loops": 0,
+        "loops": 2,
         "unresolved": {
           "P0": 0,
           "P1": 0,
           "P2": 0
         },
-        "mergedPR": null
+        "mergedPR": 19
       }
     },
     {
