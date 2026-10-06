@@ -754,12 +754,17 @@
         "knowledge-lifecycle",
         "agent-evaluation"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-LEARNING-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/sandbox-learning/src/index.ts",
+        "packages/sandbox-learning/src/runner.mjs"
+      ],
+      "tests": [
+        "packages/sandbox-learning/test/sandbox-learning.test.ts"
+      ],
       "commits": [],
       "review": {}
     },

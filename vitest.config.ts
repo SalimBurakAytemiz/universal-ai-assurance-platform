@@ -36,6 +36,7 @@ export default defineConfig({
       "@uaap/security-appsec-engine": r("./packages/security-appsec-engine/src/index.ts"),
       "@uaap/research-intelligence": r("./packages/research-intelligence/src/index.ts"),
       "@uaap/desktop-viewmodels": r("./packages/desktop-viewmodels/src/index.ts"),
+      "@uaap/sandbox-learning": r("./packages/sandbox-learning/src/index.ts"),
     },
   },
   test: {

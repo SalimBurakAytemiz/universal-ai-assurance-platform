@@ -6,6 +6,7 @@
   "main": "src/main.js",
   "scripts": {
     "dev": "electron .",
+    "smoke": "electron smoke/headless-smoke.cjs",
     "build": "node -e \"console.error('Desktop packaging (electron-builder) is not configured yet. See build-graph node desktop-packaging and .ai/KNOWN_ISSUES.md.'); process.exit(1)\""
   },
   "devDependencies": {
