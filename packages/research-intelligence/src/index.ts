@@ -103,7 +103,14 @@ export class ResearchPipeline {
     // Defensive copy: never store references into caller-owned objects — a later caller mutation
     // must not corrupt the pipeline's dedup/supersede state or desync the contentHash.
     const provenance: ResearchProvenance = { source: input.provenance.source, method: input.provenance.method, retrievedAt: input.provenance.retrievedAt };
-    const data = input.data === undefined ? undefined : structuredClone(input.data);
+    let data: unknown;
+    try {
+      data = input.data === undefined ? undefined : structuredClone(input.data);
+    } catch {
+      // Non-cloneable data (function/Symbol/Promise/…) fails CLOSED with a reason, not an uncaught
+      // DataCloneError that would abort a batch-ingest loop and drop every later finding.
+      return { ok: false, reason: "data is not serializable/cloneable" };
+    }
     const record: ResearchRecord = {
       kind: input.kind,
       topic: input.topic,

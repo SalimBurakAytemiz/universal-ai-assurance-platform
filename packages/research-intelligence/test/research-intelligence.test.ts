@@ -107,3 +107,16 @@ describe("ResearchPipeline — review-fix regressions", () => {
     expect(s.due("2026-10-06T00:00:00.000Z", "garbage")).toBe(false); // invalid next => not due
   });
 });
+
+describe("ResearchPipeline — non-cloneable data fails closed (re-review fix)", () => {
+  it("returns {ok:false} for non-cloneable data instead of throwing DataCloneError", () => {
+    const p = new ResearchPipeline(clock);
+    for (const bad of [() => {}, Symbol("x")]) {
+      const r = p.ingest({ kind: ResearchKind.ADVISORY, topic: "t", title: "x", provenance: prov(), data: bad as never });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.reason).toMatch(/cloneable|serializ/i);
+    }
+    // a normal cloneable finding still ingests fine
+    expect(p.ingest({ kind: ResearchKind.ADVISORY, topic: "t2", title: "ok", provenance: prov(), data: { a: 1 } }).ok).toBe(true);
+  });
+});
