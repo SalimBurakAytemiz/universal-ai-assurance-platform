@@ -98,3 +98,64 @@ describe("QualityDatabaseEngine — read-only validation against the local fixtu
     expect(caps.capabilities).toContain("db.foreign-key");
   });
 });
+
+describe("QualityDatabaseEngine — review-fix regressions (fail-closed, isolation)", () => {
+  it("a null row does NOT abort the table's constraint checks (PK duplicate still caught)", async () => {
+    const input = {
+      schema: { tables: [{ name: "users", columns: [{ name: "id", type: "integer" }], primaryKey: ["id"] }] },
+      dataset: { users: [{ id: 1 }, null, { id: 1 }] },
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    const k = kinds(r.findings);
+    expect(k).toContain("malformed-row");
+    expect(k).toContain("primary-key-duplicate"); // the duplicate after the null row is still found
+  });
+
+  it("an unrecognized column type is surfaced (fail-closed), not silently passed", async () => {
+    const input = { schema: { tables: [{ name: "t", columns: [{ name: "v", type: "date" }] }] }, dataset: { t: [{ v: 123 }, { v: true }] } };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).toContain("unknown-column-type");
+  });
+
+  it("migration gating normalizes separators and fails closed on unknown kinds", async () => {
+    const input = {
+      schema: { tables: [{ name: "t", columns: [{ name: "id", type: "integer" }] }] },
+      dataset: { t: [{ id: 1 }] },
+      migrations: [
+        { id: "m1", ops: [{ kind: "DROP TABLE", table: "t" }] }, // space variant -> destructive
+        { id: "m2", ops: [{ kind: "frobnicate", table: "t" }] }, // unknown -> flagged, not assumed safe
+        { id: "m3", ops: [{ kind: "add_index", table: "t" }] }, // known-safe -> no finding
+      ],
+    };
+    const r = await drive(input);
+    const k = kinds(r.findings);
+    expect(k).toContain("destructive-migration"); // "DROP TABLE" normalized to drop_table
+    expect(k).toContain("unknown-migration-op"); // frobnicate surfaced
+    expect(r.findings.filter((f) => f.locator === "migration m3")).toHaveLength(0); // add_index clean
+  });
+
+  it("a declared table absent from the dataset is surfaced as uninspected (not a silent pass)", async () => {
+    const input = {
+      schema: { tables: [{ name: "present", columns: [{ name: "id", type: "integer" }] }, { name: "absent", columns: [{ name: "id", type: "integer" }] }] },
+      dataset: { present: [{ id: 1 }] },
+    };
+    const r = await drive(input);
+    const miss = r.findings.find((f) => f.kind === "table-not-in-dataset");
+    expect(miss).toBeDefined();
+    expect(miss?.detail).toMatch(/absent/);
+  });
+
+  it("a malformed migration entry is reported and the rest still run", async () => {
+    const input = {
+      schema: { tables: [{ name: "t", columns: [{ name: "id", type: "integer" }] }] },
+      dataset: { t: [{ id: 1 }] },
+      migrations: [null, { id: "m2", ops: [{ kind: "drop_table", table: "t" }] }],
+    };
+    const r = await drive(input);
+    const k = kinds(r.findings);
+    expect(k).toContain("malformed-migration");
+    expect(k).toContain("destructive-migration"); // the valid migration still checked
+  });
+});

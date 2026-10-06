@@ -2,20 +2,18 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T09:37:00.000Z",
+    "at": "2026-10-06T10:27:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #12 engine-core + quality-api-engine",
-    "agents": 41,
-    "reported": 19,
-    "confirmed": 19,
+    "scope": "PR #13 quality-database-engine",
+    "agents": 29,
+    "reported": 13,
+    "confirmed": 13,
     "distinctDefectsFixed": [
-      "P1 FALSE NEGATIVE: request-body contract was gated on body!==undefined — a missing required request body passed clean. Now validated whenever a request schema exists.",
-      "P1 FALSE NEGATIVE: request requiredHeaders were declared+advertised but never checked. Now a missing-request-header finding is emitted.",
-      "P1 engine-core driveEngine silently DROPPED findings/evidence collected before a cancel/timeout/throw. Introduced an EngineCollector the driver owns; partials are now preserved in the result.",
-      "P1 one invalid caller schema or one malformed exchange aborted the ENTIRE run (FAILED, 0 findings). Per-exchange try/catch + safe compile + malformed-exchange guard + plan() null-guard; one bad input no longer voids the rest.",
-      "P2 driveEngine not total: capabilities()/health()/first now() ran outside try/catch. Moved inside with defensive fallbacks.",
-      "P2 timeout ineffective for a synchronous engine. Added a wall-clock DEADLINE on the token (throwIfCancelled enforces it) + post-run remap; cooperative engines (incl. this one, which checkpoints per exchange) are now bounded.",
-      "P3 emptyRequiredStrings was top-level only. Now recurses into nested object schemas (dotted path)."
+      "P1 a null/non-object row threw (Object.keys(null)) and aborted ALL of a table's PK/UNIQUE/FK checks, masking real P1 violations while status stayed DONE. Rows are now isolated into validRows (malformed-row finding + continue); all checks run over the valid rows.",
+      "P1 typeOk() default returned true, so an unrecognized column type silently disabled type validation (fail-open false green). Default is now false AND an unknown-column-type finding is surfaced per such column.",
+      "P1/P2 migration gating failed open on any kind not literally in the denylist (e.g. 'DROP TABLE' with a space, or an unknown kind). Kinds are now normalized (space/hyphen->underscore) and anything not known-safe/destructive/lossy is surfaced as unknown-migration-op (fail-closed).",
+      "P2 a schema table absent from the dataset was silently skipped yet counted as validated. Now surfaced as table-not-in-dataset and the summary reports inspected/declared.",
+      "P2/P3 the migration loop had no isolation; a null migration (and plan() deref) crashed the run. plan() guards null; the migration loop isolates malformed entries (malformed-migration + continue)."
     ],
     "allResolved": true
   },
@@ -26,22 +24,12 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
+    "count": 1,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T09:52:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #12 fix commit b5fa681",
-    "agents": 8,
-    "reported": 3,
-    "confirmed": 3,
-    "distinctDefectsFixed": [
-      "P2 empty-required-string recursion skipped ARRAYS of objects (list responses) — now recurses into array items with [i] paths.",
-      "P2 empty-required-string ran on responses only — now also on the request body (symmetry).",
-      "P2 byId endpoint-map build sat OUTSIDE the per-exchange isolation; a malformed endpoint voided the whole run. Now built defensively (skip + malformed-endpoint finding) so one bad endpoint cannot void others."
-    ],
-    "allResolved": true
+    "at": null,
+    "note": "re-review of the DB-engine fixes pending before merge"
   },
   "pr2": {
     "loop1": {
