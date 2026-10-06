@@ -25,12 +25,20 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the autopilot CI-monitor fixes pending before merge"
+    "at": "2026-10-06T08:50:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #11 fix commit 915db0d",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
+    "distinctDefectsFixed": [
+      "P1: reduceRollup gated pass-recognition on status===COMPLETED, so a passing legacy StatusContext (state:SUCCESS, used by Vercel/Netlify/codecov/commit-status) was reduced to PENDING forever -> a green PR never merged (stall). Pass-recognition now applied to the normalized token uniformly across CheckRun and StatusContext shapes; fail-closed on unknown/empty COMPLETED conclusions preserved."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

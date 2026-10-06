@@ -12,15 +12,16 @@
 /** @typedef {(cmd: string) => { code: number, stdout: string, stderr: string }} Exec */
 
 const FAIL_CONCLUSIONS = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "ERROR", "ACTION_REQUIRED", "STARTUP_FAILURE", "STALE"]);
-const PASS_CONCLUSIONS = new Set(["SUCCESS", "NEUTRAL", "SKIPPED"]); // the ONLY completed conclusions that pass
-const PENDING_TOKENS = new Set(["", "QUEUED", "IN_PROGRESS", "PENDING", "WAITING", "REQUESTED", "EXPECTED"]);
+const PASS_TOKENS = new Set(["SUCCESS", "NEUTRAL", "SKIPPED"]); // the ONLY tokens that count as a pass
 
 /**
- * Reduce a gh statusCheckRollup to SUCCESS / PENDING / FAILURE, FAIL-CLOSED on vocabulary.
- * SUCCESS requires EVERY check to be a recognized pass (SUCCESS/NEUTRAL/SKIPPED). An unknown
- * conclusion on a COMPLETED check is NOT a pass — it maps to FAILURE (it will not change by waiting
- * and must never be mistaken for green). An unknown status on a still-running check maps to PENDING.
- * Empty / no checks => PENDING (never merge with nothing to go on).
+ * Reduce a gh statusCheckRollup to SUCCESS / PENDING / FAILURE, FAIL-CLOSED on vocabulary and across
+ * BOTH node shapes: a CheckRun ({status, conclusion}) and a legacy StatusContext ({state}, used by
+ * commit-status integrations like Vercel/Netlify/codecov/CircleCI). Pass-recognition is applied to
+ * the normalized token uniformly (NOT gated on COMPLETED), so a passing StatusContext is a pass, not
+ * a perpetual PENDING. A COMPLETED check that is neither a recognized pass nor fail (incl. an empty
+ * conclusion) is treated as FAILURE (fail-closed — it will not change by waiting). A non-completed
+ * check that is not a recognized pass/fail is PENDING (keep waiting). Empty / no checks => PENDING.
  */
 export function reduceRollup(rollup) {
   if (!Array.isArray(rollup) || rollup.length === 0) return "PENDING"; // no checks yet -> keep waiting, never merge
@@ -30,10 +31,9 @@ export function reduceRollup(rollup) {
     const completed = !!c && c.status === "COMPLETED";
     const token = (completed ? String(c.conclusion ?? "") : String((c && (c.status ?? c.state)) ?? "")).toUpperCase();
     if (FAIL_CONCLUSIONS.has(token)) sawFail = true;
-    else if (completed) {
-      if (!PASS_CONCLUSIONS.has(token)) sawFail = true; // completed with an UNRECOGNIZED conclusion -> fail-closed
-    } else if (PENDING_TOKENS.has(token)) sawPending = true;
-    else sawPending = true; // unknown status on a non-completed check -> keep waiting
+    else if (PASS_TOKENS.has(token)) continue; // recognized pass (CheckRun conclusion OR StatusContext state)
+    else if (completed) sawFail = true; // completed but neither recognized pass nor fail (incl. empty) -> fail-closed
+    else sawPending = true; // still running / unknown-in-progress -> keep waiting
   }
   if (sawFail) return "FAILURE";
   if (sawPending) return "PENDING";

@@ -301,3 +301,18 @@ describe("autopilot CI monitor — review-fix regressions", () => {
     expect(ci.calls.merge).toBe(0);
   });
 });
+
+describe("reduceRollup — StatusContext pass is recognized (re-review fix)", () => {
+  it("a passing legacy StatusContext (state:SUCCESS) is SUCCESS, not a perpetual PENDING", () => {
+    expect(reduceRollup([{ state: "SUCCESS" }])).toBe("SUCCESS");
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "SUCCESS" }, { state: "SUCCESS" }])).toBe("SUCCESS");
+  });
+  it("a pending StatusContext still pends; a failing one still fails", () => {
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "SUCCESS" }, { state: "PENDING" }])).toBe("PENDING");
+    expect(reduceRollup([{ state: "SUCCESS" }, { state: "FAILURE" }])).toBe("FAILURE");
+  });
+  it("a COMPLETED check with an empty conclusion is fail-closed (FAILURE), not pending", () => {
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "" }])).toBe("FAILURE");
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "SUCCESS" }, { status: "COMPLETED", conclusion: "" }])).toBe("FAILURE");
+  });
+});
