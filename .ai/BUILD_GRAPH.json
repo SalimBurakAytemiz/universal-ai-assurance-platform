@@ -1460,8 +1460,18 @@
       "tests": [
         "packages/quality-database-engine/test/quality-database-engine.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "4d792cc5cac6a44d5873d225404d5ff818a2aea7"
+      ],
+      "review": {
+        "loops": 3,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 13
+      }
     }
   ]
 }
