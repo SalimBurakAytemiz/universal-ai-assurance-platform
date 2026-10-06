@@ -17,8 +17,24 @@
       "P3 STALE-COUNT: parseTestStatus returned the FIRST doc match (non-global exec); an earlier aspirational/stale line could be shown. Now anchored to the authoritative '## Last local run' section (last match within scope).",
       "Hardening: buildGraph.nodes / agents.agents coerced to arrays + per-node/per-agent status/guild guards in loadRepoState & the grouping fns (malformed state degrades to honest zero, never a crash)."
     ],
-    "boundedLoop": { "count": 1, "max": 3, "outcome": "CONVERGED" },
-    "regressionTests": "5 new (allow-list unknown-state; placeholder-auth rejection incl. id-only; home auth-gated no-fake-green; parseTestStatus section-anchoring; loadRepoState honest-defaults on unlocatable root). 13 total in-package, 429/429 repo-wide.",
+    "boundedLoop": { "count": 1, "max": 3 },
+    "regressionTests": "5 new (allow-list unknown-state; placeholder-auth rejection incl. id-only; home auth-gated no-fake-green; parseTestStatus section-anchoring; loadRepoState honest-defaults on unlocatable root).",
+    "allResolved": true
+  },
+  "reReview": {
+    "at": "2026-10-06T14:58:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #20 fix commit d011b3e",
+    "agents": 14,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P1 RESIDUAL fake-green: the genuineness check validated only id/targetId/allowedIdentifiers, ignoring the kernel's window/mode/scope gates — an EXPIRED (or wrong-mode/missing-domain) record still read ENABLED. Replaced with an IN-FORCE check: complete @uaap/core AuthorizationRecord + active mode (CLIENT_AUTHORIZED/INTERNAL_OWNED) + non-empty identifier/domain/environment scope + current [notBefore,notAfter) window (now threaded through securityPostureViewModel/homeViewModel/allViewModels). Expired/future/malformed => not in force => LOCKED, inconsistency surfaced.",
+      "P2 REGRESSION (fix-introduced): buildGraphViewModel's families map still dereferenced a null node and crashed, despite the null-safe status loop added in round 1. Now the node is guarded before reading .family, and the byStatus loop skips un-renderable entries (still counted).",
+      "P2 REGRESSION (fix-introduced): the malformed/missing-status fallback was 'NOT_STARTED' (a real status, inflating that bucket) and inconsistent with agentsViewModel. Now 'UNKNOWN' via a shared statusOf() helper, so an unknown status is never reported as a definite NOT_STARTED."
+    ],
+    "regressionTests": "2 new (expired/future/wrong-mode/missing-scope/bad-window auth never unlocks + home badge; null/malformed node never crashes + UNKNOWN-not-NOT_STARTED). 15 in-package, 431/431 repo-wide.",
+    "boundedLoop": { "count": 2, "max": 3, "outcome": "CONVERGED" },
     "allResolved": true
   },
   "unresolved": {
@@ -28,7 +44,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "pr19": {

@@ -79,10 +79,17 @@ function nodesOf(s: RepoState): readonly BuildGraphNodeState[] {
   return Array.isArray(s.buildGraph?.nodes) ? s.buildGraph.nodes : [];
 }
 
+/** A node's status, or "UNKNOWN" for a null/shapeless/missing-status node. NEVER "NOT_STARTED":
+ * conflating "status unknown" with the real status "not started" would misreport the plan. Kept
+ * consistent with agentsViewModel's "UNKNOWN" fallback. */
+function statusOf(n: BuildGraphNodeState | null | undefined): string {
+  return n && typeof n === "object" && typeof n.status === "string" ? n.status : "UNKNOWN";
+}
+
 function countByStatus(nodes: readonly BuildGraphNodeState[]): Record<string, number> {
   const c: Record<string, number> = {};
   for (const n of nodes) {
-    const status = n && typeof n.status === "string" ? n.status : "NOT_STARTED";
+    const status = statusOf(n);
     c[status] = (c[status] ?? 0) + 1;
   }
   return c;
@@ -99,10 +106,10 @@ export interface HomeViewModel {
   readonly securityInconsistency: string | null;
   readonly lastCheckpointCommit: string | null;
 }
-export function homeViewModel(s: RepoState): HomeViewModel {
+export function homeViewModel(s: RepoState, now: number = Date.now()): HomeViewModel {
   const nodes = nodesOf(s);
   const by = countByStatus(nodes);
-  const posture = securityPostureViewModel(s);
+  const posture = securityPostureViewModel(s, now);
   return {
     product: s.master.product ?? "Universal AI Assurance Platform",
     nodes: { done: by.DONE ?? 0, ready: by.READY ?? 0, blocked: by.BLOCKED ?? 0, notStarted: by.NOT_STARTED ?? 0, total: nodes.length },
@@ -126,10 +133,13 @@ export function buildGraphViewModel(s: RepoState): BuildGraphViewModel {
   const byStatus: Record<string, BuildGraphNodeState[]> = {};
   for (const st of STATUSES) byStatus[st] = [];
   for (const n of nodes) {
-    const status = n && typeof n.status === "string" ? n.status : "NOT_STARTED";
-    (byStatus[status] ??= []).push(n);
+    if (!n || typeof n !== "object") continue; // un-renderable entry: still COUNTED below, never listed as a null
+    (byStatus[statusOf(n)] ??= []).push(n);
   }
-  return { byStatus, counts: countByStatus(nodes), families: [...new Set(nodes.map((n) => n.family).filter((f): f is string => typeof f === "string"))].sort() };
+  // Guard the node itself before reading .family (a null node would otherwise throw here — the very
+  // crash the null-safe status loop was added to prevent). counts() still includes malformed nodes.
+  const families = [...new Set(nodes.filter((n): n is BuildGraphNodeState => !!n && typeof n.family === "string").map((n) => n.family))].sort();
+  return { byStatus, counts: countByStatus(nodes), families };
 }
 
 export interface AgentsViewModel {
@@ -177,40 +187,64 @@ export interface SecurityPostureViewModel {
  * LOCKED_BY_DESIGN, unknown, empty, a typo, wrong case — reads as LOCKED. */
 const ACTIVE_VALIDATION_ENABLED_STATES: ReadonlySet<string> = new Set(["ENABLED"]);
 
+/** Modes under which an authorization can unlock ACTIVE validation. PROSPECT_PASSIVE is passive-only
+ * (the kernel denies every active action in that mode) so it never unlocks. */
+const ACTIVE_AUTH_MODES: ReadonlySet<string> = new Set(["CLIENT_AUTHORIZED", "INTERNAL_OWNED"]);
+
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
-
-/** A structurally-genuine, scoped authorization record — the "authorization record + explicit
- * scope" the hard rules require: an id, a bound targetId, and at least one explicitly-covered
- * identifier (matching @uaap/core AuthorizationRecord). This is a fail-closed STRUCTURAL check, not
- * the kernel's full window/mode evaluation, so a placeholder/malformed entry ([{}], [null], [0],
- * [""], an id-only stub) can never masquerade as a real authorization. */
-function isGenuineAuthorization(a: unknown): boolean {
-  if (typeof a !== "object" || a === null) return false;
-  const r = a as Record<string, unknown>;
-  return (
-    isNonEmptyString(r.id) &&
-    isNonEmptyString(r.targetId) &&
-    Array.isArray(r.allowedIdentifiers) &&
-    r.allowedIdentifiers.some(isNonEmptyString)
-  );
+function hasNonEmptyStringEntry(v: unknown): boolean {
+  return Array.isArray(v) && v.some(isNonEmptyString);
 }
 
-export function securityPostureViewModel(s: RepoState): SecurityPostureViewModel {
+/** Why an authorization record is NOT currently unlocking active validation (null = it IS in force).
+ * "in force" is a fail-closed proxy for the kernel's active-action gates: a complete @uaap/core
+ * AuthorizationRecord (id, active mode, bound target + explicit identifier/domain/environment scope)
+ * whose [notBefore, notAfter) window currently contains `now`. A record that is merely well-shaped
+ * but expired/not-yet/malformed is NOT in force — so an expired authorization can never keep the
+ * desktop showing green. This is intentionally NO MORE permissive than the kernel. */
+function authorizationNotInForceReason(a: unknown, now: number): string | null {
+  if (typeof a !== "object" || a === null) return "malformed";
+  const r = a as Record<string, unknown>;
+  const shaped =
+    isNonEmptyString(r.id) &&
+    isNonEmptyString(r.targetId) &&
+    typeof r.mode === "string" &&
+    ACTIVE_AUTH_MODES.has(r.mode) &&
+    hasNonEmptyStringEntry(r.allowedIdentifiers) &&
+    hasNonEmptyStringEntry(r.allowedDomains) &&
+    hasNonEmptyStringEntry(r.allowedEnvironments) &&
+    isNonEmptyString(r.notBefore) &&
+    isNonEmptyString(r.notAfter);
+  if (!shaped) return "malformed";
+  const from = Date.parse(r.notBefore as string);
+  const until = Date.parse(r.notAfter as string);
+  if (!Number.isFinite(from) || !Number.isFinite(until)) return "malformed";
+  if (now < from) return "not-yet-valid";
+  if (now >= until) return "expired";
+  return null; // in force
+}
+
+export function securityPostureViewModel(s: RepoState, now: number = Date.now()): SecurityPostureViewModel {
   // FAIL-CLOSED / ALLOW-LIST: unknown or missing state reads as LOCKED; active validation is shown
-  // as unlocked ONLY when the state is an explicit ENABLED signal AND a genuine scoped authorization
-  // record actually exists. Any over-claim is surfaced as an inconsistency, never hidden.
+  // as unlocked ONLY when the state is an explicit ENABLED signal AND at least one authorization
+  // record is CURRENTLY IN FORCE (complete, active-mode, scoped, and within its time window — an
+  // expired/not-yet/malformed record does NOT count). Any over-claim is surfaced, never hidden.
   const activeValidation = s.master.activeSecurityValidation?.state ?? "LOCKED_BY_DESIGN";
   const authList = Array.isArray(s.authorizations?.authorizations) ? s.authorizations.authorizations : [];
-  const genuineAuthorizations = authList.filter(isGenuineAuthorization).length;
-  const authorizationsPresent = genuineAuthorizations > 0;
+  const inForce = authList.filter((a) => authorizationNotInForceReason(a, now) === null).length;
+  const recordsPresent = authList.length;
+  const authorizationsPresent = inForce > 0;
   const stateClaimsEnabled = ACTIVE_VALIDATION_ENABLED_STATES.has(activeValidation);
   const locked = !(stateClaimsEnabled && authorizationsPresent);
 
   let inconsistency: string | null = null;
   if (stateClaimsEnabled && !authorizationsPresent) {
-    inconsistency = `state says "${activeValidation}" but no genuine scoped authorization record exists`;
+    inconsistency =
+      recordsPresent > 0
+        ? `state says "${activeValidation}" but no genuine scoped authorization record is currently in force (${recordsPresent} present, 0 in force — expired/not-yet/malformed) — treated as LOCKED`
+        : `state says "${activeValidation}" but no genuine scoped authorization record exists`;
   } else if (!stateClaimsEnabled && activeValidation !== "LOCKED_BY_DESIGN") {
     // A value that is neither the locked sentinel nor a recognized enabled signal is ambiguous →
     // DENY (locked) and say so, rather than silently treating it as enabled OR as locked-by-design.
@@ -269,13 +303,14 @@ export function loadRepoState(startDir = dirname(fileURLToPath(import.meta.url))
   };
 }
 
-/** Build every desktop view-model from the live repository state in one call. */
-export function allViewModels(s: RepoState = loadRepoState()) {
+/** Build every desktop view-model from the live repository state in one call. `now` (ms) gates the
+ * authorization time-window check; it is threaded through so home and the posture agree. */
+export function allViewModels(s: RepoState = loadRepoState(), now: number = Date.now()) {
   return {
-    home: homeViewModel(s),
+    home: homeViewModel(s, now),
     buildGraph: buildGraphViewModel(s),
     agents: agentsViewModel(s),
     reviews: reviewsViewModel(s),
-    securityPosture: securityPostureViewModel(s),
+    securityPosture: securityPostureViewModel(s, now),
   };
 }
