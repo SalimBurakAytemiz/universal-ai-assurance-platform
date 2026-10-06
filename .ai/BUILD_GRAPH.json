@@ -645,14 +645,26 @@
       "dependencies": [
         "knowledge-lifecycle"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-RESEARCH-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/research-intelligence/src/index.ts"
+      ],
+      "tests": [
+        "packages/research-intelligence/test/research-intelligence.test.ts"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     },
     {
       "id": "standards-intelligence",
@@ -661,14 +673,26 @@
       "dependencies": [
         "knowledge-lifecycle"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-RESEARCH-002"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/research-intelligence/src/index.ts"
+      ],
+      "tests": [
+        "packages/research-intelligence/test/research-intelligence.test.ts"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     },
     {
       "id": "advisory-intelligence",
@@ -677,14 +701,26 @@
       "dependencies": [
         "knowledge-lifecycle"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-RESEARCH-003"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/research-intelligence/src/index.ts"
+      ],
+      "tests": [
+        "packages/research-intelligence/test/research-intelligence.test.ts"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     },
     {
       "id": "sandbox-learning",
