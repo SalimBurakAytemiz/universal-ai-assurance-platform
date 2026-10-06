@@ -939,8 +939,20 @@
       "tests": [
         "packages/quality-web-engine/test/quality-web-engine.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "e0b3d42a50d8e7c1953b60f6dc1ac9c4b05aaa8e"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 14,
+        "mergedPR": 21
+      }
     },
     {
       "id": "security-appsec-engine",
