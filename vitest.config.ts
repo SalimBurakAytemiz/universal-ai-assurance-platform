@@ -31,6 +31,7 @@ export default defineConfig({
       "@uaap/quality-database-engine": r("./packages/quality-database-engine/src/index.ts"),
       "@uaap/quality-realtime-engine": r("./packages/quality-realtime-engine/src/index.ts"),
       "@uaap/quality-performance-engine": r("./packages/quality-performance-engine/src/index.ts"),
+      "@uaap/quality-accessibility-engine": r("./packages/quality-accessibility-engine/src/index.ts"),
     },
   },
   test: {

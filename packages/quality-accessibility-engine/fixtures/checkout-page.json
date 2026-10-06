@@ -1,0 +1,39 @@
+{
+  "pages": [
+    {
+      "id": "/checkout",
+      "lang": "en",
+      "elements": [
+        { "tag": "h1", "text": "Checkout" },
+        { "tag": "h3", "text": "Shipping" },
+        { "tag": "img" },
+        { "tag": "img", "alt": "" },
+        { "tag": "img", "alt": "Company logo" },
+        { "tag": "img", "presentation": true },
+        { "tag": "input", "id": "email", "labelled": false },
+        { "tag": "input", "id": "name", "ariaLabel": "Full name" },
+        { "tag": "button" },
+        { "tag": "button", "text": "Pay now" },
+        { "tag": "a", "href": "/help", "text": "Help" },
+        { "tag": "span", "text": "low contrast", "fg": "#aaaaaa", "bg": "#ffffff" },
+        { "tag": "span", "text": "ok contrast", "fg": "#000000", "bg": "#ffffff" },
+        { "tag": "div", "id": "dup" },
+        { "tag": "div", "id": "dup" }
+      ],
+      "visual": { "baselineHash": "abc123", "currentHash": "def456" }
+    },
+    {
+      "id": "/clean",
+      "lang": "en",
+      "elements": [
+        { "tag": "h1", "text": "Title" },
+        { "tag": "h2", "text": "Section" },
+        { "tag": "img", "alt": "A photo" },
+        { "tag": "input", "id": "q", "ariaLabel": "Search" },
+        { "tag": "button", "text": "Go" },
+        { "tag": "span", "text": "readable", "fg": "#000000", "bg": "#ffffff" }
+      ],
+      "visual": { "baselineHash": "same", "currentHash": "same" }
+    }
+  ]
+}

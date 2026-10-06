@@ -1534,6 +1534,27 @@
         },
         "mergedPR": 15
       }
+    },
+    {
+      "id": "quality-accessibility-engine",
+      "name": "Quality: accessibility + visual engine",
+      "family": "quality",
+      "dependencies": [
+        "engine-core"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-QA-A11Y-001"
+      ],
+      "files": [
+        "packages/quality-accessibility-engine/src/index.ts",
+        "packages/quality-accessibility-engine/fixtures/checkout-page.json"
+      ],
+      "tests": [
+        "packages/quality-accessibility-engine/test/quality-accessibility-engine.test.ts"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }
