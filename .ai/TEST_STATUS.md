@@ -16,9 +16,9 @@ Desktop shell + Agents/Knowledge/Learning/Security views — REAL Electron runti
 renderer), registers the same IPC state handler main.js uses (src/state.js), waits for the renderer
 to receive real state, drives each view, and asserts the DOM reflects the COMPUTED real view-model
 values. Result (exit 0):
-`VIEWS_RESULT:{"ok":true,"checks":{"homeDoneTotal":true,"homeSecurity":true,"agentsRealTotal":true,
-"agentsCertified":true,"securityLocked":true,"knowledgeRendered":true,"learningRendered":true},
-"agentsTotal":72,"securityLocked":true,"homeDone":56,"homeTotal":62}`
+`VIEWS_RESULT:{"ok":true,"checks":{...all true},"agentsTotal":72,"securityLocked":true,"homeDone":60,"homeTotal":62}`
+(assertions are card-scoped via DOM + ground-truth-anchored — agents total ===72, a known knowledge
+node id must render, security State card === the real posture — so a view collapsing to empty fails.)
 
 - The desktop consumes the REVIEWED @uaap/desktop-viewmodels (bundled via esbuild to
   apps/desktop/vendor/, gitignored, rebuilt on demand) — no re-implemented logic, no fake green.
@@ -35,4 +35,11 @@ Environment blocker-proof: `.ai/ENVIRONMENT_PROOF.md` (Electron v32.3.3 proven t
 Build graph: 62 nodes — DONE 60, BLOCKED 1 (security-active-validation-gate, LOCKED_BY_DESIGN),
 NOT_STARTED 1 (desktop-packaging — dev build attempt next).
 
-P0/P1/P2/P3 open on this change: 0 / 0 / 0 / 0 (pre-PR; adversarial review runs on the PR).
+Adversarial review round 1 (PR #23, 17 agents) confirmed 5 defects — ALL fixed: 3 fake-green
+(learningView showed green "0" when REVIEW_STATE absent -> now "unknown"/muted via the guarded
+reviews view-model, summing ALL severities; systemHealth hardcoded green -> color now derives from
+the value; home bundle-absent fallback showed the raw master state -> now fail-closed
+"LOCKED_BY_DESIGN"); 2 weak smoke assertions (agentsCertified + knowledgeRendered were trivially
+satisfied by static copy -> now card-scoped DOM reads + a required known knowledge node id).
+Re-validated: npm run views exit 0, all card-scoped checks true. P0/P1/P2/P3 open: 0 / 0 / 0 / 0.
+Re-review runs on the fix commit.

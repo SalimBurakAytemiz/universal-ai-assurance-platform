@@ -2,24 +2,24 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T18:55:00.000Z",
+    "at": "2026-10-06T20:05:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #22 sandbox-learning (round 1)",
-    "agents": 20,
+    "scope": "PR #23 desktop shell + views (round 1)",
+    "agents": 17,
     "reported": 5,
     "confirmed": 5,
     "distinctDefectsFixed": [
-      "P1 TOTAL violation: runSandboxed threw on a non-serializable input (BigInt/circular) via hashObject before the allow-list gate; now guarded (sentinel hash) + request serialization guarded + a catch wraps the spawn/write path -> always a structured result.",
-      "P2 output-cap breach (ENOBUFS) misclassified as TIMED_OUT (signal===SIGKILL fallback); now classified by error.code (ETIMEDOUT=>TIMED_OUT, ENOBUFS=>FAILED with an accurate reason).",
-      "P2 spawn/write path had no catch and could throw on a malformed limit (NaN timeout) or IO error; limits are clamped to finite ints and a catch maps any throw to FAILED.",
-      "P2 evaluateCase hardcoded policyCompliant:true (fake-green metric); now DERIVED from the real outcome (a reported workspace escape => non-compliant), so the one containment limitation can surface in aggregateMetrics.",
-      "P3 ENVIRONMENT_PROOF overstated the Electron smoke/dev-packaging; the headless smoke is now committed + runnable (apps/desktop/smoke/headless-smoke.cjs, npm run smoke, exit 0) and packaging is explicitly marked NOT yet proven."
+      "P2 fake-green: learningView summed only P0-P3 of reviewUnresolved and rendered green 0 even when REVIEW_STATE was ABSENT (null=>{}=>0). Now uses the guarded reviews view-model, sums ALL severities, and shows unknown (muted) when review state is absent.",
+      "P3 fake-green: systemHealth hardcoded green and ? fallback. Color now derives from the value (green only for IMPLEMENTED/HEALTHY/TESTED/OK); missing => unknown (muted).",
+      "P3 fake-green: home() bundle-absent fallback echoed the raw master security state word (bypassing the auth gate). Now fail-closed LOCKED_BY_DESIGN text when the view-model bundle is absent.",
+      "P2 weak smoke: agentsCertified check was satisfied by static footer copy containing 0. Now reads the Certified CARD (scoped DOM) and compares to vm.agents.certified.",
+      "P2 weak smoke: knowledgeRendered was tautological (title always present + self-referential count). Now asserts the card-scoped node count AND that a known knowledge node id (knowledge-store) actually renders in the table; fails if the view collapses to empty."
     ],
+    "runtimeValidation": "npm run views exit 0 after fixes; all card-scoped checks true.",
     "boundedLoop": {
       "count": 1,
       "max": 3
     },
-    "regressionTests": "4 new (non-serializable input no-throw; ENOBUFS=>FAILED; NaN-limit no-throw; policyCompliant derived). 13 in-package, 465/465 repo-wide.",
     "allResolved": true
   },
   "unresolved": {
@@ -29,9 +29,8 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 6,
-    "max": 3,
-    "outcome": "CLOSED"
+    "count": 1,
+    "max": 3
   },
   "pr20": {
     "round1": {
@@ -492,95 +491,120 @@
     "mergedPR": 21,
     "outcome": "6 rounds + confirmation; 14 confirmed defects fixed; safeUrl leak-proof by construction; merged e0b3d42"
   },
-  "reReview": {
-    "at": "2026-10-06T19:07:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #22 fix commit a4ec8cb (round 2)",
-    "agents": 11,
-    "reported": 3,
-    "confirmed": 3,
-    "distinctDefectsFixed": [
-      "P2 bad injected clock: opts.now returning new Date(NaN) (toISOString throws) or throwing escaped runSandboxed before the try (startedAt) and in mkAudit finishedAt (even inside the catch). Now a defensive nowIso() wraps the clock and falls back to a real timestamp -> TOTAL holds.",
-      "P3 malformed policy: policy.limits / policy.envAllowlist / policy.allowedTasks were dereferenced before the try, so a policy missing limits (or null) threw on an allowed task. Policy + limits are now read defensively (pol = policy||{}; rawLimits off pol) -> DENIED/FAILED, never a throw.",
-      "P1 committed Electron smoke exited 0 on a FAILED assertion: app.quit() completed shutdown before the deferred setTimeout(app.exit) fired, so a window that loaded but returned wrong content/title was reported as a pass by exit code. Now app.exit(ok?0:4) is called synchronously; PROVEN: a forced-wrong-title variant now exits 4 (success still exits 0)."
-    ],
-    "boundedLoop": {
-      "count": 2,
-      "max": 3,
-      "outcome": "CONVERGED"
+  "pr22": {
+    "lastReview": {
+      "at": "2026-10-06T18:55:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #22 sandbox-learning (round 1)",
+      "agents": 20,
+      "reported": 5,
+      "confirmed": 5,
+      "distinctDefectsFixed": [
+        "P1 TOTAL violation: runSandboxed threw on a non-serializable input (BigInt/circular) via hashObject before the allow-list gate; now guarded (sentinel hash) + request serialization guarded + a catch wraps the spawn/write path -> always a structured result.",
+        "P2 output-cap breach (ENOBUFS) misclassified as TIMED_OUT (signal===SIGKILL fallback); now classified by error.code (ETIMEDOUT=>TIMED_OUT, ENOBUFS=>FAILED with an accurate reason).",
+        "P2 spawn/write path had no catch and could throw on a malformed limit (NaN timeout) or IO error; limits are clamped to finite ints and a catch maps any throw to FAILED.",
+        "P2 evaluateCase hardcoded policyCompliant:true (fake-green metric); now DERIVED from the real outcome (a reported workspace escape => non-compliant), so the one containment limitation can surface in aggregateMetrics.",
+        "P3 ENVIRONMENT_PROOF overstated the Electron smoke/dev-packaging; the headless smoke is now committed + runnable (apps/desktop/smoke/headless-smoke.cjs, npm run smoke, exit 0) and packaging is explicitly marked NOT yet proven."
+      ],
+      "boundedLoop": {
+        "count": 1,
+        "max": 3
+      },
+      "regressionTests": "4 new (non-serializable input no-throw; ENOBUFS=>FAILED; NaN-limit no-throw; policyCompliant derived). 13 in-package, 465/465 repo-wide.",
+      "allResolved": true
     },
-    "regressionTests": "2 new (bad-clock no-throw; malformed/null policy no-throw) + manual smoke exit-code proof (wrong-title => exit 4). 15 in-package, 467/467 repo-wide.",
-    "allResolved": true
-  },
-  "reReview2": {
-    "at": "2026-10-06T19:16:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #22 fix commit ab69042 (round 3 — bounded cap)",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
-    "distinctDefectsFixed": [
-      "P2 TOTAL gap: a null opts threw at opts.now (the ={} default only covers undefined), and a request with a throwing taskId getter would throw before the try. Closed ENUMERATION-FREE with an outer backstop: runSandboxed now wraps the inner implementation in try/catch and returns a structured FAILED (with a minimal safe audit) on ANY throw, plus targeted opts/taskId guards. Total by construction."
-    ],
-    "regressionTests": "1 new (null opts + hostile taskId getter never throw). 16 in-package, 468/468 repo-wide.",
-    "boundedLoop": {
-      "count": 3,
-      "max": 3
+    "reReview": {
+      "at": "2026-10-06T19:07:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #22 fix commit a4ec8cb (round 2)",
+      "agents": 11,
+      "reported": 3,
+      "confirmed": 3,
+      "distinctDefectsFixed": [
+        "P2 bad injected clock: opts.now returning new Date(NaN) (toISOString throws) or throwing escaped runSandboxed before the try (startedAt) and in mkAudit finishedAt (even inside the catch). Now a defensive nowIso() wraps the clock and falls back to a real timestamp -> TOTAL holds.",
+        "P3 malformed policy: policy.limits / policy.envAllowlist / policy.allowedTasks were dereferenced before the try, so a policy missing limits (or null) threw on an allowed task. Policy + limits are now read defensively (pol = policy||{}; rawLimits off pol) -> DENIED/FAILED, never a throw.",
+        "P1 committed Electron smoke exited 0 on a FAILED assertion: app.quit() completed shutdown before the deferred setTimeout(app.exit) fired, so a window that loaded but returned wrong content/title was reported as a pass by exit code. Now app.exit(ok?0:4) is called synchronously; PROVEN: a forced-wrong-title variant now exits 4 (success still exits 0)."
+      ],
+      "boundedLoop": {
+        "count": 2,
+        "max": 3,
+        "outcome": "CONVERGED"
+      },
+      "regressionTests": "2 new (bad-clock no-throw; malformed/null policy no-throw) + manual smoke exit-code proof (wrong-title => exit 4). 15 in-package, 467/467 repo-wide.",
+      "allResolved": true
     },
-    "allResolved": true
-  },
-  "reReview3": {
-    "at": "2026-10-06T19:23:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #22 fix commit 5715bcf (round 4 — final TOTAL confirmation)",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
-    "distinctDefectsFixed": [
-      "P2 the outer backstop catch could ITSELF throw: `${e instanceof Error ? e.message : String(e)}` invokes a hostile toString/Symbol.toPrimitive/message getter on a pathological caught value, re-throwing out of the only backstop. The message extraction is now wrapped in its own try/catch (fallback strings), so the catch can never throw and runSandboxed is total for ANY input."
-    ],
-    "regressionTests": "1 new (unstringifiable caught value -> structured FAILED, no throw). 17 in-package, 469/469 repo-wide.",
-    "boundedLoop": {
-      "count": 4,
-      "max": 3
+    "reReview2": {
+      "at": "2026-10-06T19:16:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #22 fix commit ab69042 (round 3 — bounded cap)",
+      "agents": 4,
+      "reported": 1,
+      "confirmed": 1,
+      "distinctDefectsFixed": [
+        "P2 TOTAL gap: a null opts threw at opts.now (the ={} default only covers undefined), and a request with a throwing taskId getter would throw before the try. Closed ENUMERATION-FREE with an outer backstop: runSandboxed now wraps the inner implementation in try/catch and returns a structured FAILED (with a minimal safe audit) on ANY throw, plus targeted opts/taskId guards. Total by construction."
+      ],
+      "regressionTests": "1 new (null opts + hostile taskId getter never throw). 16 in-package, 468/468 repo-wide.",
+      "boundedLoop": {
+        "count": 3,
+        "max": 3
+      },
+      "allResolved": true
     },
-    "allResolved": true
-  },
-  "reReview4": {
-    "at": "2026-10-06T19:30:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #22 fix commit a5e2e81 (round 5 — final TOTAL confirmation)",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
-    "verified": "runSandboxed wrapper CONFIRMED genuinely total under any input (verified not to throw).",
-    "distinctDefectsFixed": [
-      "P2 evaluateCase (not runSandboxed) had an unguarded JSON.stringify in deepEqual: a non-serializable spec.expect (circular/BigInt) threw on a COMPLETED run. deepEqual now wraps JSON.stringify in try/catch (non-serializable expect => not-equal => correct=false), so evaluateCase is total too."
-    ],
-    "regressionTests": "1 new (non-serializable spec.expect => correct=false, no throw). 18 in-package, 470/470 repo-wide.",
-    "boundedLoop": {
-      "count": 5,
-      "max": 3
+    "reReview3": {
+      "at": "2026-10-06T19:23:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #22 fix commit 5715bcf (round 4 — final TOTAL confirmation)",
+      "agents": 4,
+      "reported": 1,
+      "confirmed": 1,
+      "distinctDefectsFixed": [
+        "P2 the outer backstop catch could ITSELF throw: `${e instanceof Error ? e.message : String(e)}` invokes a hostile toString/Symbol.toPrimitive/message getter on a pathological caught value, re-throwing out of the only backstop. The message extraction is now wrapped in its own try/catch (fallback strings), so the catch can never throw and runSandboxed is total for ANY input."
+      ],
+      "regressionTests": "1 new (unstringifiable caught value -> structured FAILED, no throw). 17 in-package, 469/469 repo-wide.",
+      "boundedLoop": {
+        "count": 4,
+        "max": 3
+      },
+      "allResolved": true
     },
-    "allResolved": true
-  },
-  "reReview5": {
-    "at": "2026-10-06T19:36:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #22 fix commit 90977eb (round 6 — loop closed)",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
-    "verified": "runSandboxed CONFIRMED genuinely total a 2nd independent round.",
-    "distinctDefectsFixed": [
-      "P2 evaluateCase(null/undefined spec) threw on spec.request (unguarded). spec is now normalized the same defensive way runSandboxed guards its params, so a malformed spec yields a structured DENIED CaseOutcome. Both public functions are now total by construction."
-    ],
-    "regressionTests": "1 new (null/undefined spec => structured outcome, no throw). 19 in-package, 471/471 repo-wide.",
-    "boundedLoop": {
-      "count": 6,
-      "max": 3,
-      "outcome": "CLOSED"
+    "reReview4": {
+      "at": "2026-10-06T19:30:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #22 fix commit a5e2e81 (round 5 — final TOTAL confirmation)",
+      "agents": 4,
+      "reported": 1,
+      "confirmed": 1,
+      "verified": "runSandboxed wrapper CONFIRMED genuinely total under any input (verified not to throw).",
+      "distinctDefectsFixed": [
+        "P2 evaluateCase (not runSandboxed) had an unguarded JSON.stringify in deepEqual: a non-serializable spec.expect (circular/BigInt) threw on a COMPLETED run. deepEqual now wraps JSON.stringify in try/catch (non-serializable expect => not-equal => correct=false), so evaluateCase is total too."
+      ],
+      "regressionTests": "1 new (non-serializable spec.expect => correct=false, no throw). 18 in-package, 470/470 repo-wide.",
+      "boundedLoop": {
+        "count": 5,
+        "max": 3
+      },
+      "allResolved": true
     },
-    "loopClosureRationale": "6 rounds (cap 3) — each exceeded-cap round fixed a REAL throw in the TOTAL contract. runSandboxed confirmed total across rounds 5 and 6; round 6 closed the last symmetric gap (evaluateCase spec guard). The malformed-input throw class is now fully guarded on both public functions; further rounds would only probe ever-more-contrived typed-API misuse (disproportionate). Loop closed; ready to merge."
+    "reReview5": {
+      "at": "2026-10-06T19:36:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #22 fix commit 90977eb (round 6 — loop closed)",
+      "agents": 4,
+      "reported": 1,
+      "confirmed": 1,
+      "verified": "runSandboxed CONFIRMED genuinely total a 2nd independent round.",
+      "distinctDefectsFixed": [
+        "P2 evaluateCase(null/undefined spec) threw on spec.request (unguarded). spec is now normalized the same defensive way runSandboxed guards its params, so a malformed spec yields a structured DENIED CaseOutcome. Both public functions are now total by construction."
+      ],
+      "regressionTests": "1 new (null/undefined spec => structured outcome, no throw). 19 in-package, 471/471 repo-wide.",
+      "boundedLoop": {
+        "count": 6,
+        "max": 3,
+        "outcome": "CLOSED"
+      },
+      "loopClosureRationale": "6 rounds (cap 3) — each exceeded-cap round fixed a REAL throw in the TOTAL contract. runSandboxed confirmed total across rounds 5 and 6; round 6 closed the last symmetric gap (evaluateCase spec guard). The malformed-input throw class is now fully guarded on both public functions; further rounds would only probe ever-more-contrived typed-API misuse (disproportionate). Loop closed; ready to merge."
+    },
+    "mergedPR": 22,
+    "outcome": "6 rounds; both public functions total by construction; merged 59f2c2c"
   }
 }

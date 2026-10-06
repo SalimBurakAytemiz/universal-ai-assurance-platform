@@ -36,28 +36,47 @@ app.whenReady().then(async () => {
     }
     if (!ready) { out({ ok: false, stage: "boot", reason: "renderer did not render within timeout" }); win.destroy(); return app.exit(2); }
 
+    // Use textContent (layout-independent) — innerText is empty on an offscreen show:false window.
     const read = async (view) => {
       await js("show(" + JSON.stringify(view) + ");");
-      return String(await js("document.getElementById('main').innerText"));
+      return String(await js("document.getElementById('main').textContent"));
     };
-    const homeTxt = await read("home");
-    const agentsTxt = await read("agents");
+    // Read a specific card's value by its label (scoped DOM), so a check can't pass on stray/footer copy.
+    const cardVal = async (label) => js(
+      "(function(){var cs=[].slice.call(document.querySelectorAll('#main .card'));" +
+      "for(var i=0;i<cs.length;i++){var k=cs[i].querySelector('.k');" +
+      "if(k&&k.textContent.trim()===" + JSON.stringify(label) + "){var v=cs[i].querySelector('.v');return v?v.textContent.trim():null;}}return null;})()"
+    ).then((x) => (x === null ? null : String(x)));
+
+    await read("home");
+    const homeDoneCard = await cardVal("Build graph");
+    const homeSecCard = await cardVal("Active security validation");
+    await read("agents");
+    const agentsTotalCard = await cardVal("Defined roles");
+    const agentsCertCard = await cardVal("Certified");
     const secTxt = await read("security");
+    const secStateCard = await cardVal("State");
     const knowTxt = await read("knowledge");
-    const learnTxt = await read("learning");
+    const knowNodesCard = await cardVal("Knowledge nodes");
+    await read("learning");
+    const learnCertCard = await cardVal("Agents certified");
+
+    // Ground-truth anchors: a known knowledge node id must actually render in the table.
+    const knownKnowledgeId = (expected.knowledge.nodes.find((n) => n.id === "knowledge-store") || expected.knowledge.nodes[0] || {}).id || "";
 
     const checks = {
-      // Home reflects the real build-graph counts + effective (auth-gated) security + recorded tests.
-      homeDoneTotal: homeTxt.includes(vm.home.nodes.done + "/" + vm.home.nodes.total + " done"),
-      homeSecurity: homeTxt.includes(vm.home.activeSecurityValidation),
-      // Agents shows the REAL registry total (the authoritative 72) and a guild breakdown.
-      agentsRealTotal: vm.agents.total === 72 && agentsTxt.includes(String(vm.agents.total)),
-      agentsCertified: agentsTxt.includes(String(vm.agents.certified)),
-      // Security posture is FAIL-CLOSED: LOCKED with no authorization.
-      securityLocked: vm.securityPosture.locked === true && secTxt.includes("LOCKED"),
-      // Knowledge + Learning render real state (node counts / certification from .ai).
-      knowledgeRendered: knowTxt.includes("Knowledge") && knowTxt.includes(String(expected.knowledge.nodes.length)),
-      learningRendered: learnTxt.includes(expected.learning.certified + " / " + expected.learning.defined),
+      // Home reflects the real build-graph counts (card-scoped) + effective auth-gated security.
+      homeDoneTotal: homeDoneCard === vm.home.nodes.done + "/" + vm.home.nodes.total + " done",
+      homeSecurity: homeSecCard === vm.home.activeSecurityValidation,
+      // Agents shows the REAL registry total (the authoritative 72) and certified, read from the cards.
+      agentsRealTotal: vm.agents.total === 72 && agentsTotalCard === String(vm.agents.total),
+      agentsCertified: agentsCertCard === String(vm.agents.certified),
+      // Security posture is FAIL-CLOSED: LOCKED with no authorization; the State card shows the real value.
+      securityLocked: vm.securityPosture.locked === true && secTxt.includes("LOCKED") && secStateCard === vm.securityPosture.activeValidation,
+      // Knowledge: card-scoped count matches real state AND a known node id actually renders in the table.
+      knowledgeRendered: expected.knowledge.nodes.length > 0 && knowNodesCard === String(expected.knowledge.nodes.length) && !!knownKnowledgeId && knowTxt.includes(knownKnowledgeId),
+      // Learning: certification is card-scoped against the authoritative state.
+      learningRendered: learnCertCard === expected.learning.certified + " / " + expected.learning.defined,
     };
     const ok = Object.values(checks).every(Boolean);
     out({ ok, checks, agentsTotal: vm.agents.total, securityLocked: vm.securityPosture.locked, homeDone: vm.home.nodes.done, homeTotal: vm.home.nodes.total });

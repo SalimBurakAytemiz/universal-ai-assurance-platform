@@ -75,7 +75,9 @@ function home(main) {
   // Prefer the reviewed view-model; fall back to raw counts only if the bundle is absent.
   const n = vm && vm.home ? vm.home.nodes : { done: g.byStatus.DONE || 0, total: g.total };
   const tests = vm && vm.home ? vm.home.tests : null;
-  const sec = vm && vm.home ? vm.home.activeSecurityValidation : ((STATE.activeSecurityValidation || {}).state || "UNKNOWN");
+  // Fail-closed: without the reviewed view-model we do NOT echo the raw master state word (which could
+  // be an unbacked "ENABLED"); we show the locked-by-design posture.
+  const sec = vm && vm.home ? vm.home.activeSecurityValidation : "LOCKED_BY_DESIGN";
   const locked = vm && vm.home ? vm.home.securityLocked : true;
   main.appendChild(el(`<p class="title">${STATE.product || "UAAP"}</p>
     <p class="sub">Local-first AI software assurance — one product, one repository, one desktop.</p>
@@ -88,14 +90,21 @@ function home(main) {
     <p class="foot">Derived from the reviewed @uaap/desktop-viewmodels over real .ai/ state${vm ? "" : " (bundle not built — run npm run bundle)"}. Read at ${STATE.readAt || "?"}. ${STATE.error ? "ERROR: " + STATE.error : ""}</p>`));
 }
 
+// Color derives from the VALUE — green only for a healthy/implemented status, muted for unknown,
+// warn otherwise. Never a hardcoded green on a missing or non-healthy value (no fake green).
+function healthColor(v) {
+  if (!v) return "var(--na)";
+  return /IMPLEMENTED|HEALTHY|TESTED|\bOK\b/i.test(String(v)) ? "var(--ok)" : "var(--warn)";
+}
 function systemHealth(main) {
   const av = STATE.activeSecurityValidation || {};
+  const cell = (v) => `<div class="v" style="color:${healthColor(v)}">${v || "unknown"}</div>`;
   main.appendChild(el(`<p class="title">System Health</p>
-    <p class="sub">Core safety components (read from state).</p>
+    <p class="sub">Core safety components (read from state; color derives from the real value).</p>
     <div class="grid">
-      <div class="card"><div class="k">Trust Kernel</div><div class="v" style="color:var(--ok)">${av.trustKernel || "?"}</div></div>
-      <div class="card"><div class="k">Policy Engine</div><div class="v" style="color:var(--ok)">${av.policyEngine || "?"}</div></div>
-      <div class="card"><div class="k">Audit</div><div class="v" style="color:var(--ok)">${av.audit || "?"}</div></div>
+      <div class="card"><div class="k">Trust Kernel</div>${cell(av.trustKernel)}</div>
+      <div class="card"><div class="k">Policy Engine</div>${cell(av.policyEngine)}</div>
+      <div class="card"><div class="k">Audit</div>${cell(av.audit)}</div>
     </div>`));
 }
 
@@ -128,15 +137,20 @@ function knowledgeView(main) {
 
 function learningView(main) {
   const l = STATE.learning || { nodes: [], certified: 0, defined: 0, reviewUnresolved: null };
-  const u = l.reviewUnresolved || {};
-  const unresolved = ["P0", "P1", "P2", "P3"].reduce((acc, k) => acc + (Number(u[k]) || 0), 0);
+  // Unresolved review findings: sum ALL severities from the reviewed view-model (guarded). When the
+  // review state is ABSENT, show "unknown" (muted) — NEVER a green 0 (which would be fake all-clear).
+  const rev = STATE.viewModels && STATE.viewModels.reviews;
+  const haveReview = !!(rev && rev.unresolved && Object.keys(rev.unresolved).length > 0);
+  const unresolvedTotal = haveReview ? Object.values(rev.unresolved).reduce((acc, n) => acc + (Number(n) || 0), 0) : null;
+  const unresolvedText = haveReview ? String(unresolvedTotal) : "unknown";
+  const unresolvedColor = !haveReview ? "var(--na)" : (unresolvedTotal ? "var(--warn)" : "var(--ok)");
   const rows = l.nodes.map((n) => `<tr><td>${n.id}</td><td>${n.name}</td><td><span class="pill s-${n.status}">${n.status}</span></td></tr>`).join("");
   main.appendChild(el(`<p class="title">Learning</p>
     <p class="sub">Evaluation, certification and sandbox — real state from .ai/ and the registries.</p>
     <div class="grid">
       <div class="card"><div class="k">Agents certified</div><div class="v">${l.certified} / ${l.defined}</div></div>
       <div class="card"><div class="k">Learning nodes</div><div class="v">${l.nodes.length}</div></div>
-      <div class="card"><div class="k">Unresolved review findings</div><div class="v" style="color:${unresolved ? "var(--warn)" : "var(--ok)"}">${unresolved}</div></div>
+      <div class="card"><div class="k">Unresolved review findings</div><div class="v" style="color:${unresolvedColor}">${unresolvedText}</div></div>
     </div>
     <table><thead><tr><th>id</th><th>name</th><th>status</th></tr></thead><tbody>${rows || '<tr><td colspan="3">none</td></tr>'}</tbody></table>
     <p class="foot">Certified is read from the authoritative state (no self-certification). The sandbox runtime (@uaap/sandbox-learning) is DONE; agent activation/runtime remains a separate node.</p>`));
