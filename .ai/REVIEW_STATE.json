@@ -28,7 +28,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "pr20": {
@@ -651,5 +651,24 @@
     },
     "mergedPR": 24,
     "outcome": "2 rounds; P1 packaging-scope honesty fixed (update/rollback split out NOT_STARTED); round 2 clean; merged c928a5f"
+  },
+  "reReview": {
+    "at": "2026-10-06T21:13:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #25 fix commit 3e1f7bf (round 2) + self-verified residual",
+    "agents": 7,
+    "reported": 2,
+    "confirmedByMajority": 0,
+    "note": "Round-2 majority confirmed 0, but I SELF-VERIFIED a security-critical SSRF claim the majority refuted and found it REAL: file:////host/share parses to empty host + //host path, which isLocalTarget accepted and Windows Chrome loads as \\hostshare SMB. Per the absolute no-exfiltration hard rule, I verify SSRF claims directly rather than trust a majority-refute.",
+    "distinctDefectsFixed": [
+      "P1 SSRF (self-verified, majority-missed): file:////host/share (and file://///...) — empty-host but UNC-style //host path. isLocalTarget now also rejects a file: URL whose pathname starts with // .",
+      "P3 (refuted finding, fixed for correctness): the route guard aborted local non-network subresources (blob:/about:/data:/filesystem:) causing spurious network-failed findings; the guard now passes those local schemes."
+    ],
+    "regressionTests": "file:////host/share + file://///host/share refused (SSRF). 6 CI unit tests + live smoke exit 0.",
+    "boundedLoop": {
+      "count": 2,
+      "max": 3
+    },
+    "allResolved": true
   }
 }

@@ -44,8 +44,10 @@ export function isLocalTarget(target: string): boolean {
   if (t.startsWith("/") || t.startsWith("./") || t.startsWith("../")) return true;
   try {
     const u = new URL(t);
-    // file: is local ONLY when it carries no remote authority (host empty / loopback).
-    if (u.protocol === "file:") return isLocalHost(u.hostname);
+    // file: is local ONLY when it carries no remote authority (host empty / loopback) AND its path is
+    // NOT a UNC-style //host/share form — `file:////host/share` parses to an EMPTY host but Chrome on
+    // Windows loads the //host path as the SMB share \\host\share (SSRF / NTLM leak).
+    if (u.protocol === "file:") return isLocalHost(u.hostname) && !u.pathname.startsWith("//");
     if (u.protocol === "http:" || u.protocol === "https:") return isLocalHost(u.hostname);
     return false;
   } catch {
@@ -127,7 +129,11 @@ export async function driveAndCaptureFlow(spec: CaptureSpec): Promise<WebFlow> {
     await page.route("**/*", (route: any) => {
       let reqUrl = "";
       try { reqUrl = route.request().url(); } catch { reqUrl = ""; }
-      if (isLocalTarget(reqUrl)) route.continue();
+      // Allow inherently-local, non-network schemes (in-memory / same-origin) in addition to the
+      // local-target allow-list, so a legitimate local page's blob:/about:/data: subresource is not
+      // spuriously aborted. These never reach a remote host.
+      const localScheme = /^(blob:|about:|data:|filesystem:)/i.test(reqUrl);
+      if (localScheme || isLocalTarget(reqUrl)) route.continue();
       else route.abort();
     });
     // Presence helpers: on a thrown/failed check return undefined (UNVERIFIABLE) — never coerce an

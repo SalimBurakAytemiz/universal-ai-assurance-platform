@@ -42,6 +42,8 @@ describe("@uaap/quality-web-live-adapter — local-target allow-list (fail-close
       "http://localhost@evil.com/x", // userinfo trick -> host is evil.com
       "http://localhost.evil.com/x", // suffix trick
       "http://127.0.0.1.evil.com/x",
+      "file:////host/share", // UNC-in-path: empty host but //host path -> Chrome loads \\host\share
+      "file://///host/share",
     ]) {
       expect(isLocalTarget(bad), bad).toBe(false);
     }
