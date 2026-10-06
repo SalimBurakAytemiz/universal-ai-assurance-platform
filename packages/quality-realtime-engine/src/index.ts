@@ -138,11 +138,20 @@ export class QualityRealtimeEngine implements ExecutionEngine {
     const input = this.input(ctx);
     const streams = input?.streams && typeof input.streams === "object" ? input.streams : {};
 
-    // Admit well-formed channels only (object + string name + events array).
+    // Admit well-formed channels only (object + string name + events array). A DUPLICATE channel
+    // name is ambiguous — fail closed: surface it and keep the first spec rather than silently
+    // letting a later, laxer spec overwrite a stricter one (which would mask real violations).
     const channelByName = new Map<string, ChannelSpec>();
     for (const c of this.channelsOf(ctx)) {
-      if (c && typeof c === "object" && typeof c.name === "string" && Array.isArray(c.events)) channelByName.set(c.name, c);
-      else collector.finding(finding({ severity: SEV.P2, kind: "malformed-channel", title: "Malformed channel in contract", detail: "A channel is null, has no string name, or has no events array; skipped.", locator: "contracts.channels" }));
+      if (!(c && typeof c === "object" && typeof c.name === "string" && Array.isArray(c.events))) {
+        collector.finding(finding({ severity: SEV.P2, kind: "malformed-channel", title: "Malformed channel in contract", detail: "A channel is null, has no string name, or has no events array; skipped.", locator: "contracts.channels" }));
+        continue;
+      }
+      if (channelByName.has(c.name)) {
+        collector.finding(finding({ severity: SEV.P2, kind: "duplicate-channel", title: "Duplicate channel name", detail: `Channel "${c.name}" is declared more than once; the ambiguous later spec is ignored (the first is kept). Deduplicate the contract.`, locator: "contracts.channels" }));
+        continue;
+      }
+      channelByName.set(c.name, c);
     }
 
     // Stream channels not declared in the contract.

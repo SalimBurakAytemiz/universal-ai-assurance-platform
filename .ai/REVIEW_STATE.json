@@ -23,7 +23,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
+    "count": 3,
     "max": 3
   },
   "reReview": {
@@ -307,17 +307,17 @@
     }
   },
   "finalReReview": {
-    "at": "2026-10-06T10:42:00.000Z",
+    "at": "2026-10-06T11:11:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #13 fix commit c339cf4",
-    "agents": 6,
-    "reported": 2,
-    "confirmed": 2,
+    "scope": "PR #14 fix commit 98786c6",
+    "agents": 3,
+    "reported": 1,
+    "confirmed": 1,
     "distinctDefectsFixed": [
-      "P1 a null/non-object column entry (and non-array primaryKey/unique/foreignKeys, or a malformed fk entry) crashed table.columns.map()/tuple() into a masked P2 engine-error, suppressing real P1 constraint checks under DONE. Columns are now isolated into validColumns (malformed-column + exclude), and every constraint array/entry is Array.isArray-guarded (malformed-constraint) so a bad structural input is surfaced and the remaining checks still run."
+      "P2 a duplicate channel name last-wins-overwrote in the admission Map, silently dropping a stricter spec (requireAck/ordering/schema) -> false green. Now fail-closed: a duplicate-channel finding is surfaced and the first spec is kept."
     ],
     "boundedLoopCapReached": true,
     "allResolved": true,
-    "note": "Structural-robustness class now comprehensively hardened: columns, rows, migrations, migrations-container, primaryKey, unique, foreignKeys, and fk entries are all isolated into structured findings — no malformed input can crash the run or mask a real violation."
+    "followUp": "The same duplicate-key last-wins pattern exists latently in the already-merged quality-api-engine (endpoint byId) and quality-database-engine (tableByName); flagged as a separate hardening task rather than reopening merged work mid-stream."
   }
 }

@@ -170,3 +170,16 @@ describe("QualityRealtimeEngine — payload format constraints are validated (re
     expect(r.findings).toHaveLength(0);
   });
 });
+
+describe("QualityRealtimeEngine — duplicate channel name fails closed (final re-review)", () => {
+  it("surfaces a duplicate channel and keeps the first (stricter) spec — the later lax spec cannot mask a violation", async () => {
+    const input = {
+      contracts: { channels: [{ name: "orders", requireAck: true, events: [{ type: "e" }] }, { name: "orders", events: [{ type: "e" }] }] },
+      streams: { orders: [{ type: "e", acked: false }] },
+    };
+    const r = await driveEngine(new QualityRealtimeEngine(), ctx(input));
+    const k = kinds(r.findings);
+    expect(k).toContain("duplicate-channel");
+    expect(k).toContain("unacked-message"); // the first spec's requireAck is still enforced
+  });
+});
