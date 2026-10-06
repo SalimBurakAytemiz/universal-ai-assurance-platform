@@ -1,0 +1,27 @@
+{
+  "contracts": {
+    "channels": [
+      {
+        "name": "orders",
+        "ordering": "total",
+        "requireAck": true,
+        "events": [
+          {
+            "type": "order.created",
+            "schema": { "type": "object", "additionalProperties": false, "required": ["orderId", "total"], "properties": { "orderId": { "type": "integer" }, "total": { "type": "number" } } },
+            "requiredHeaders": ["trace-id"]
+          },
+          { "type": "order.cancelled", "schema": { "type": "object", "required": ["orderId"], "properties": { "orderId": { "type": "integer" } } } }
+        ]
+      }
+    ]
+  },
+  "streams": {
+    "orders": [
+      { "type": "order.created", "seq": 1, "payload": { "orderId": 1, "total": 9.99 }, "headers": { "trace-id": "t-1" }, "acked": true },
+      { "type": "order.created", "seq": 3, "payload": { "orderId": 2, "total": "free", "extra": 1 }, "headers": {}, "acked": false },
+      { "type": "order.created", "seq": 2, "payload": { "orderId": 3, "total": 5 }, "headers": { "trace-id": "t-3" }, "acked": true },
+      { "type": "order.shipped", "seq": 4, "payload": {}, "acked": true }
+    ]
+  }
+}
