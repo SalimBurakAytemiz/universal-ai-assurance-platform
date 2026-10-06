@@ -26,7 +26,8 @@
       "@uaap/assurance-planner": ["packages/assurance-planner/src/index.ts"],
       "@uaap/knowledge-graph": ["packages/knowledge-graph/src/index.ts"],
       "@uaap/engine-core": ["packages/engine-core/src/index.ts"],
-      "@uaap/quality-api-engine": ["packages/quality-api-engine/src/index.ts"]
+      "@uaap/quality-api-engine": ["packages/quality-api-engine/src/index.ts"],
+      "@uaap/quality-database-engine": ["packages/quality-database-engine/src/index.ts"]
     }
   },
   "include": [

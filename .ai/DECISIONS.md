@@ -36,3 +36,14 @@
   contract and is OFFLINE-ONLY (no target I/O, nothing to authorize). Live exchanges will come from a
   broker-backed transport later; contract validation runs today against local fixtures. Dependency
   added: `ajv-formats@3.0.1` (MIT) for JSON-Schema format checks (email/date-time/uri/uuid).
+- **2026-10-06** Execution-engine order altered (permitted by the contract): built the DATABASE
+  validation engine (C) before the Web/Playwright engine (B). Reason: lowest external dependency +
+  deterministic testability. Playwright needs a heavy browser-binary download via a separate
+  `playwright install` step and a live browser runtime (unverified on this host; npm postinstall
+  scripts are gated here). The read-only DB engine has ZERO external runtime dependency, validates a
+  dataset snapshot against schema/constraints fully deterministically against local fixtures, and
+  delivers immediate value. Web/Playwright is deferred until a browser runtime is confirmed
+  installable; its offline portion (snapshot/accessibility validation) can be built first if not.
+- **2026-10-06** `@uaap/quality-database-engine` is READ-ONLY by construction: it inspects a provided
+  dataset snapshot (never connects to a DB, never mutates). Destructive migrations are flagged and
+  require explicit approval (`allowDestructiveMigrations`), honoring "read-only by default".

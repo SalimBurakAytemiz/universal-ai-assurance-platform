@@ -1441,6 +1441,27 @@
         },
         "mergedPR": 12
       }
+    },
+    {
+      "id": "quality-database-engine",
+      "name": "Quality: read-only database validation engine",
+      "family": "quality",
+      "dependencies": [
+        "engine-core"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-QA-DB-001"
+      ],
+      "files": [
+        "packages/quality-database-engine/src/index.ts",
+        "packages/quality-database-engine/fixtures/orders-db.json"
+      ],
+      "tests": [
+        "packages/quality-database-engine/test/quality-database-engine.test.ts"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }

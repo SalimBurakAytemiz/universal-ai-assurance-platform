@@ -2,20 +2,18 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T09:37:00.000Z",
+    "at": "2026-10-06T10:27:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #12 engine-core + quality-api-engine",
-    "agents": 41,
-    "reported": 19,
-    "confirmed": 19,
+    "scope": "PR #13 quality-database-engine",
+    "agents": 29,
+    "reported": 13,
+    "confirmed": 13,
     "distinctDefectsFixed": [
-      "P1 FALSE NEGATIVE: request-body contract was gated on body!==undefined — a missing required request body passed clean. Now validated whenever a request schema exists.",
-      "P1 FALSE NEGATIVE: request requiredHeaders were declared+advertised but never checked. Now a missing-request-header finding is emitted.",
-      "P1 engine-core driveEngine silently DROPPED findings/evidence collected before a cancel/timeout/throw. Introduced an EngineCollector the driver owns; partials are now preserved in the result.",
-      "P1 one invalid caller schema or one malformed exchange aborted the ENTIRE run (FAILED, 0 findings). Per-exchange try/catch + safe compile + malformed-exchange guard + plan() null-guard; one bad input no longer voids the rest.",
-      "P2 driveEngine not total: capabilities()/health()/first now() ran outside try/catch. Moved inside with defensive fallbacks.",
-      "P2 timeout ineffective for a synchronous engine. Added a wall-clock DEADLINE on the token (throwIfCancelled enforces it) + post-run remap; cooperative engines (incl. this one, which checkpoints per exchange) are now bounded.",
-      "P3 emptyRequiredStrings was top-level only. Now recurses into nested object schemas (dotted path)."
+      "P1 a null/non-object row threw (Object.keys(null)) and aborted ALL of a table's PK/UNIQUE/FK checks, masking real P1 violations while status stayed DONE. Rows are now isolated into validRows (malformed-row finding + continue); all checks run over the valid rows.",
+      "P1 typeOk() default returned true, so an unrecognized column type silently disabled type validation (fail-open false green). Default is now false AND an unknown-column-type finding is surfaced per such column.",
+      "P1/P2 migration gating failed open on any kind not literally in the denylist (e.g. 'DROP TABLE' with a space, or an unknown kind). Kinds are now normalized (space/hyphen->underscore) and anything not known-safe/destructive/lossy is surfaced as unknown-migration-op (fail-closed).",
+      "P2 a schema table absent from the dataset was silently skipped yet counted as validated. Now surfaced as table-not-in-dataset and the summary reports inspected/declared.",
+      "P2/P3 the migration loop had no isolation; a null migration (and plan() deref) crashed the run. plan() guards null; the migration loop isolates malformed entries (malformed-migration + continue)."
     ],
     "allResolved": true
   },
@@ -30,16 +28,15 @@
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T09:52:00.000Z",
+    "at": "2026-10-06T10:36:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #12 fix commit b5fa681",
-    "agents": 8,
-    "reported": 3,
-    "confirmed": 3,
+    "scope": "PR #13 fix commit 06f90b0",
+    "agents": 6,
+    "reported": 2,
+    "confirmed": 2,
     "distinctDefectsFixed": [
-      "P2 empty-required-string recursion skipped ARRAYS of objects (list responses) — now recurses into array items with [i] paths.",
-      "P2 empty-required-string ran on responses only — now also on the request body (symmetry).",
-      "P2 byId endpoint-map build sat OUTSIDE the per-exchange isolation; a malformed endpoint voided the whole run. Now built defensively (skip + malformed-endpoint finding) so one bad endpoint cannot void others."
+      "P1 a table admitted on name alone but with no columns array crashed table.columns.map() into a masked P2 engine-error (false negative under DONE). Admission now requires Array.isArray(columns); such a table is surfaced as malformed-table and skipped.",
+      "P2 a non-array top-level `migrations` (or non-array schema.tables) crashed discover()/plan() (run before prereqs) -> FAILED, zero findings. discover/plan now Array.isArray-guard both; a present-but-non-array migrations is a malformed-migrations-input finding and table validation still runs."
     ],
     "allResolved": true
   },
@@ -312,17 +309,17 @@
     }
   },
   "finalReReview": {
-    "at": "2026-10-06T10:03:00.000Z",
+    "at": "2026-10-06T10:42:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #12 fix commit 25c571c",
-    "agents": 8,
-    "reported": 3,
-    "confirmed": 3,
+    "scope": "PR #13 fix commit c339cf4",
+    "agents": 6,
+    "reported": 2,
+    "confirmed": 2,
     "distinctDefectsFixed": [
-      "P2 (x2) emptyRequiredStrings skipped nested subschemas that omit an explicit `type` keyword and did not flatten allOf — untyped/composed nested empty required strings slipped through. Rewrote as schemaView() which infers object/array shape structurally (properties/items/required) and flattens allOf; recursion no longer depends on `type`."
+      "P1 a null/non-object column entry (and non-array primaryKey/unique/foreignKeys, or a malformed fk entry) crashed table.columns.map()/tuple() into a masked P2 engine-error, suppressing real P1 constraint checks under DONE. Columns are now isolated into validColumns (malformed-column + exclude), and every constraint array/entry is Array.isArray-guarded (malformed-constraint) so a bad structural input is surfaced and the remaining checks still run."
     ],
-    "documentedLimitation": "The empty-required-string heuristic does not resolve $ref or branch oneOf/anyOf; minLength:1 (enforced natively by Ajv everywhere) is the robust path and is documented in the function. This is a documented bounded heuristic, not a silent false green — Ajv structural validation remains authoritative.",
     "boundedLoopCapReached": true,
-    "allResolved": true
+    "allResolved": true,
+    "note": "Structural-robustness class now comprehensively hardened: columns, rows, migrations, migrations-container, primaryKey, unique, foreignKeys, and fk entries are all isolated into structured findings — no malformed input can crash the run or mask a real violation."
   }
 }
