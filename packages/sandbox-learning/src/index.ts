@@ -115,8 +115,20 @@ export interface RunOptions {
  * preserved. The workspace is always cleaned up (unless policy.keepWorkspace) even on failure.
  */
 export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opts: RunOptions = {}): SandboxResult {
-  const now = opts.now ?? (() => new Date());
-  const startedAt = now().toISOString();
+  // Defensive clock: a bad injected now() (throwing, or `new Date(NaN)` whose toISOString throws)
+  // must NOT break the TOTAL contract — fall back to a real timestamp.
+  const rawNow = opts.now ?? (() => new Date());
+  const nowIso = (): string => {
+    try {
+      const s = rawNow().toISOString();
+      return typeof s === "string" ? s : new Date().toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  };
+  // Defensive policy: a null/malformed policy must resolve structurally (DENIED/FAILED), never throw.
+  const pol = (policy && typeof policy === "object" ? policy : {}) as SandboxPolicy;
+  const startedAt = nowIso();
   const t0 = Date.now();
   const taskId = request && typeof request.taskId === "string" ? request.taskId : "";
   // Guard: a non-serializable input (BigInt, circular ref) must NOT make the function throw — the
@@ -127,8 +139,16 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
   } catch {
     inputHash = "unserializable";
   }
+
+  // Clamp limits (read defensively off a possibly-absent policy.limits) to finite, in-range values
+  // so a malformed policy can never make spawnSync throw.
+  const rawLimits = (pol.limits && typeof pol.limits === "object" ? pol.limits : {}) as Partial<SandboxLimits>;
+  const timeoutMs = Number.isFinite(rawLimits.timeoutMs as number) ? Math.max(1, Math.floor(rawLimits.timeoutMs as number)) : 1;
+  const maxBuffer = Number.isFinite(rawLimits.maxOutputBytes as number) ? Math.max(1024, Math.floor(rawLimits.maxOutputBytes as number)) : 1024;
+  const normLimits: SandboxLimits = { timeoutMs, maxOutputBytes: maxBuffer };
+
   const envEssential = osEssentialEnv();
-  const allow = Array.isArray(policy.envAllowlist) ? policy.envAllowlist : [];
+  const allow = Array.isArray(pol.envAllowlist) ? pol.envAllowlist : [];
   for (const k of allow) {
     const v = process.env[k];
     if (typeof v === "string") envEssential[k] = v;
@@ -139,10 +159,10 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
     id: newId("SBX"),
     taskId,
     inputHash,
-    limits: policy.limits,
+    limits: normLimits,
     envKeys,
     startedAt,
-    finishedAt: now().toISOString(),
+    finishedAt: nowIso(),
     status,
     exitCode,
     signal,
@@ -153,7 +173,7 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
   });
 
   // Gate 1: allow-list (fail-closed).
-  const allowed = Array.isArray(policy.allowedTasks) ? policy.allowedTasks : [];
+  const allowed = Array.isArray(pol.allowedTasks) ? pol.allowedTasks : [];
   if (!taskId || !allowed.includes(taskId)) {
     return { status: SandboxStatus.DENIED, result: null, stdout: "", stderr: "", reason: taskId ? `task "${taskId}" is not in the policy allow-list` : "missing taskId", audit: mkAudit(SandboxStatus.DENIED, null, null, 0, 0) };
   }
@@ -161,16 +181,12 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
   // Gate 2: dedicated workspace.
   let workspace: string;
   try {
-    const root = policy.workspaceRoot ?? tmpdir();
+    const root = pol.workspaceRoot ?? tmpdir();
     if (!existsSync(root)) mkdirSync(root, { recursive: true });
     workspace = mkdtempSync(join(root, "uaap-sbx-"));
   } catch (e) {
     return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `workspace creation failed: ${e instanceof Error ? e.message : String(e)}`, audit: mkAudit(SandboxStatus.FAILED, null, null, 0, 0) };
   }
-
-  // Clamp limits to finite, in-range values so a malformed policy can never make spawnSync throw.
-  const timeoutMs = Number.isFinite(policy.limits.timeoutMs) ? Math.max(1, Math.floor(policy.limits.timeoutMs)) : 1;
-  const maxBuffer = Number.isFinite(policy.limits.maxOutputBytes) ? Math.max(1024, Math.floor(policy.limits.maxOutputBytes)) : 1024;
 
   try {
     // Serialize the request safely: a non-serializable input cannot run the task -> FAILED, not throw.
@@ -229,7 +245,7 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
     // TOTAL guarantee: any unexpected throw (IO error on write, spawn arg error) -> structured FAILED.
     return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `sandbox error: ${e instanceof Error ? e.message : String(e)}`, audit: mkAudit(SandboxStatus.FAILED, null, null, 0, 0) };
   } finally {
-    if (!policy.keepWorkspace) {
+    if (!pol.keepWorkspace) {
       try { rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort cleanup */ }
     }
   }

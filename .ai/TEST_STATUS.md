@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **465 passed / 465** across 37 files (+ sandbox-learning, real bounded child-process execution, review round 1 fixes)
+- vitest: **467 passed / 467** across 37 files (+ sandbox-learning, real bounded child-process execution, review rounds 1-2 fixes)
 
 New this change — `@uaap/sandbox-learning` (`packages/sandbox-learning/test/`): **9 tests**
 - A SAFE, LOCAL, bounded execution sandbox for the platform's synthetic learning/eval tasks — the
@@ -40,4 +40,8 @@ error.code, ENOBUFS -> FAILED); P2 no-catch on the spawn/write path (now mapped 
 clamped); P2 evaluateCase hardcoded policyCompliant:true (now DERIVED — a reported containment escape
 is non-compliant); P3 ENVIRONMENT_PROOF overstated the Electron smoke/packaging (smoke now committed
 + runnable at apps/desktop/smoke/headless-smoke.cjs; packaging explicitly marked NOT yet proven).
-P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Re-review runs on the fix commit.
+Round 2 (11 agents) confirmed 3 more — ALL fixed: P2 a bad injected clock (new Date(NaN)/throwing)
+escaped before the try (now a defensive nowIso fallback); P3 a malformed policy (missing limits/null)
+threw before the try (now read defensively -> DENIED/FAILED); P1 the committed Electron smoke exited 0
+on a FAILED assertion because app.quit() beat the deferred app.exit (now app.exit(ok?0:4) sync —
+proven: a forced-wrong title now exits 4). P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Round 3 (cap) runs next.

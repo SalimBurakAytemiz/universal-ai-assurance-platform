@@ -23,10 +23,13 @@ app.whenReady().then(async () => {
     const text = await win.webContents.executeJavaScript("document.getElementById('t').textContent");
     const title = win.webContents.getTitle();
     if (!crashed) {
-      process.stdout.write("SMOKE_RESULT:" + JSON.stringify({ ok: text === "ready" && title === "UAAP", ready: true, windowCreated: true, loaded: text === "ready", text, title, ms: Date.now() - started }) + "\n");
+      const ok = text === "ready" && title === "UAAP";
+      process.stdout.write("SMOKE_RESULT:" + JSON.stringify({ ok, ready: true, windowCreated: true, loaded: text === "ready", text, title, ms: Date.now() - started }) + "\n");
       win.destroy();
-      app.quit();
-      setTimeout(() => app.exit(text === "ready" && title === "UAAP" ? 0 : 4), 150);
+      // Exit DETERMINISTICALLY with the assertion's code. Do NOT defer via setTimeout after app.quit():
+      // app.quit() completes shutdown and the process exits (code 0) before the timer fires, which
+      // would report a failed assertion as a pass. app.exit(code) forces the exact code immediately.
+      app.exit(ok ? 0 : 4);
     }
   } catch (e) {
     process.stdout.write("SMOKE_ERROR:" + (e && e.message ? e.message : String(e)) + "\n");

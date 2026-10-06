@@ -118,6 +118,23 @@ describe("@uaap/sandbox-learning — real bounded child-process execution", () =
     expect(Object.values(SandboxStatus)).toContain(r.status); // some terminal state, no exception
   }, 15000);
 
+  it("REGRESSION (round 2): a bad injected clock never breaks the TOTAL contract", () => {
+    const badDate = runSandboxed({ taskId: "noop" }, policy(), { now: () => new Date(NaN) });
+    expect(Object.values(SandboxStatus)).toContain(badDate.status); // no throw; structured result
+    const throwing = runSandboxed({ taskId: "noop" }, policy(), { now: () => { throw new Error("bad clock"); } });
+    expect(Object.values(SandboxStatus)).toContain(throwing.status);
+    expect(typeof throwing.audit.startedAt).toBe("string"); // fell back to a real timestamp
+  });
+
+  it("REGRESSION (round 2): a malformed policy resolves structurally, never throws", () => {
+    // missing limits on an allowed task (previously threw reading policy.limits.timeoutMs)
+    const noLimits = runSandboxed({ taskId: "noop" }, { allowedTasks: ["noop"] } as unknown as SandboxPolicy);
+    expect(Object.values(SandboxStatus)).toContain(noLimits.status);
+    // null policy => everything denied, no throw
+    const nullPolicy = runSandboxed({ taskId: "noop" }, null as unknown as SandboxPolicy);
+    expect(nullPolicy.status).toBe(SandboxStatus.DENIED);
+  }, 15000);
+
   it("REGRESSION: policyCompliant is DERIVED from the real outcome, not a hardcoded true", () => {
     const { outcome, run } = evaluateCase({ id: "esc", request: { taskId: "write-outside" } }, policy());
     // the metric must track the actual reported containment outcome, not a constant

@@ -29,7 +29,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "pr20": {
@@ -490,5 +490,25 @@
     },
     "mergedPR": 21,
     "outcome": "6 rounds + confirmation; 14 confirmed defects fixed; safeUrl leak-proof by construction; merged e0b3d42"
+  },
+  "reReview": {
+    "at": "2026-10-06T19:07:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #22 fix commit a4ec8cb (round 2)",
+    "agents": 11,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P2 bad injected clock: opts.now returning new Date(NaN) (toISOString throws) or throwing escaped runSandboxed before the try (startedAt) and in mkAudit finishedAt (even inside the catch). Now a defensive nowIso() wraps the clock and falls back to a real timestamp -> TOTAL holds.",
+      "P3 malformed policy: policy.limits / policy.envAllowlist / policy.allowedTasks were dereferenced before the try, so a policy missing limits (or null) threw on an allowed task. Policy + limits are now read defensively (pol = policy||{}; rawLimits off pol) -> DENIED/FAILED, never a throw.",
+      "P1 committed Electron smoke exited 0 on a FAILED assertion: app.quit() completed shutdown before the deferred setTimeout(app.exit) fired, so a window that loaded but returned wrong content/title was reported as a pass by exit code. Now app.exit(ok?0:4) is called synchronously; PROVEN: a forced-wrong-title variant now exits 4 (success still exits 0)."
+    ],
+    "boundedLoop": {
+      "count": 2,
+      "max": 3,
+      "outcome": "CONVERGED"
+    },
+    "regressionTests": "2 new (bad-clock no-throw; malformed/null policy no-throw) + manual smoke exit-code proof (wrong-title => exit 4). 15 in-package, 467/467 repo-wide.",
+    "allResolved": true
   }
 }
