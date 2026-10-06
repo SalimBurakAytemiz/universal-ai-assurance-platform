@@ -1,0 +1,22 @@
+{
+  "budgets": {
+    "endpoints": [
+      { "id": "GET /users", "thresholds": { "p95": 100, "max": 200, "errorRate": 0.01 } },
+      { "id": "POST /orders", "thresholds": { "p95": 50, "errorRate": 0.0 } }
+    ]
+  },
+  "samples": {
+    "GET /users": [
+      { "latencyMs": 40, "ok": true },
+      { "latencyMs": 55, "ok": true },
+      { "latencyMs": 60, "ok": true },
+      { "latencyMs": 80, "ok": true },
+      { "latencyMs": 450, "ok": false }
+    ],
+    "POST /orders": [
+      { "latencyMs": 120, "ok": true },
+      { "latencyMs": 130, "ok": false },
+      { "latencyMs": 140, "ok": true }
+    ]
+  }
+}

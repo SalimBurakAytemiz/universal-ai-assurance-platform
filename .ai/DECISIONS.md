@@ -53,3 +53,9 @@
   fail-closed ordering-mode vocabulary. Validates recorded message streams against channel contracts
   (event coverage, payload schema, headers, total/per-key sequence ordering + duplicates, delivery
   ack). Offline-only (captured streams; broker-backed subscriber later).
+- **2026-10-06** `@uaap/quality-performance-engine` (engine E) validates recorded latency samples
+  against bounded budgets (p50/p95/p99/max + error rate) per endpoint — OFFLINE, deterministic. It
+  does NOT generate load (active load vs a target needs the target + authorization + k6 via the
+  broker); it analyzes captured measurements. Fail-closed: a budget with no usable samples is
+  UNVERIFIABLE, not a pass. Built with all robustness lessons baked in (array guards, per-sample
+  isolation, duplicate-budget fail-closed, unknown-threshold vocabulary fail-closed).
