@@ -3,28 +3,46 @@
 > Authoritative "what to do next". Updated at every validated checkpoint.
 
 ## Just completed
-- `@uaap/knowledge-graph` — assurance knowledge graph (requirement↔feature↔code↔component↔
-  service↔api↔db/event/queue↔test↔finding↔evidence↔risk↔release) with traceability,
-  change-impact, blast-radius, regression selection, root-cause and fail-closed release
-  assurance. 19 tests. (build graph: 40 DONE / 7 READY / 1 BLOCKED / 7 NOT_STARTED.)
+- **PR #20 — `@uaap/desktop-viewmodels`** (real-state view-model data layer, fail-closed). Derives
+  every desktop view-model from REAL repo/runtime state (`.ai/*`, agent/skill registries, recorded
+  test status); no fabricated green; security posture fail-closed by allow-list + in-force
+  authorization check. 3 isolated adversarial review rounds (cap=3) → 12 confirmed defects, ALL
+  fixed with regression tests. Merged squash `8c9cbf9`. Post-merge verify: 431/431 across 35 files.
 
-## Now building — execution engines (autonomous, dependency-ordered)
-Order (Decision Ledger 2026-10-04): A API/contract → B web/Playwright → C database →
-D realtime → E performance → F accessibility/visual → G security sandbox → H mobile → I specialized.
+## Build-graph status
+**DONE 54 · READY 2 · BLOCKED 1 · NOT_STARTED 5.** Every pure-logic / offline-deterministic node is
+DONE. The whole core (kernel/policy/audit/orchestrator/tool-broker), the full execution-engine layer
+(api, database, realtime, performance, accessibility), the security appsec detection engine, the
+knowledge graph, the research-intelligence pipeline, the autopilot durability chain, and the desktop
+real-state data layer are all IMPLEMENTED+TESTED and merged.
 
-1. **quality-api-engine** — common engine contract (discover/plan/validate-prereqs/execute/
-   collect-artifacts/produce-evidence/result/cancel/timeout/capabilities/health) + Ajv/JSON-Schema/
-   OpenAPI request+response contract checks, headers, null/empty, negative, schema drift. Local
-   fixtures only. Routes evidence through the Evidence Engine; findings through the finding lifecycle.
-2. web engine (Playwright) — install Playwright locally; deterministic local HTML fixtures.
-3. database validation engine — read-only consistency/schema checks against a local fixture.
+## Stopping boundary reached — remaining nodes need an external runtime or a human decision
+None of the remaining nodes is technically executable/validatable in this environment without an
+external runtime or a human/legal action. Per the contract, that is the only legitimate stop.
 
-## Locked by design (HUMAN_ACTION_REQUIRED)
-- `security-active-validation-gate`: needs explicit external target authorization + scope.
-  Security ENGINE + agents + lifecycle still built against local controlled fixtures.
+| Node | Status | Gate (why it cannot be truly completed here) |
+|------|--------|-----------------------------------------------|
+| `desktop-shell` | READY | Electron runtime — must build+run the app to validate rendering (not fakeable). |
+| `desktop-agents-view` / `desktop-knowledge-view` / `desktop-learning-view` | NOT_STARTED | Electron runtime; consume the merged view-models. |
+| `desktop-packaging` | NOT_STARTED | Windows build runtime; unsigned dev build OK, production = `DESKTOP_SIGNING_REQUIRED`. |
+| `quality-web-engine` | NOT_STARTED | Playwright browser runtime (local browser install). |
+| `sandbox-learning` | READY | Sandbox execution runtime. |
+| `security-active-validation-gate` | BLOCKED | `LOCKED_BY_DESIGN` — needs an explicit, signed, scoped human authorization in `.ai/security/`. Stays locked. |
 
-## Human/environment-gated (not blocking other work)
-- Research nodes (technology-scout/standards/advisory): implement pipeline/schemas/provenance/
-  scheduler locally; mark live external fetch BLOCKED_EXTERNAL_RESEARCH if no internet.
-- Desktop packaging: unsigned dev installer OK; production signing = DESKTOP_SIGNING_REQUIRED.
-- Final license = FINAL_LICENSE_DECISION_REQUIRED (conservative placeholder stays).
+## HUMAN_ACTION_REQUIRED (genuine external blockers only)
+- **Electron / Playwright / sandbox runtimes** — to build, run and validate the desktop app, the
+  browser engine, and sandboxed learning. Pure-logic layers they depend on are already built+tested.
+- **`security-active-validation-gate`** — needs an explicit external-target authorization + scope
+  record (`.ai/security/`). The security ENGINE, agents and lifecycle are already built and tested
+  against local controlled fixtures; only ACTIVE validation is gated. Stays `LOCKED_BY_DESIGN`.
+- **`DESKTOP_SIGNING_REQUIRED`** — production code-signing cert for signed installers (unsigned dev
+  build is acceptable and ungated).
+- **`FINAL_LICENSE_DECISION_REQUIRED`** — business/legal; conservative placeholder stays.
+- **`BLOCKED_EXTERNAL_RESEARCH`** — live external fetch for the research pipeline (offline ingest +
+  provenance + scheduler are built and tested; live fetch stays gated).
+
+## On resume
+Re-run the session-start procedure (`git status`/`log`, read `.ai/*`, `npm run verify`). If an
+external runtime or a human authorization has since been provided, pick up the matching gated node
+(e.g. Electron available → `desktop-shell`). Otherwise there is no new technically-executable node;
+hold at this boundary rather than fabricating progress.

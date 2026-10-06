@@ -1662,8 +1662,20 @@
       "tests": [
         "packages/desktop-viewmodels/test/desktop-viewmodels.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "8c9cbf935ae8aa9eebf052ece9ec82f7fd2cb652"
+      ],
+      "review": {
+        "loops": 3,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 12,
+        "mergedPR": 20
+      }
     }
   ]
 }
