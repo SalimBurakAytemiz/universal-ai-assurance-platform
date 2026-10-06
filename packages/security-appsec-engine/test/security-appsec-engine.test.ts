@@ -177,3 +177,17 @@ describe("SecurityAppsecEngine — residual-leak closure (no raw line echo, by c
     expect(kinds(r.findings)).toContain("code-eval");
   });
 });
+
+describe("SecurityAppsecEngine — credential-rule precision (final re-review)", () => {
+  it("does NOT flag descriptor keys whose credential word is a prefix/middle (token_type: Bearer etc.)", async () => {
+    const r = await drive({
+      config: [{ path: "oauth.json", content: `{ "token_type": "Bearer", "tokenEndpoint": "https://idp.example/token", "access_token_url": "https://x/oauth", "secretName": "my-ref" }` }],
+    });
+    expect(kinds(r.findings)).not.toContain("hardcoded-secret"); // all are descriptor keys / public constants / URLs
+  });
+
+  it("STILL flags real trailing-credential keys with concrete values", async () => {
+    const r = await drive({ config: [{ path: "a.json", content: `{ "auth_token": "t0ps3cr3tTokenVal" }` }, { path: "b.json", content: `{ "db_password": "P@ssw0rdValue9" }` }] });
+    expect(r.findings.filter((f) => f.kind === "hardcoded-secret").length).toBe(2); // both key shapes match
+  });
+});

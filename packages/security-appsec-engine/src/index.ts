@@ -80,7 +80,11 @@ const SECRET_RULES: readonly LineRule[] = [
   // snake_case name that CONTAINS a credential word (db_password, aws_secret_access_key, app_secret,
   // auth_token, private_key…) and may be quoted ("password":). Env references (${X}, <X>, {X}) are
   // excluded via the value's first-char class. (Detection only; the value is never echoed anyway.)
-  { kind: "hardcoded-secret", severity: SEV.P2, title: "Hardcoded credential assignment", re: /["']?[A-Za-z0-9_]*(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|private[_-]?key|credential|token)[A-Za-z0-9_]*["']?\s*[:=]\s*["'][^"'$<{][^"']{3,}["']/i, redact: true },
+  // The credential word must be the END of the key (optionally with a prefix), so auth_token /
+  // db_password / aws_secret_access_key match but DESCRIPTOR keys like token_type / tokenEndpoint /
+  // secretName / access_token_url do NOT (the word there is a prefix/middle segment). The value must
+  // not be a well-known public constant (Bearer/Basic/Digest/true/false/null) or a URL.
+  { kind: "hardcoded-secret", severity: SEV.P2, title: "Hardcoded credential assignment", re: /["']?[A-Za-z0-9_]*(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|private[_-]?key|credential|token)["']?\s*[:=]\s*["'](?!(?:bearer|basic|digest|true|false|null)["'])(?!https?:\/\/)[^"'$<{][^"']{3,}["']/i, redact: true },
 ];
 const INJECTION_RULES: readonly LineRule[] = [
   { kind: "sql-injection-pattern", severity: SEV.P2, title: "Potential SQL injection (string interpolation into SQL)", re: /["'`](?:select|insert|update|delete)\b[^"'`]*\$\{/i },
