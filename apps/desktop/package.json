@@ -5,11 +5,16 @@
   "description": "Universal AI Assurance Platform — desktop control plane (Electron shell).",
   "main": "src/main.js",
   "scripts": {
+    "bundle": "node scripts/build-viewmodels.mjs",
+    "predev": "npm run bundle",
     "dev": "electron .",
     "smoke": "electron smoke/headless-smoke.cjs",
+    "previews": "npm run bundle",
+    "views": "electron smoke/views-smoke.cjs",
     "build": "node -e \"console.error('Desktop packaging (electron-builder) is not configured yet. See build-graph node desktop-packaging and .ai/KNOWN_ISSUES.md.'); process.exit(1)\""
   },
   "devDependencies": {
-    "electron": "^32.1.2"
+    "electron": "^32.1.2",
+    "esbuild": "^0.21.5"
   }
 }

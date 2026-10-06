@@ -30,8 +30,11 @@ recorded. This file is the evidence. "Runtime missing" is not, by itself, a prov
    `apps/desktop/smoke/headless-smoke.cjs` (run via `npm run smoke` in apps/desktop): creates a
    `BrowserWindow({show:false})`, loads a `data:` page, evaluates renderer JS, reads it back, exits 0 →
    `SMOKE_RESULT:{"ok":true,"ready":true,"windowCreated":true,"loaded":true,...}`.
-6. Conclusion for desktop-shell / desktop-*-view: **NOT BLOCKED.** Electron builds AND runtime-validates
-   on this host headlessly; these nodes are implemented + runtime-validated in their own PRs.
+6. Conclusion for desktop-shell / desktop-*-view: **NOT BLOCKED — now RUNTIME-VALIDATED.** The full
+   app surface was launched headless and every view asserted to render the COMPUTED real view-model
+   state (`apps/desktop`, `npm run views`, committed at `apps/desktop/smoke/views-smoke.cjs`, exit 0):
+   home 56/62 done, agents 72 (real registry), security LOCKED (fail-closed), knowledge/learning real.
+   desktop-shell + the three views are DONE (runtime-validated).
 7. Scope note (honest): **dev packaging is NOT yet proven** — `apps/desktop`'s `build` script is still a
    deliberate stub that exits 1. An electron-builder/packager dev build is ATTEMPTED and its exact
    result recorded in the desktop-packaging PR. PRODUCTION CODE-SIGNING (`DESKTOP_SIGNING_REQUIRED`)

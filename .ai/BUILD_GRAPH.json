@@ -311,16 +311,20 @@
         "orchestrator",
         "ai-state"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-DESKTOP-001"
       ],
       "files": [
-        "apps/desktop/package.json",
-        "apps/desktop/src/main.ts",
-        "apps/desktop/renderer/index.html"
+        "apps/desktop/src/main.js",
+        "apps/desktop/src/state.js",
+        "apps/desktop/renderer/renderer.js",
+        "apps/desktop/scripts/build-viewmodels.mjs",
+        "apps/desktop/smoke/views-smoke.cjs"
       ],
-      "tests": [],
+      "tests": [
+        "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
+      ],
       "commits": [],
       "review": {}
     },
@@ -1154,12 +1158,20 @@
         "agent-definitions-72",
         "desktop-viewmodels"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-DESKTOP-AGENTS-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "apps/desktop/src/main.js",
+        "apps/desktop/src/state.js",
+        "apps/desktop/renderer/renderer.js",
+        "apps/desktop/scripts/build-viewmodels.mjs",
+        "apps/desktop/smoke/views-smoke.cjs"
+      ],
+      "tests": [
+        "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
+      ],
       "commits": [],
       "review": {}
     },
@@ -1172,12 +1184,20 @@
         "knowledge-store",
         "desktop-viewmodels"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-DESKTOP-KNOWLEDGE-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "apps/desktop/src/main.js",
+        "apps/desktop/src/state.js",
+        "apps/desktop/renderer/renderer.js",
+        "apps/desktop/scripts/build-viewmodels.mjs",
+        "apps/desktop/smoke/views-smoke.cjs"
+      ],
+      "tests": [
+        "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
+      ],
       "commits": [],
       "review": {}
     },
@@ -1190,12 +1210,20 @@
         "knowledge-lifecycle",
         "desktop-viewmodels"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-DESKTOP-LEARNING-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "apps/desktop/src/main.js",
+        "apps/desktop/src/state.js",
+        "apps/desktop/renderer/renderer.js",
+        "apps/desktop/scripts/build-viewmodels.mjs",
+        "apps/desktop/smoke/views-smoke.cjs"
+      ],
+      "tests": [
+        "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
+      ],
       "commits": [],
       "review": {}
     },

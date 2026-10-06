@@ -5,8 +5,8 @@
 const MENU = [
   ["Overview", [["home", "Home", "live"], ["system-health", "System Health", "live"], ["audit", "Audit", "live"]]],
   ["Project", [["organizations", "Organizations"], ["projects", "Projects"], ["architecture", "Architecture"], ["digital-twin", "Digital Twin"], ["domains", "Domains"], ["capabilities", "Capabilities"], ["journeys", "Critical Journeys"]]],
-  ["Assurance", [["quality", "Quality"], ["security", "Security"], ["data", "Data"], ["performance", "Performance"], ["reliability", "Reliability"], ["privacy", "Privacy"], ["accessibility", "Accessibility"]]],
-  ["Agents & Knowledge", [["agents", "Agents", "live"], ["agent-teams", "Agent Teams"], ["evaluations", "Agent Evaluations"], ["knowledge", "Knowledge"], ["learning", "Learning"]]],
+  ["Assurance", [["quality", "Quality"], ["security", "Security", "live"], ["data", "Data"], ["performance", "Performance"], ["reliability", "Reliability"], ["privacy", "Privacy"], ["accessibility", "Accessibility"]]],
+  ["Agents & Knowledge", [["agents", "Agents", "live"], ["agent-teams", "Agent Teams"], ["evaluations", "Agent Evaluations"], ["knowledge", "Knowledge", "live"], ["learning", "Learning", "live"]]],
   ["Operations", [["runs", "Runs"], ["schedules", "Schedules"], ["automation", "Automation"], ["findings", "Findings"], ["risks", "Risks"], ["evidence", "Evidence"], ["reports", "Reports"]]],
   ["Governance", [["approvals", "Approvals"], ["policies", "Policies"], ["authorization", "Authorization", "live"], ["release", "Release Center", "live"]]],
   ["Build", [["buildgraph", "Build Graph", "live"], ["autopilot", "Autopilot", "live"]]],
@@ -56,7 +56,7 @@ function show(id) {
   setActive(id);
   const main = document.getElementById("main");
   main.innerHTML = "";
-  const views = { home, "system-health": systemHealth, agents: agentsView, authorization: authView, release: releaseView, buildgraph: buildGraphView, audit: auditView, autopilot: autopilotView };
+  const views = { home, "system-health": systemHealth, agents: agentsView, knowledge: knowledgeView, learning: learningView, security: securityView, authorization: authView, release: releaseView, buildgraph: buildGraphView, audit: auditView, autopilot: autopilotView };
   (views[id] || (() => notAvailable(id)))(main);
 }
 
@@ -70,17 +70,22 @@ function notAvailable(id) {
 }
 
 function home(main) {
+  const vm = STATE.viewModels;
   const g = STATE.buildGraph || { total: 0, byStatus: {} };
-  const av = STATE.activeSecurityValidation || {};
+  // Prefer the reviewed view-model; fall back to raw counts only if the bundle is absent.
+  const n = vm && vm.home ? vm.home.nodes : { done: g.byStatus.DONE || 0, total: g.total };
+  const tests = vm && vm.home ? vm.home.tests : null;
+  const sec = vm && vm.home ? vm.home.activeSecurityValidation : ((STATE.activeSecurityValidation || {}).state || "UNKNOWN");
+  const locked = vm && vm.home ? vm.home.securityLocked : true;
   main.appendChild(el(`<p class="title">${STATE.product || "UAAP"}</p>
     <p class="sub">Local-first AI software assurance — one product, one repository, one desktop.</p>
     <div class="grid">
-      <div class="card"><div class="k">Build graph</div><div class="v">${g.byStatus.DONE || 0}/${g.total} done</div></div>
-      <div class="card"><div class="k">Active security validation</div><div class="v" style="color:var(--block)">${(av.state || "UNKNOWN")}</div></div>
+      <div class="card"><div class="k">Build graph</div><div class="v">${n.done}/${n.total} done</div></div>
+      <div class="card"><div class="k">Tests</div><div class="v">${tests ? tests.passed + " / " + tests.total : "unknown"}</div></div>
+      <div class="card"><div class="k">Active security validation</div><div class="v" style="color:${locked ? "var(--block)" : "var(--ok)"}">${sec}</div></div>
       <div class="card"><div class="k">Authorizations on file</div><div class="v">${STATE.authorizationsCount ?? 0}</div></div>
-      <div class="card"><div class="k">GitHub</div><div class="v">${(STATE.github && STATE.github.created) ? "connected" : "pending"}</div></div>
     </div>
-    <p class="foot">State read at ${STATE.readAt || "?"} from .ai/. ${STATE.error ? "ERROR: " + STATE.error : ""}</p>`));
+    <p class="foot">Derived from the reviewed @uaap/desktop-viewmodels over real .ai/ state${vm ? "" : " (bundle not built — run npm run bundle)"}. Read at ${STATE.readAt || "?"}. ${STATE.error ? "ERROR: " + STATE.error : ""}</p>`));
 }
 
 function systemHealth(main) {
@@ -95,15 +100,60 @@ function systemHealth(main) {
 }
 
 function agentsView(main) {
+  const a = STATE.viewModels && STATE.viewModels.agents;
+  if (!a) { notAvailable("agents"); return; }
+  const guildRows = Object.entries(a.byGuild).sort().map(([g, n]) => `<tr><td>${g}</td><td>${n}</td></tr>`).join("");
   main.appendChild(el(`<p class="title">Agents</p>
-    <p class="sub">72 canonical role definitions (9 guilds × 8). Runtime/evaluation not yet implemented.</p>
+    <p class="sub">Canonical agent role registry — real counts from the reviewed view-model (agents/registry/agents.json).</p>
     <div class="grid">
-      <div class="card"><div class="k">Defined roles</div><div class="v">72 / 72</div></div>
-      <div class="card"><div class="k">Certified</div><div class="v">0</div></div>
-      <div class="card"><div class="k">Running</div><div class="v na" style="color:var(--na)">N/A</div></div>
+      <div class="card"><div class="k">Defined roles</div><div class="v">${a.total}</div></div>
+      <div class="card"><div class="k">Certified</div><div class="v">${a.certified}</div></div>
+      <div class="card"><div class="k">Guilds</div><div class="v">${Object.keys(a.byGuild).length}</div></div>
     </div>
-    <div class="na-note">Agent runtime, activation planner, and evaluation are NOT AVAILABLE yet.
-    Definitions live in <code>agents/registry/agents.json</code>.</div>`));
+    <table><thead><tr><th>guild</th><th>agents</th></tr></thead><tbody>${guildRows || '<tr><td colspan="2">none</td></tr>'}</tbody></table>
+    <p class="foot">Certified comes from the authoritative state (0 until the certification layer promotes) — never inferred. Agent runtime/activation is a separate node, still NOT AVAILABLE.</p>`));
+}
+
+function knowledgeView(main) {
+  const k = STATE.knowledge || { nodes: [], skillCount: 0 };
+  const rows = k.nodes.map((n) => `<tr><td>${n.id}</td><td>${n.name}</td><td><span class="pill s-${n.status}">${n.status}</span></td></tr>`).join("");
+  main.appendChild(el(`<p class="title">Knowledge</p>
+    <p class="sub">Knowledge-domain build-graph nodes and skill registry — real state, no fabrication.</p>
+    <div class="grid">
+      <div class="card"><div class="k">Knowledge nodes</div><div class="v">${k.nodes.length}</div></div>
+      <div class="card"><div class="k">Skills registered</div><div class="v">${k.skillCount}</div></div>
+    </div>
+    <table><thead><tr><th>id</th><th>name</th><th>status</th></tr></thead><tbody>${rows || '<tr><td colspan="3">none</td></tr>'}</tbody></table>`));
+}
+
+function learningView(main) {
+  const l = STATE.learning || { nodes: [], certified: 0, defined: 0, reviewUnresolved: null };
+  const u = l.reviewUnresolved || {};
+  const unresolved = ["P0", "P1", "P2", "P3"].reduce((acc, k) => acc + (Number(u[k]) || 0), 0);
+  const rows = l.nodes.map((n) => `<tr><td>${n.id}</td><td>${n.name}</td><td><span class="pill s-${n.status}">${n.status}</span></td></tr>`).join("");
+  main.appendChild(el(`<p class="title">Learning</p>
+    <p class="sub">Evaluation, certification and sandbox — real state from .ai/ and the registries.</p>
+    <div class="grid">
+      <div class="card"><div class="k">Agents certified</div><div class="v">${l.certified} / ${l.defined}</div></div>
+      <div class="card"><div class="k">Learning nodes</div><div class="v">${l.nodes.length}</div></div>
+      <div class="card"><div class="k">Unresolved review findings</div><div class="v" style="color:${unresolved ? "var(--warn)" : "var(--ok)"}">${unresolved}</div></div>
+    </div>
+    <table><thead><tr><th>id</th><th>name</th><th>status</th></tr></thead><tbody>${rows || '<tr><td colspan="3">none</td></tr>'}</tbody></table>
+    <p class="foot">Certified is read from the authoritative state (no self-certification). The sandbox runtime (@uaap/sandbox-learning) is DONE; agent activation/runtime remains a separate node.</p>`));
+}
+
+function securityView(main) {
+  const sp = STATE.viewModels && STATE.viewModels.securityPosture;
+  if (!sp) { notAvailable("security"); return; }
+  main.appendChild(el(`<p class="title">Security</p>
+    <p class="sub">Active-validation posture — FAIL-CLOSED (reviewed view-model).</p>
+    <div class="grid">
+      <div class="card"><div class="k">Active validation</div><div class="v" style="color:${sp.locked ? "var(--block)" : "var(--ok)"}">${sp.locked ? "LOCKED" : "ENABLED"}</div></div>
+      <div class="card"><div class="k">State</div><div class="v">${sp.activeValidation}</div></div>
+      <div class="card"><div class="k">Authorizations in force</div><div class="v">${sp.authorizationsPresent ? "yes" : "none"}</div></div>
+    </div>
+    ${sp.inconsistency ? `<div class="na-note"><b>INCONSISTENCY</b><br/>${sp.inconsistency}</div>` : ""}
+    <p class="foot">${sp.note}</p>`));
 }
 
 function authView(main) {
