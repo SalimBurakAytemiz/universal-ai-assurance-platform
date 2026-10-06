@@ -188,3 +188,36 @@ describe("QualityDatabaseEngine — re-review regressions (schema/migrations con
     expect(r.status).toBe(EngineStatus.PREREQ_FAILED);
   });
 });
+
+describe("QualityDatabaseEngine — final re-review regressions (column/constraint robustness)", () => {
+  it("a null column entry is surfaced (malformed-column) and real PK checks STILL run", async () => {
+    const input = { schema: { tables: [{ name: "users", columns: [{ name: "id", type: "integer" }, null], primaryKey: ["id"] }] }, dataset: { users: [{ id: 1 }, { id: 1 }] } };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    const k = kinds(r.findings);
+    expect(k).toContain("malformed-column");
+    expect(k).toContain("primary-key-duplicate"); // NOT masked behind engine-error
+    expect(k).not.toContain("engine-error");
+  });
+
+  it("a non-array primaryKey/unique/foreignKeys is surfaced (malformed-constraint), not a crash", async () => {
+    const input = {
+      schema: { tables: [{ name: "t", columns: [{ name: "id", type: "integer" }], primaryKey: "id", unique: "nope", foreignKeys: "bad" }] },
+      dataset: { t: [{ id: 1 }, { id: 2 }] },
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).toContain("malformed-constraint");
+    expect(kinds(r.findings)).not.toContain("engine-error");
+  });
+
+  it("a malformed foreign-key entry (missing arrays) is surfaced without crashing the FK pass", async () => {
+    const input = {
+      schema: { tables: [{ name: "t", columns: [{ name: "id", type: "integer" }], foreignKeys: [{ refTable: "u" }] }] },
+      dataset: { t: [{ id: 1 }], u: [{ id: 1 }] },
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).toContain("malformed-constraint");
+  });
+});

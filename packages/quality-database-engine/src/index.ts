@@ -194,15 +194,23 @@ export class QualityDatabaseEngine implements ExecutionEngine {
           continue;
         }
         inspectedTables++;
-        const colByName = new Map(table.columns.map((c) => [c.name, c]));
         let violations = 0;
         const add = (f: EngineFinding) => {
           violations++;
           collector.finding(f);
         };
 
-        // Isolate malformed rows up front: a null/non-object row becomes its own finding and does
-        // NOT abort the PK/UNIQUE/FK checks for the rest of the table.
+        // Isolate malformed COLUMN entries up front: a null/non-object column (or one without a
+        // string name) becomes its own finding and is excluded — it can never throw past the
+        // constraint checks and mask a real violation behind a generic engine-error.
+        const validColumns: ColumnSpec[] = [];
+        for (const c of table.columns as unknown[]) {
+          if (c && typeof c === "object" && typeof (c as ColumnSpec).name === "string") validColumns.push(c as ColumnSpec);
+          else add(finding({ severity: SEV.P2, kind: "malformed-column", title: "Malformed column in schema", detail: `A column of "${table.name}" is null or has no string name; skipped.`, locator: loc }));
+        }
+        const colByName = new Map(validColumns.map((c) => [c.name, c]));
+
+        // Isolate malformed rows up front (same reasoning as columns).
         const validRows: { row: Record<string, unknown>; i: number }[] = [];
         rawRows.forEach((row, i) => {
           if (isRowObject(row)) validRows.push({ row, i });
@@ -212,12 +220,19 @@ export class QualityDatabaseEngine implements ExecutionEngine {
         // Columns with an unrecognized declared type are surfaced (fail-closed) and excluded from the
         // per-value type check (so we never silently green-light nor flood with bogus type errors).
         const unknownTypeCols = new Set<string>();
-        for (const col of table.columns) {
+        for (const col of validColumns) {
           if (!KNOWN_TYPES.has(col.type)) {
             unknownTypeCols.add(col.name);
             add(finding({ severity: SEV.P2, kind: "unknown-column-type", title: "Unknown column type", detail: `Column "${col.name}" declares unsupported type "${col.type}"; its values cannot be type-checked.`, locator: loc }));
           }
         }
+
+        // A declared constraint column tuple must be a real array before it is passed to tuple().
+        const safeCols = (v: unknown, what: string): string[] | null => {
+          if (Array.isArray(v)) return v as string[];
+          add(finding({ severity: SEV.P2, kind: "malformed-constraint", title: "Malformed constraint", detail: `${what} on "${table.name}" is not an array; skipped.`, locator: loc }));
+          return null;
+        };
 
         // Row-level: column drift, NOT NULL, type.
         for (const { row, i } of validRows) {
@@ -225,7 +240,7 @@ export class QualityDatabaseEngine implements ExecutionEngine {
           for (const key of Object.keys(row)) {
             if (!colByName.has(key)) add(finding({ severity: SEV.P2, kind: "schema-drift", title: "Unknown column in row", detail: `Column "${key}" is not declared on table "${table.name}".`, locator: rloc }));
           }
-          for (const col of table.columns) {
+          for (const col of validColumns) {
             const present = Object.prototype.hasOwnProperty.call(row, col.name);
             const val = row[col.name];
             if (!present || isNullish(val)) {
@@ -237,21 +252,27 @@ export class QualityDatabaseEngine implements ExecutionEngine {
         }
 
         // Primary key: non-null + unique.
-        if (table.primaryKey && table.primaryKey.length > 0) {
+        const pk = table.primaryKey === undefined ? null : safeCols(table.primaryKey, "primaryKey");
+        if (pk && pk.length > 0) {
           const seen = new Set<string>();
           for (const { row, i } of validRows) {
-            const vals = tuple(row, table.primaryKey);
-            if (vals.some(isNullish)) add(finding({ severity: SEV.P1, kind: "primary-key-null", title: "Primary key contains NULL", detail: `PK (${table.primaryKey.join(", ")}) has a null component.`, locator: `${loc} row[${i}]` }));
+            const vals = tuple(row, pk);
+            if (vals.some(isNullish)) add(finding({ severity: SEV.P1, kind: "primary-key-null", title: "Primary key contains NULL", detail: `PK (${pk.join(", ")}) has a null component.`, locator: `${loc} row[${i}]` }));
             else {
               const k = JSON.stringify(vals);
-              if (seen.has(k)) add(finding({ severity: SEV.P1, kind: "primary-key-duplicate", title: "Duplicate primary key", detail: `PK (${table.primaryKey.join(", ")}) = ${k} appears more than once.`, locator: `${loc} row[${i}]` }));
+              if (seen.has(k)) add(finding({ severity: SEV.P1, kind: "primary-key-duplicate", title: "Duplicate primary key", detail: `PK (${pk.join(", ")}) = ${k} appears more than once.`, locator: `${loc} row[${i}]` }));
               seen.add(k);
             }
           }
         }
 
         // UNIQUE constraints (SQL semantics: rows with a NULL component are not compared).
-        for (const uniq of table.unique ?? []) {
+        let uniques: readonly unknown[] = [];
+        if (Array.isArray(table.unique)) uniques = table.unique;
+        else if (table.unique !== undefined) add(finding({ severity: SEV.P2, kind: "malformed-constraint", title: "Malformed constraint", detail: `unique on "${table.name}" is not an array; skipped.`, locator: loc }));
+        for (const uniqRaw of uniques) {
+          const uniq = safeCols(uniqRaw, "a unique constraint");
+          if (!uniq) continue;
           const seen = new Set<string>();
           for (const { row, i } of validRows) {
             const vals = tuple(row, uniq);
@@ -263,7 +284,13 @@ export class QualityDatabaseEngine implements ExecutionEngine {
         }
 
         // Foreign keys: referential integrity against the referenced table's rows.
-        for (const fk of table.foreignKeys ?? []) {
+        const fks = table.foreignKeys === undefined ? [] : Array.isArray(table.foreignKeys) ? table.foreignKeys : [];
+        if (table.foreignKeys !== undefined && !Array.isArray(table.foreignKeys)) add(finding({ severity: SEV.P2, kind: "malformed-constraint", title: "Malformed constraint", detail: `foreignKeys on "${table.name}" is not an array; skipped.`, locator: loc }));
+        for (const fk of fks) {
+          if (!fk || typeof fk !== "object" || !Array.isArray(fk.columns) || !Array.isArray(fk.refColumns) || typeof fk.refTable !== "string") {
+            add(finding({ severity: SEV.P2, kind: "malformed-constraint", title: "Malformed foreign key", detail: `A foreign key on "${table.name}" is missing columns/refColumns arrays or a refTable; skipped.`, locator: loc }));
+            continue;
+          }
           const refRows = dataset[fk.refTable];
           if (!Array.isArray(refRows)) {
             add(finding({ severity: SEV.P2, kind: "fk-unverifiable", title: "Foreign key cannot be verified", detail: `Referenced table "${fk.refTable}" has no rows in the dataset; referential integrity for (${fk.columns.join(", ")}) is unverifiable.`, locator: loc }));

@@ -24,7 +24,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
+    "count": 3,
     "max": 3
   },
   "reReview": {
@@ -309,17 +309,17 @@
     }
   },
   "finalReReview": {
-    "at": "2026-10-06T10:03:00.000Z",
+    "at": "2026-10-06T10:42:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #12 fix commit 25c571c",
-    "agents": 8,
-    "reported": 3,
-    "confirmed": 3,
+    "scope": "PR #13 fix commit c339cf4",
+    "agents": 6,
+    "reported": 2,
+    "confirmed": 2,
     "distinctDefectsFixed": [
-      "P2 (x2) emptyRequiredStrings skipped nested subschemas that omit an explicit `type` keyword and did not flatten allOf — untyped/composed nested empty required strings slipped through. Rewrote as schemaView() which infers object/array shape structurally (properties/items/required) and flattens allOf; recursion no longer depends on `type`."
+      "P1 a null/non-object column entry (and non-array primaryKey/unique/foreignKeys, or a malformed fk entry) crashed table.columns.map()/tuple() into a masked P2 engine-error, suppressing real P1 constraint checks under DONE. Columns are now isolated into validColumns (malformed-column + exclude), and every constraint array/entry is Array.isArray-guarded (malformed-constraint) so a bad structural input is surfaced and the remaining checks still run."
     ],
-    "documentedLimitation": "The empty-required-string heuristic does not resolve $ref or branch oneOf/anyOf; minLength:1 (enforced natively by Ajv everywhere) is the robust path and is documented in the function. This is a documented bounded heuristic, not a silent false green — Ajv structural validation remains authoritative.",
     "boundedLoopCapReached": true,
-    "allResolved": true
+    "allResolved": true,
+    "note": "Structural-robustness class now comprehensively hardened: columns, rows, migrations, migrations-container, primaryKey, unique, foreignKeys, and fk entries are all isolated into structured findings — no malformed input can crash the run or mask a real violation."
   }
 }
