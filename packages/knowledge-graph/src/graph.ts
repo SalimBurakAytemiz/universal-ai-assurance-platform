@@ -68,17 +68,24 @@ export interface ReleaseAssuranceReport {
   readonly reasons: readonly string[];
 }
 
-function isPassingEvidence(node: GraphNode): boolean {
-  const a = node.attrs ?? {};
-  const outcome = String((a as Record<string, unknown>).outcome ?? (a as Record<string, unknown>).verdict ?? "").toUpperCase();
-  return outcome === "PASS" || outcome === "PASSED" || (a as Record<string, unknown>).passed === true;
-}
+/** Only these outcome tokens (or passed===true) count as a PASS. Everything else is NOT a pass. */
+const PASS_OUTCOMES: ReadonlySet<string> = new Set(["PASS", "PASSED", "OK", "SUCCESS", "SUCCEEDED"]);
 
-/** Explicitly-failing evidence (a FAIL/ERROR verdict). Neutral evidence (e.g. a LOG) is neither. */
-function isFailingEvidence(node: GraphNode): boolean {
-  const a = node.attrs ?? {};
-  const outcome = String((a as Record<string, unknown>).outcome ?? (a as Record<string, unknown>).verdict ?? "").toUpperCase();
-  return outcome === "FAIL" || outcome === "FAILED" || outcome === "ERROR" || (a as Record<string, unknown>).passed === false;
+/**
+ * The verdict an evidence node carries, as one of PASS / FAIL / NONE. This is VOCABULARY-CLOSED
+ * and fail-closed, NOT a failure denylist: an evidence ASSURES only if it is a recognized PASS;
+ * an evidence with ANY explicit-but-unrecognized verdict (FAILURE, ERRORED, KO, REGRESSION,
+ * TIMEOUT, …) counts as FAIL, so an unknown token on the untrusted load path can never be
+ * mistaken for "neutral" and let a real failure slip past. A missing/blank verdict is NONE
+ * (e.g. a LOG/SCREENSHOT artifact), which neither assures nor fails.
+ */
+function evidenceVerdict(node: GraphNode): "PASS" | "FAIL" | "NONE" {
+  const a = (node.attrs ?? {}) as Record<string, unknown>;
+  if (a.passed === true) return "PASS";
+  if (a.passed === false) return "FAIL";
+  const raw = a.outcome ?? a.verdict;
+  if (raw === undefined || raw === null || String(raw).trim() === "") return "NONE";
+  return PASS_OUTCOMES.has(String(raw).trim().toUpperCase()) ? "PASS" : "FAIL";
 }
 
 export class KnowledgeGraph {
@@ -396,9 +403,9 @@ export class KnowledgeGraph {
         for (const testId of validatingTests) {
           for (const e of this.out.get(testId) ?? []) {
             if (e.type !== EdgeType.PRODUCES) continue;
-            const ev = this.nodes.get(e.to)!;
-            if (isPassingEvidence(ev)) passingEvidence = true;
-            if (isFailingEvidence(ev)) failingEvidence = true;
+            const v = evidenceVerdict(this.nodes.get(e.to)!);
+            if (v === "PASS") passingEvidence = true;
+            else if (v === "FAIL") failingEvidence = true; // any explicit non-pass verdict (vocabulary-closed)
           }
         }
         const status: "ASSURED" | "GAP" = validated && passingEvidence && !failingEvidence ? "ASSURED" : "GAP";

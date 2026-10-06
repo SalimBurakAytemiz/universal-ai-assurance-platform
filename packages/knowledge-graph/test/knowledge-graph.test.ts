@@ -448,3 +448,53 @@ describe("KnowledgeGraph — re-review regressions (PR #10 fix commit)", () => {
     expect(g.releaseAssurance(rel).verdict).toBe("ASSURED");
   });
 });
+
+describe("KnowledgeGraph — evidence verdict is vocabulary-closed (final re-review P2)", () => {
+  // rel -> feat <- code, feat -> req, test VALIDATES req, test PRODUCES each evidence in `evs`.
+  function verdictFor(evs: Array<Record<string, unknown>>) {
+    const g = new KnowledgeGraph();
+    const rel = g.addNode({ type: NodeType.RELEASE, key: "r" });
+    const feat = g.addNode({ type: NodeType.FEATURE, key: "f" });
+    const code = g.addNode({ type: NodeType.CODE, key: "c" });
+    const req = g.addNode({ type: NodeType.REQUIREMENT, key: "rq" });
+    const test = g.addNode({ type: NodeType.TEST, key: "t" });
+    g.addEdge(EdgeType.SHIPS, rel, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, code, feat);
+    g.addEdge(EdgeType.IMPLEMENTS, feat, req);
+    g.addEdge(EdgeType.VALIDATES, test, req);
+    evs.forEach((attrs, i) => {
+      const ev = g.addNode({ type: NodeType.EVIDENCE, key: `ev${i}`, attrs });
+      g.addEdge(EdgeType.PRODUCES, test, ev);
+    });
+    const r = g.releaseAssurance(rel);
+    return { verdict: r.verdict, req: r.requirements.find((x) => x.key === "rq")! };
+  }
+
+  it("a non-standard failure token (FAILURE/ERRORED/KO/REGRESSION/TIMEOUT) coexisting with PASS still forces GAP", () => {
+    for (const tok of ["FAILURE", "ERRORED", "KO", "REGRESSION", "TIMEOUT", "BROKEN", "failure"]) {
+      const { verdict, req } = verdictFor([{ outcome: "PASS" }, { outcome: tok }]);
+      expect(req.failingEvidence, tok).toBe(true);
+      expect(verdict, tok).toBe("NOT_ASSURED");
+    }
+  });
+
+  it("passed:false coexisting with a PASS still forces GAP", () => {
+    const { verdict, req } = verdictFor([{ outcome: "PASS" }, { passed: false }]);
+    expect(req.failingEvidence).toBe(true);
+    expect(verdict).toBe("NOT_ASSURED");
+  });
+
+  it("recognized pass synonyms (PASSED/OK/SUCCESS/SUCCEEDED) assure", () => {
+    for (const tok of ["PASSED", "OK", "SUCCESS", "SUCCEEDED", "pass"]) {
+      const { verdict } = verdictFor([{ outcome: tok }]);
+      expect(verdict, tok).toBe("ASSURED");
+    }
+  });
+
+  it("evidence with NO verdict (a LOG) is neutral — PASS + LOG assures; LOG alone is a GAP", () => {
+    expect(verdictFor([{ outcome: "PASS" }, { kind: "LOG" }]).verdict).toBe("ASSURED");
+    const only = verdictFor([{ kind: "LOG" }]); // no passing evidence at all
+    expect(only.req.passingEvidence).toBe(false);
+    expect(only.verdict).toBe("NOT_ASSURED");
+  });
+});
