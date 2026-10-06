@@ -76,9 +76,11 @@ const SECRET_RULES: readonly LineRule[] = [
   { kind: "hardcoded-secret", severity: SEV.P1, title: "Private key material", re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----/, redact: true },
   { kind: "hardcoded-secret", severity: SEV.P1, title: "Potential Slack token", re: /xox[baprs]-[0-9A-Za-z-]{10,}/, redact: true },
   { kind: "hardcoded-secret", severity: SEV.P2, title: "Potential JWT literal", re: /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{6,}/, redact: true },
-  // Assigned credential with a concrete (non env-reference) value. Tolerate a quoted key ("password":)
-  // so JSON config is covered, not just bare `password =`.
-  { kind: "hardcoded-secret", severity: SEV.P2, title: "Hardcoded credential assignment", re: /\b(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|client[_-]?secret)\b["']?\s*[:=]\s*["'][^"'$<{][^"']{4,}["']/i, redact: true },
+  // Assigned credential with a concrete (non env-reference) value. The key may be a COMPOUND /
+  // snake_case name that CONTAINS a credential word (db_password, aws_secret_access_key, app_secret,
+  // auth_token, private_key…) and may be quoted ("password":). Env references (${X}, <X>, {X}) are
+  // excluded via the value's first-char class. (Detection only; the value is never echoed anyway.)
+  { kind: "hardcoded-secret", severity: SEV.P2, title: "Hardcoded credential assignment", re: /["']?[A-Za-z0-9_]*(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|private[_-]?key|credential|token)[A-Za-z0-9_]*["']?\s*[:=]\s*["'][^"'$<{][^"']{3,}["']/i, redact: true },
 ];
 const INJECTION_RULES: readonly LineRule[] = [
   { kind: "sql-injection-pattern", severity: SEV.P2, title: "Potential SQL injection (string interpolation into SQL)", re: /["'`](?:select|insert|update|delete)\b[^"'`]*\$\{/i },
@@ -104,30 +106,27 @@ const WEAK_TLS_PROTOCOLS = new Set(["ssl", "sslv2", "sslv3", "tls1", "tls1.0", "
 const WEAK_CIPHER_RE = /\b(?:rc4|null|export|3?des|tripledes|triple|md5|anon)\b/i;
 
 /**
- * Mask every SECRET_RULE match in a line with [REDACTED]. Redaction is a property of the LINE, not of
- * the individual rule: a non-redacting rule (injection/config) that echoes a line must NEVER emit a
- * secret that happens to sit on that same line. Applied to every echoed snippet unconditionally.
+ * Scan a line against each rule. A finding reports only the rule TITLE and the LOCATION
+ * (path:line) — it NEVER echoes raw line content. This is an allowlist stance, not a denylist: by
+ * never reproducing any part of the inspected source, a secret of ANY shape (recognized or not —
+ * snake_case keys, embedded-quote values, unquoted/$-prefixed values, GitHub/Google tokens,
+ * high-entropy literals) can never leak into a finding or evidence, including via a non-secret rule
+ * that happens to match the same line. The reader looks at `path:line` in the source to see context.
  */
-function redactSecretsInLine(line: string): string {
-  let safe = line;
-  for (const r of SECRET_RULES) {
-    const g = r.re.flags.includes("g") ? r.re : new RegExp(r.re.source, r.re.flags + "g");
-    safe = safe.replace(g, "[REDACTED]");
-  }
-  return safe;
-}
-
 function scanLines(artifact: SourceArtifact, rules: readonly LineRule[], add: (f: EngineFinding) => void, catLoc: string): void {
   const lines = String(artifact.content ?? "").split(/\r?\n/);
   lines.forEach((line, i) => {
     for (const rule of rules) {
       if (rule.re.test(line)) {
-        const detail = rule.redact
-          ? `${rule.title} detected at ${artifact.path}:${i + 1} (value REDACTED). Detection signal — requires independent verification.`
-          : // Echo a snippet with ALL secret matches masked, so a secret co-located with an
-            // injection/config pattern never leaks through the non-redacting rule's echo.
-            `${rule.title} detected at ${artifact.path}:${i + 1}: ${redactSecretsInLine(line).trim().slice(0, 160)}. Detection signal — requires independent verification.`;
-        add(finding({ severity: rule.severity, kind: rule.kind, title: rule.title, detail, locator: `${catLoc} ${artifact.path}:${i + 1}` }));
+        add(
+          finding({
+            severity: rule.severity,
+            kind: rule.kind,
+            title: rule.title,
+            detail: `${rule.title} detected at ${artifact.path}:${i + 1}${rule.redact ? " (value REDACTED)" : ""}. Detection signal — requires independent verification. (Line content is not reproduced; inspect the source at the given location.)`,
+            locator: `${catLoc} ${artifact.path}:${i + 1}`,
+          }),
+        );
       }
     }
   });

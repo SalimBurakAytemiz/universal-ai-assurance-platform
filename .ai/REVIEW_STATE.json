@@ -24,12 +24,20 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the appsec fixes (esp. the P0 secret-leak) pending before merge"
+    "at": "2026-10-06T13:49:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #18 fix commit 0b427e6",
+    "agents": 8,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P0 (x3, same root): the per-line secret sanitizer was a DENYLIST — any secret shape the 5 rules did not cover (snake_case keys like aws_secret_access_key, embedded-quote values, unquoted/$-prefixed, ghp_/AIza tokens, high-entropy literals) still leaked via a co-located non-redact rule's echoed line. Fixed by an ALLOWLIST stance: findings NEVER echo raw line content (only rule title + path:line), so a secret of ANY shape can never leak by construction. Also generalized credential detection to compound/snake_case keys (db_password/aws_secret_access_key/auth_token/...)."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

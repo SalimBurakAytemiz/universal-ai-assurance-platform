@@ -148,3 +148,32 @@ describe("SecurityAppsecEngine — review-fix regressions (no secret leak, JSON 
     expect(kinds(r.findings)).toContain("weak-tls-cipher");
   });
 });
+
+describe("SecurityAppsecEngine — residual-leak closure (no raw line echo, by construction)", () => {
+  it("a snake_case credential co-located with a non-secret rule never leaks AND is now detected", async () => {
+    const VAL = "Sup3rS3cr3tValue1";
+    const r = await drive({ config: [{ path: "prod.json", content: `{ "debug": true, "db_password": "${VAL}" }` }] });
+    expect(JSON.stringify(r)).not.toContain(VAL);
+    expect(kinds(r.findings)).toContain("hardcoded-secret"); // generic compound-key rule catches db_password
+    expect(kinds(r.findings)).toContain("debug-enabled");
+  });
+
+  it("an aws_secret_access_key compound key is detected and its value never leaks", async () => {
+    const VAL = "wJalr0utnFEMIK7MDENGxyz123fakeSECRET99aa";
+    const r = await drive({ config: [{ path: "prod.json", content: `{ "ssl": false, "aws_secret_access_key": "${VAL}" }` }] });
+    expect(JSON.stringify(r)).not.toContain(VAL);
+    expect(kinds(r.findings)).toContain("hardcoded-secret");
+  });
+
+  it("an embedded-quote credential value does not leak its tail", async () => {
+    const r = await drive({ config: [{ path: "prod.json", content: `{ "ssl": false, "password": "abc'tail1234plus" }` }] });
+    expect(JSON.stringify(r)).not.toContain("tail1234plus");
+  });
+
+  it("a secret of an UNRECOGNIZED shape co-located with a non-secret rule still never leaks (no content echo)", async () => {
+    const VAL = "gAAAA-unmodeled-high-entropy-9f8e7d6c5b4a3210";
+    const r = await drive({ sources: [{ path: "a.ts", content: `eval(userCode); const t = "${VAL}";` }] });
+    expect(JSON.stringify(r)).not.toContain(VAL); // code-eval finding no longer echoes the line
+    expect(kinds(r.findings)).toContain("code-eval");
+  });
+});
