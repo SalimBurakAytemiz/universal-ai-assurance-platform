@@ -113,3 +113,21 @@ describe("QualityPerformanceEngine — review-fix regressions (threshold value, 
     expect(k).not.toContain("malformed-sample"); // {ok:false} with no latency is a valid failure record
   });
 });
+
+describe("QualityPerformanceEngine — threshold RANGE validation (re-review fix)", () => {
+  it("errorRate outside [0,1] is malformed-threshold, not an un-fireable silent pass", async () => {
+    const input = { budgets: { endpoints: [{ id: "a", thresholds: { errorRate: 5 } }] }, samples: { a: [{ ok: false }, { ok: false }, { ok: false }, { ok: false }] } };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).toContain("malformed-threshold");
+    expect(kinds(r.findings)).not.toContain("error-rate-exceeded"); // not enforced (surfaced instead)
+  });
+
+  it("a negative latency threshold is malformed-threshold, not a spurious breach (no cry-wolf)", async () => {
+    const input = { budgets: { endpoints: [{ id: "a", thresholds: { p95: -5 } }] }, samples: { a: [{ latencyMs: 10, ok: true }, { latencyMs: 20, ok: true }] } };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    expect(kinds(r.findings)).toContain("malformed-threshold");
+    expect(kinds(r.findings)).not.toContain("latency-budget-exceeded");
+  });
+});

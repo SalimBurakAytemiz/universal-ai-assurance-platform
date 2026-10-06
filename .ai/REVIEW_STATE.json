@@ -22,12 +22,20 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the perf-engine fixes pending before merge (usage limit reached)"
+    "at": "2026-10-06T12:44:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #15 fix commit 47428e9",
+    "agents": 3,
+    "reported": 1,
+    "confirmed": 1,
+    "distinctDefectsFixed": [
+      "P2 threshold RANGE not validated: errorRate>=1 was an un-fireable check (false green) and a negative latency budget cried wolf. Now a known threshold outside its valid range (errorRate in [0,1]; latency >= 0) is malformed-threshold (fail-closed) and not enforced."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

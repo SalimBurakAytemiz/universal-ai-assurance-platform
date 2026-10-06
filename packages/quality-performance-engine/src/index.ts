@@ -148,13 +148,18 @@ export class QualityPerformanceEngine implements ExecutionEngine {
           collector.finding(f);
         };
 
-        // Fail-closed vocabulary + VALUE validation: an unknown threshold KEY, or a known key whose
-        // VALUE is not a finite number (e.g. "100", null, NaN), is surfaced — never silently skipped.
+        // A threshold value is usable only if finite AND in its valid RANGE: latency budgets must be
+        // >= 0 (a negative latency budget would cry wolf on healthy samples); errorRate must be in
+        // [0,1] (an errorRate >= 1 can never fire — a silent false green; < 0 is nonsense).
+        const inRange = (key: string, v: number): boolean => (key === "errorRate" ? v >= 0 && v <= 1 : v >= 0);
+        const usable = (key: string, v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && inRange(key, v);
+        // Fail-closed vocabulary + VALUE + RANGE validation: an unknown key, or a known key whose value
+        // is non-finite or out of its valid range (e.g. "100", NaN, errorRate:5, p95:-5), is surfaced.
         for (const [key, val] of Object.entries(th)) {
           if (!KNOWN_THRESHOLDS.has(key)) add(finding({ severity: SEV.P2, kind: "unknown-threshold", title: "Unknown performance threshold", detail: `Endpoint "${budget.id}" declares threshold "${key}" which is not one of ${[...KNOWN_THRESHOLDS].join("/")}.`, locator: loc }));
-          else if (typeof val !== "number" || !Number.isFinite(val)) add(finding({ severity: SEV.P2, kind: "malformed-threshold", title: "Malformed performance threshold", detail: `Endpoint "${budget.id}" threshold "${key}" is not a finite number (${JSON.stringify(val)}); it cannot be enforced (fail-closed).`, locator: loc }));
+          else if (!usable(key, val)) add(finding({ severity: SEV.P2, kind: "malformed-threshold", title: "Malformed performance threshold", detail: `Endpoint "${budget.id}" threshold "${key}" = ${JSON.stringify(val)} is not a finite number in its valid range (${key === "errorRate" ? "[0,1]" : ">= 0"}); it cannot be enforced (fail-closed).`, locator: loc }));
         }
-        const limitOf = (k: "p50" | "p95" | "p99" | "max"): number | undefined => (typeof th[k] === "number" && Number.isFinite(th[k]) ? (th[k] as number) : undefined);
+        const limitOf = (k: "p50" | "p95" | "p99" | "max"): number | undefined => (usable(k, th[k]) ? (th[k] as number) : undefined);
 
         // Classify samples. A latency is usable only if it is a finite, NON-NEGATIVE number (a
         // negative latency is impossible and would deflate percentiles -> flagged malformed). The
@@ -205,7 +210,7 @@ export class QualityPerformanceEngine implements ExecutionEngine {
             add(finding({ severity: SEV.P1, kind: "latency-budget-exceeded", title: `Latency budget exceeded (${metric})`, detail: `${metric} = ${computed[metric].toFixed(2)}ms exceeds budget ${limit}ms.`, locator: loc }));
           }
         }
-        if (typeof th.errorRate === "number" && Number.isFinite(th.errorRate)) {
+        if (usable("errorRate", th.errorRate)) {
           if (errorTotal === 0) add(finding({ severity: SEV.P2, kind: "budget-unverifiable", title: "Error-rate budget unverifiable", detail: `Endpoint "${budget.id}" declares an errorRate budget but has no samples with a delivery outcome.`, locator: loc }));
           else if (computed.errorRate > th.errorRate) add(finding({ severity: SEV.P1, kind: "error-rate-exceeded", title: "Error rate budget exceeded", detail: `error rate = ${(computed.errorRate * 100).toFixed(2)}% exceeds budget ${(th.errorRate * 100).toFixed(2)}% (${errors}/${errorTotal}).`, locator: loc }));
         }
