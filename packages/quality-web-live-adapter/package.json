@@ -1,0 +1,16 @@
+{
+  "name": "@uaap/quality-web-live-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "bundle": "esbuild src/index.ts --bundle --format=esm --platform=node --external:playwright-core --outfile=smoke/_adapter.mjs",
+    "prelive": "npm run bundle",
+    "live": "node smoke/live-capture.mjs"
+  },
+  "dependencies": { "@uaap/core": "*", "@uaap/engine-core": "*", "@uaap/quality-web-engine": "*" },
+  "devDependencies": { "playwright-core": "^1.47.0" }
+}

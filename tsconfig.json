@@ -35,7 +35,8 @@
       "@uaap/security-appsec-engine": ["packages/security-appsec-engine/src/index.ts"],
       "@uaap/research-intelligence": ["packages/research-intelligence/src/index.ts"],
       "@uaap/desktop-viewmodels": ["packages/desktop-viewmodels/src/index.ts"],
-      "@uaap/sandbox-learning": ["packages/sandbox-learning/src/index.ts"]
+      "@uaap/sandbox-learning": ["packages/sandbox-learning/src/index.ts"],
+      "@uaap/quality-web-live-adapter": ["packages/quality-web-live-adapter/src/index.ts"]
     }
   },
   "include": [
