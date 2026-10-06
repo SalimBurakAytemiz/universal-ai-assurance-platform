@@ -47,3 +47,9 @@
 - **2026-10-06** `@uaap/quality-database-engine` is READ-ONLY by construction: it inspects a provided
   dataset snapshot (never connects to a DB, never mutates). Destructive migrations are flagged and
   require explicit approval (`allowDestructiveMigrations`), honoring "read-only by default".
+- **2026-10-06** `@uaap/quality-realtime-engine` (engine D, realtime/event/queue) built with ALL
+  robustness lessons from the API + DB engines baked in from the start: Array.isArray guards in
+  discover/plan/execute, per-message/per-channel/per-event-spec isolation, safe Ajv compile,
+  fail-closed ordering-mode vocabulary. Validates recorded message streams against channel contracts
+  (event coverage, payload schema, headers, total/per-key sequence ordering + duplicates, delivery
+  ack). Offline-only (captured streams; broker-backed subscriber later).

@@ -1472,6 +1472,27 @@
         },
         "mergedPR": 13
       }
+    },
+    {
+      "id": "quality-realtime-engine",
+      "name": "Quality: realtime/event/queue validation engine",
+      "family": "quality",
+      "dependencies": [
+        "engine-core"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-QA-RT-001"
+      ],
+      "files": [
+        "packages/quality-realtime-engine/src/index.ts",
+        "packages/quality-realtime-engine/fixtures/orders-stream.json"
+      ],
+      "tests": [
+        "packages/quality-realtime-engine/test/quality-realtime-engine.test.ts"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }
