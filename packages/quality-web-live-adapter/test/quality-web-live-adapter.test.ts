@@ -33,6 +33,25 @@ describe("@uaap/quality-web-live-adapter — local-target allow-list (fail-close
     }
   });
 
+  it("REGRESSION (SSRF): refuses remote-authority forms that masquerade as local", () => {
+    for (const bad of [
+      "file://evil.com/share/x", // file: with a REMOTE host -> Windows UNC/SMB (NTLM leak)
+      "file://169.254.169.254/x",
+      "//evil.com/x", // protocol-relative authority
+      "\\\\evil.com\\x", // UNC path
+      "http://localhost@evil.com/x", // userinfo trick -> host is evil.com
+      "http://localhost.evil.com/x", // suffix trick
+      "http://127.0.0.1.evil.com/x",
+    ]) {
+      expect(isLocalTarget(bad), bad).toBe(false);
+    }
+    // ...while genuinely-local file forms remain allowed:
+    for (const ok of ["file:///C:/tmp/a.html", "file://localhost/C:/tmp/a.html", "/abs/path.html"]) {
+      expect(isLocalTarget(ok), ok).toBe(true);
+    }
+    expect(() => toLocalUrl("//evil.com/x")).toThrow(/non-local/);
+  });
+
   it("toLocalUrl converts a bare path to file:// and throws on a non-local target", () => {
     expect(toLocalUrl("data:text/html,x")).toBe("data:text/html,x");
     expect(toLocalUrl("a/b.html")).toMatch(/^file:\/\/\/.*a\/b\.html$/);

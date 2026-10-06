@@ -21,25 +21,36 @@ import {
   type WebStep,
 } from "@uaap/quality-web-engine";
 
-/** FAIL-CLOSED allow-list: only genuinely LOCAL targets may be driven. Everything else is refused. */
+/** Loopback / local hostnames permitted for http(s) and resolved file: hosts. */
+function isLocalHost(hostname: string): boolean {
+  const h = (hostname || "").toLowerCase();
+  return h === "" || h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]" || h.endsWith(".localhost") || h.endsWith(".test");
+}
+
+/** FAIL-CLOSED allow-list: only genuinely LOCAL targets may be driven. Everything else is refused —
+ * crucially including anything that resolves to a REMOTE authority (UNC \\host, protocol-relative
+ * //host, file://host, or an http(s) non-loopback host) which could become an SSRF / SMB credential
+ * leak. */
 export function isLocalTarget(target: string): boolean {
   if (typeof target !== "string") return false;
   const t = target.trim();
   if (t === "") return false;
   if (t.startsWith("data:")) return true;
-  // Local filesystem paths: Windows drive (C:\ or C:/), UNC (\\), POSIX absolute (/), or relative.
-  if (/^[a-zA-Z]:[\\/]/.test(t) || t.startsWith("\\\\") || t.startsWith("/") || t.startsWith("./") || t.startsWith("../")) return true;
+  // REFUSE UNC / protocol-relative authority paths outright: \\host\.. and //host/.. point at a
+  // REMOTE host (on Windows, Chrome loads them as SMB — SSRF + NTLM leak).
+  if (t.startsWith("\\\\") || t.startsWith("//")) return false;
+  // Local filesystem paths: Windows drive (C:\ or C:/), POSIX absolute (single /), or relative.
+  if (/^[a-zA-Z]:[\\/]/.test(t)) return true;
+  if (t.startsWith("/") || t.startsWith("./") || t.startsWith("../")) return true;
   try {
     const u = new URL(t);
-    if (u.protocol === "file:") return true;
-    if (u.protocol === "http:" || u.protocol === "https:") {
-      const h = u.hostname.toLowerCase();
-      return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]" || h.endsWith(".localhost") || h.endsWith(".test");
-    }
+    // file: is local ONLY when it carries no remote authority (host empty / loopback).
+    if (u.protocol === "file:") return isLocalHost(u.hostname);
+    if (u.protocol === "http:" || u.protocol === "https:") return isLocalHost(u.hostname);
     return false;
   } catch {
-    // Not an absolute URL and not a recognized path form — treat as a bare relative path ONLY if it
-    // carries no URL scheme (fail-closed: anything scheme-like is refused).
+    // Not an absolute URL and not a recognized path form — a bare relative path ONLY if it carries no
+    // URL scheme (fail-closed: anything scheme-like is refused).
     return !/^[a-z][a-z0-9+.-]*:/i.test(t);
   }
 }
@@ -49,7 +60,14 @@ export function toLocalUrl(target: string): string {
   if (!isLocalTarget(target)) throw new Error(`live adapter refuses a non-local target: ${String(target)}`);
   const t = target.trim();
   if (t.startsWith("data:") || /^[a-z][a-z0-9+.-]*:\/\//i.test(t) || t.startsWith("file:")) return t;
-  return pathToFileURL(t).href; // a bare path -> file:// URL
+  const url = pathToFileURL(t).href; // a bare path -> file:// URL
+  // Defense-in-depth: a path must never resolve to a file URL with a remote authority.
+  try {
+    if (!isLocalHost(new URL(url).hostname)) throw new Error(`live adapter refuses a path that resolves to a remote host: ${String(target)}`);
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("live adapter")) throw e;
+  }
+  return url;
 }
 
 export interface CaptureElementSpec {
@@ -102,6 +120,24 @@ export async function driveAndCaptureFlow(spec: CaptureSpec): Promise<WebFlow> {
   const steps: WebStep[] = [];
   try {
     const page: any = await browser.newPage();
+    // NETWORK GUARD (fail-closed): abort ANY request — initial navigation, redirect target, click
+    // navigation, or subresource — whose URL is not local. This enforces "local only" for EVERY
+    // navigation, not just the initial goto, so a 3xx/meta/JS redirect or a link to a remote host
+    // cannot cause an external fetch.
+    await page.route("**/*", (route: any) => {
+      let reqUrl = "";
+      try { reqUrl = route.request().url(); } catch { reqUrl = ""; }
+      if (isLocalTarget(reqUrl)) route.continue();
+      else route.abort();
+    });
+    // Presence helpers: on a thrown/failed check return undefined (UNVERIFIABLE) — never coerce an
+    // error to a definite boolean (that would let the engine silently pass/mislabel it).
+    const presenceOf = async (sel: string): Promise<boolean | undefined> => {
+      try { return !!(await page.$(sel)); } catch { return undefined; }
+    };
+    const visibleOf = async (sel: string): Promise<boolean | undefined> => {
+      try { return await page.isVisible(sel); } catch { return undefined; }
+    };
     for (const s of spec.steps) {
       const consoleEntries: WebConsoleEntry[] = [];
       const network: WebNetworkEntry[] = [];
@@ -122,19 +158,23 @@ export async function driveAndCaptureFlow(spec: CaptureSpec): Promise<WebFlow> {
           status = resp ? resp.status() : undefined;
         }
         if (s.click) await page.click(s.click, { timeout });
+        // Post-navigation locality check (belt-and-suspenders beyond the route guard): if the page
+        // somehow ended up on a non-local URL, treat the step as failed rather than capturing remote state.
+        const landed = page.url();
+        if (typeof landed === "string" && landed !== "about:blank" && !isLocalTarget(landed)) ok = false;
       } catch {
         ok = false;
       }
 
       const requires: WebElementRef[] = [];
       for (const r of s.requires || []) {
-        const present = await page.$(r.selector).then((h: unknown) => !!h).catch(() => false);
-        const visible = present ? await page.isVisible(r.selector).catch(() => false) : false;
+        const present = await presenceOf(r.selector);
+        const visible = present === true ? await visibleOf(r.selector) : undefined;
         requires.push({ selector: r.selector, present, visible });
       }
       const forbids: WebElementRef[] = [];
       for (const sel of s.forbids || []) {
-        const present = await page.$(sel).then((h: unknown) => !!h).catch(() => false);
+        const present = await presenceOf(sel); // undefined on error => engine surfaces forbidden-unverifiable (not a silent pass)
         forbids.push({ selector: sel, present });
       }
 
