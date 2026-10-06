@@ -209,6 +209,25 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
     }
   });
 
+  it("REGRESSION (round 5): a protocol-relative URL with a malformed authority is redacted, not echoed with userinfo", async () => {
+    for (const url of [
+      "//user:SECRET@host:999999/path", // port out of range -> new URL throws
+      "//alice:SUPERSECRET@xn--a/p", // invalid punycode label -> throws
+      "//user:SECRET@192.168.0.300/p", // invalid IPv4 octet -> throws
+    ]) {
+      const r = await drive({ flows: [{ id: "f", steps: [{ network: [{ url, failed: true }] }] }] });
+      const blob = JSON.stringify(r.findings);
+      expect(blob, url).not.toContain("SECRET");
+      expect(blob, url).not.toContain("SUPERSECRET");
+      expect(blob, url).not.toContain("user:");
+    }
+    // a well-formed protocol-relative URL still shows host+path (userinfo stripped by the parser)
+    const ok = await drive({ flows: [{ id: "f", steps: [{ network: [{ url: "//user:pw@cdn.example.com/app.js", failed: true }] }] }] });
+    const okblob = JSON.stringify(ok.findings);
+    expect(okblob).not.toContain("user:pw");
+    expect(okblob).toContain("cdn.example.com/app.js");
+  });
+
   it("REGRESSION: a cancellation yields CANCELLED, never a swallowed engine-error finding", async () => {
     const tok = new CancellationToken();
     tok.cancel("test-cancel");

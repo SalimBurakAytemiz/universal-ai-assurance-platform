@@ -126,7 +126,10 @@ function safeUrl(u: unknown): string {
     if (raw.startsWith("//") && rel.host && rel.host !== "host.invalid") return `${rel.protocol}//${rel.host}${rel.pathname || ""}`;
     return rel.pathname || "/"; // bare relative path: no userinfo; query/fragment dropped
   } catch {
-    if (hasScheme) return redactScheme(); // malformed authority where a credential could hide
+    // Unparseable but bearing an AUTHORITY (a scheme, or protocol-relative "//…") where a credential
+    // could hide: redact, never echo. Only a bare relative path (no authority => no userinfo) is
+    // safe to echo with its query/fragment stripped.
+    if (hasScheme || raw.startsWith("//")) return redactScheme();
     const s = raw.split("#")[0]!.split("?")[0]!;
     return s.length > 0 ? s : "(empty url)";
   }

@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **450 passed / 450** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-4 fixes)
+- vitest: **451 passed / 451** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-5 fixes)
 
 New this change — `@uaap/quality-web-engine` (`packages/quality-web-engine/test/`): **9 tests**
 - Functional web/UI assurance on the @uaap/engine-core lifecycle over RECORDED web-interaction
@@ -46,4 +46,7 @@ eliminating the hand-rolled-parser class by construction. Round 4 (focused verif
 `origin+pathname` still leaked userinfo for OPAQUE-path schemes (foo:user:pass@…, blob:…@…), where
 the parser leaves userinfo inside pathname. Final invariant: render `protocol//host/path` ONLY when
 host is non-empty (true authority — parser isolates userinfo); REDACT every opaque/rejected scheme
-to its scheme. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. A final round-5 verification runs on the fix commit.
+to its scheme. Round 5 found the catch-branch redaction was gated on `hasScheme`, so a malformed
+protocol-relative `//user:SECRET@…` still echoed userinfo; the catch now redacts any authority-bearing
+input (`hasScheme || starts with //`). safeUrl leak-vector count across rounds: 1→2→3→1→0. P0/P1/P2/P3
+open: 0 / 0 / 0 / 0. A final round-6 confirmation runs on the fix commit.
