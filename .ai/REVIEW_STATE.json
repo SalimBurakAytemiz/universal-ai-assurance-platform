@@ -29,8 +29,9 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 5,
-    "max": 3
+    "count": 6,
+    "max": 3,
+    "outcome": "CLOSED"
   },
   "pr20": {
     "round1": {
@@ -562,5 +563,24 @@
       "max": 3
     },
     "allResolved": true
+  },
+  "reReview5": {
+    "at": "2026-10-06T19:36:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #22 fix commit 90977eb (round 6 — loop closed)",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
+    "verified": "runSandboxed CONFIRMED genuinely total a 2nd independent round.",
+    "distinctDefectsFixed": [
+      "P2 evaluateCase(null/undefined spec) threw on spec.request (unguarded). spec is now normalized the same defensive way runSandboxed guards its params, so a malformed spec yields a structured DENIED CaseOutcome. Both public functions are now total by construction."
+    ],
+    "regressionTests": "1 new (null/undefined spec => structured outcome, no throw). 19 in-package, 471/471 repo-wide.",
+    "boundedLoop": {
+      "count": 6,
+      "max": 3,
+      "outcome": "CLOSED"
+    },
+    "loopClosureRationale": "6 rounds (cap 3) — each exceeded-cap round fixed a REAL throw in the TOTAL contract. runSandboxed confirmed total across rounds 5 and 6; round 6 closed the last symmetric gap (evaluateCase spec guard). The malformed-input throw class is now fully guarded on both public functions; further rounds would only probe ever-more-contrived typed-API misuse (disproportionate). Loop closed; ready to merge."
   }
 }

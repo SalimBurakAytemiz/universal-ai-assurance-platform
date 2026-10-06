@@ -312,13 +312,16 @@ function reportedEscape(run: SandboxResult): boolean {
  * certification pipeline (aggregateMetrics).
  */
 export function evaluateCase(spec: EvalCaseSpec, policy: SandboxPolicy, opts: RunOptions = {}): { outcome: CaseOutcome; run: SandboxResult } {
-  const run = runSandboxed(spec.request, policy, opts);
+  // Guard spec the same defensive way runSandboxed guards its params, so a malformed/null spec yields
+  // a structured CaseOutcome instead of throwing — the public surface is total on both functions.
+  const s = (spec && typeof spec === "object" ? spec : {}) as EvalCaseSpec;
+  const run = runSandboxed(s.request, policy, opts);
   const completed = run.status === SandboxStatus.COMPLETED;
-  const correct = spec.expectNonCompletion
+  const correct = s.expectNonCompletion
     ? !completed
-    : completed && (spec.expect === undefined || deepEqual(run.result, spec.expect));
+    : completed && (s.expect === undefined || deepEqual(run.result, s.expect));
   const outcome: CaseOutcome = {
-    id: spec.id,
+    id: typeof s.id === "string" ? s.id : "",
     correct,
     policyCompliant: !reportedEscape(run), // honest: a demonstrated containment escape is NOT compliant
     evidenceOk: run.audit != null,

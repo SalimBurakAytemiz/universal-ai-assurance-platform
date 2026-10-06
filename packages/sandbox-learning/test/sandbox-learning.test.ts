@@ -156,6 +156,15 @@ describe("@uaap/sandbox-learning — real bounded child-process execution", () =
     expect(nullPolicy.status).toBe(SandboxStatus.DENIED);
   }, 15000);
 
+  it("REGRESSION (round 6): evaluateCase is total — a null/undefined spec yields a structured outcome, no throw", () => {
+    for (const bad of [null, undefined]) {
+      const { outcome, run } = evaluateCase(bad as unknown as Parameters<typeof evaluateCase>[0], policy());
+      expect(outcome.id).toBe("");
+      expect(typeof outcome.correct).toBe("boolean");
+      expect(run.status).toBe(SandboxStatus.DENIED); // undefined request => missing taskId => DENIED
+    }
+  });
+
   it("REGRESSION (round 5): evaluateCase never throws on a non-serializable spec.expect", () => {
     const circular: Record<string, unknown> = {}; circular.self = circular;
     for (const expect_ of [circular, { n: 10n } as unknown]) {
