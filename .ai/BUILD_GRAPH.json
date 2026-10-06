@@ -282,7 +282,7 @@
         "validation-scripts",
         "agent-registry-schema"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-CI-001"
       ],
@@ -290,8 +290,18 @@
         ".github/workflows/ci.yml"
       ],
       "tests": [],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "acf6d0b"
+      ],
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     },
     {
       "id": "desktop-shell",
@@ -321,14 +331,22 @@
       "dependencies": [
         "ci-workflow"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-GITHUB-001"
       ],
       "files": [],
       "tests": [],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": 11
+      }
     },
     {
       "id": "agent-permission-graph",
