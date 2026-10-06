@@ -2,17 +2,23 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T14:12:00.000Z",
+    "at": "2026-10-06T14:40:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #19 research-intelligence",
-    "agents": 10,
-    "reported": 4,
-    "confirmed": 4,
+    "scope": "PR #20 desktop-viewmodels",
+    "agents": 27,
+    "reported": 8,
+    "confirmed": 8,
     "distinctDefectsFixed": [
-      "P1 same-source supersede collided ids (id excluded retrievedAt), so a newer finding clobbered the SUPERSEDED record (history lost) and `superseded` self-referenced. Id now includes retrievedAt -> distinct per version; the supersede chain is retrievable.",
-      "P2 stored record aliased caller-owned provenance/data (shallow spread); a later caller mutation corrupted dedup and desynced the contentHash. Now provenance is rebuilt from fields and data is structuredClone'd.",
-      "P3 scheduler failed OPEN: an invalid/empty lastRun defaulted to epoch 0 -> perpetually due. nextRunAt now throws on invalid input and due() returns false on invalid timestamps (fail-closed)."
+      "P1 FAIL-OPEN: securityPostureViewModel.locked used a DENY-LIST (=== LOCKED_BY_DESIGN); any non-sentinel/unknown/typo state + any auth array read as UNLOCKED. Now an ALLOW-LIST: locked unless state is explicitly ENABLED AND a genuine scoped authorization exists; unknown states surface an inconsistency.",
+      "P1 FAIL-OPEN: authorizationsPresent was `Array.isArray && length>0`, so [{}]/[null]/[0]/[\"\"]/id-only stubs masqueraded as a real authorization. Now each entry is structurally validated against @uaap/core AuthorizationRecord (non-empty id + targetId + >=1 allowedIdentifiers).",
+      "P2 FAKE-GREEN: homeViewModel.activeSecurityValidation passed the raw master state string through (home badge showed ENABLED with no auth while securityPosture correctly said locked). Now auth-gated: LOCKED_BY_DESIGN unless the posture is genuinely unlocked; exposes securityLocked + securityInconsistency.",
+      "P2 CRASH-NOT-DEGRADE: loadRepoState's findRepoRoot() was outside try/catch -> a packaged/relocated build (no marker) threw and crashed the data layer. Now returns all-defaults honest state on an unlocatable root.",
+      "P2 CRASH-NOT-DEGRADE: readFileSync(TEST_STATUS.md) was unguarded (EISDIR/EACCES/TOCTOU) -> crash. Now wrapped -> testStatus=null (unknown).",
+      "P3 STALE-COUNT: parseTestStatus returned the FIRST doc match (non-global exec); an earlier aspirational/stale line could be shown. Now anchored to the authoritative '## Last local run' section (last match within scope).",
+      "Hardening: buildGraph.nodes / agents.agents coerced to arrays + per-node/per-agent status/guild guards in loadRepoState & the grouping fns (malformed state degrades to honest zero, never a crash)."
     ],
+    "boundedLoop": { "count": 1, "max": 3, "outcome": "CONVERGED" },
+    "regressionTests": "5 new (allow-list unknown-state; placeholder-auth rejection incl. id-only; home auth-gated no-fake-green; parseTestStatus section-anchoring; loadRepoState honest-defaults on unlocatable root). 13 total in-package, 429/429 repo-wide.",
     "allResolved": true
   },
   "unresolved": {
@@ -22,20 +28,36 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
+    "count": 1,
     "max": 3
   },
-  "reReview": {
-    "at": "2026-10-06T14:14:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #19 fix commit d19478f",
-    "agents": 3,
-    "reported": 1,
-    "confirmed": 1,
-    "distinctDefectsFixed": [
-      "P2 (regression from the defensive-copy fix): structuredClone threw an uncaught DataCloneError on non-cloneable data (function/Symbol/Promise) instead of failing closed, which would abort a batch-ingest loop. Now wrapped in try/catch -> {ok:false, reason:'data is not serializable/cloneable'}, preserving the IngestResult contract."
-    ],
-    "allResolved": true
+  "pr19": {
+    "lastReview": {
+      "at": "2026-10-06T14:12:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #19 research-intelligence",
+      "agents": 10,
+      "reported": 4,
+      "confirmed": 4,
+      "distinctDefectsFixed": [
+        "P1 same-source supersede collided ids (id excluded retrievedAt), so a newer finding clobbered the SUPERSEDED record (history lost) and `superseded` self-referenced. Id now includes retrievedAt -> distinct per version; the supersede chain is retrievable.",
+        "P2 stored record aliased caller-owned provenance/data (shallow spread); a later caller mutation corrupted dedup and desynced the contentHash. Now provenance is rebuilt from fields and data is structuredClone'd.",
+        "P3 scheduler failed OPEN: an invalid/empty lastRun defaulted to epoch 0 -> perpetually due. nextRunAt now throws on invalid input and due() returns false on invalid timestamps (fail-closed)."
+      ],
+      "allResolved": true
+    },
+    "reReview": {
+      "at": "2026-10-06T14:14:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #19 fix commit d19478f",
+      "agents": 3,
+      "reported": 1,
+      "confirmed": 1,
+      "distinctDefectsFixed": [
+        "P2 (regression from the defensive-copy fix): structuredClone threw an uncaught DataCloneError on non-cloneable data (function/Symbol/Promise) instead of failing closed, which would abort a batch-ingest loop. Now wrapped in try/catch -> {ok:false, reason:'data is not serializable/cloneable'}, preserving the IngestResult contract."
+      ],
+      "allResolved": true
+    }
   },
   "pr2": {
     "loop1": {
