@@ -1,0 +1,247 @@
+// @uaap/sandbox-learning — a SAFE, LOCAL, bounded execution sandbox for the platform's own synthetic
+// learning / evaluation tasks. It is the local alternative to a container runtime (Docker is not
+// available on this host): it runs a FIXED project runner script in an isolated Node child process
+// with real resource + workspace + environment bounds, captures artifacts, produces an
+// evaluation-shaped outcome, writes an audit trail, and cleans up deterministically.
+//
+// FAIL-CLOSED by construction:
+//   * Only task ids explicitly listed in the policy's `allowedTasks` run; everything else => DENIED
+//     (an empty allow-list denies everything).
+//   * A controlled environment is built from an allow-list — the child never inherits the parent's
+//     secrets. No production/provider target access is granted.
+//   * A dedicated per-run temp workspace is the child's cwd; it is removed after the run.
+//   * A wall-clock timeout SIGKILLs a runaway task (it can never hang the caller).
+//   * stdout/stderr are size-capped.
+//
+// HONEST LIMITATION (recorded, not hidden): a Node child process bounds time/output/env/cwd and gives
+// an audit trail, but it is NOT an OS-level jail — it cannot by itself stop a task from touching the
+// wider filesystem (the built-in "write-outside" probe task measures and reports this). That is why
+// ONLY trusted, allow-listed synthetic tasks run here; true adversarial-code isolation needs a
+// container/VM runtime. `audit.osLevelIsolation` is always false to make this explicit.
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { hashObject, newId } from "@uaap/core";
+import type { CaseOutcome } from "@uaap/agent-evaluation";
+
+const RUNNER = join(dirname(fileURLToPath(import.meta.url)), "runner.mjs");
+
+/** The built-in, trusted, deterministic synthetic tasks the runner can execute. */
+export const BUILTIN_TASKS = ["noop", "echo", "sum", "slow", "busy-timeout", "throw", "leak-env", "write-outside"] as const;
+export type BuiltinTask = (typeof BUILTIN_TASKS)[number];
+
+export const SandboxStatus = {
+  COMPLETED: "COMPLETED",
+  TIMED_OUT: "TIMED_OUT",
+  FAILED: "FAILED",
+  DENIED: "DENIED",
+} as const;
+export type SandboxStatus = (typeof SandboxStatus)[keyof typeof SandboxStatus];
+
+export interface SandboxLimits {
+  /** Wall-clock budget; past it the child is SIGKILLed. */
+  readonly timeoutMs: number;
+  /** Max bytes captured from stdout+stderr combined (spawn maxBuffer). */
+  readonly maxOutputBytes: number;
+}
+
+export interface SandboxPolicy {
+  readonly limits: SandboxLimits;
+  /** Base directory for per-run workspaces. Defaults to the OS temp dir. */
+  readonly workspaceRoot?: string;
+  /** Parent env var names the child MAY see (besides the OS-essential minimum). Default: none. */
+  readonly envAllowlist?: readonly string[];
+  /** Task ids permitted to run. Empty/absent => everything is DENIED (fail-closed). */
+  readonly allowedTasks: readonly string[];
+  /** Keep the workspace after the run (debugging). Default false (deterministic cleanup). */
+  readonly keepWorkspace?: boolean;
+}
+
+export interface SandboxRequest {
+  readonly taskId: string;
+  readonly input?: unknown;
+}
+
+export interface SandboxAudit {
+  readonly id: string;
+  readonly taskId: string;
+  readonly inputHash: string;
+  readonly limits: SandboxLimits;
+  readonly envKeys: readonly string[];
+  readonly startedAt: string;
+  readonly finishedAt: string;
+  readonly status: SandboxStatus;
+  readonly exitCode: number | null;
+  readonly signal: string | null;
+  readonly durationMs: number;
+  readonly stdoutBytes: number;
+  readonly stderrBytes: number;
+  /** ALWAYS false: a Node-child sandbox is not an OS jail (documented limitation). */
+  readonly osLevelIsolation: false;
+}
+
+export interface SandboxResult {
+  readonly status: SandboxStatus;
+  readonly result: unknown;
+  readonly stdout: string;
+  readonly stderr: string;
+  readonly reason?: string;
+  readonly audit: SandboxAudit;
+}
+
+/** OS env vars the child genuinely needs to start (platform-aware); never includes app secrets. */
+function osEssentialEnv(): Record<string, string> {
+  const keys = process.platform === "win32"
+    ? ["SystemRoot", "windir", "TEMP", "TMP", "PATHEXT", "NUMBER_OF_PROCESSORS", "COMSPEC"]
+    : ["PATH", "LANG", "LC_ALL", "TMPDIR"];
+  const out: Record<string, string> = {};
+  for (const k of keys) {
+    const v = process.env[k];
+    if (typeof v === "string") out[k] = v;
+  }
+  return out;
+}
+
+export interface RunOptions {
+  /** Injected clock for deterministic audit timestamps (defaults to Date.now via new Date()). */
+  now?: () => Date;
+}
+
+/**
+ * Run one request in the sandbox. TOTAL: never throws to the caller — a denied task, a timeout, a
+ * crash, a bad workspace or a spawn error all map to a structured SandboxResult. Partial output is
+ * preserved. The workspace is always cleaned up (unless policy.keepWorkspace) even on failure.
+ */
+export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opts: RunOptions = {}): SandboxResult {
+  const now = opts.now ?? (() => new Date());
+  const startedAt = now().toISOString();
+  const t0 = Date.now();
+  const taskId = request && typeof request.taskId === "string" ? request.taskId : "";
+  const inputHash = hashObject(request ? request.input ?? null : null);
+  const envEssential = osEssentialEnv();
+  const allow = Array.isArray(policy.envAllowlist) ? policy.envAllowlist : [];
+  for (const k of allow) {
+    const v = process.env[k];
+    if (typeof v === "string") envEssential[k] = v;
+  }
+  const envKeys = Object.keys(envEssential).sort();
+
+  const mkAudit = (status: SandboxStatus, exitCode: number | null, signal: string | null, outB: number, errB: number): SandboxAudit => ({
+    id: newId("SBX"),
+    taskId,
+    inputHash,
+    limits: policy.limits,
+    envKeys,
+    startedAt,
+    finishedAt: now().toISOString(),
+    status,
+    exitCode,
+    signal,
+    durationMs: Date.now() - t0,
+    stdoutBytes: outB,
+    stderrBytes: errB,
+    osLevelIsolation: false,
+  });
+
+  // Gate 1: allow-list (fail-closed).
+  const allowed = Array.isArray(policy.allowedTasks) ? policy.allowedTasks : [];
+  if (!taskId || !allowed.includes(taskId)) {
+    return { status: SandboxStatus.DENIED, result: null, stdout: "", stderr: "", reason: taskId ? `task "${taskId}" is not in the policy allow-list` : "missing taskId", audit: mkAudit(SandboxStatus.DENIED, null, null, 0, 0) };
+  }
+
+  // Gate 2: dedicated workspace.
+  let workspace: string;
+  try {
+    const root = policy.workspaceRoot ?? tmpdir();
+    if (!existsSync(root)) mkdirSync(root, { recursive: true });
+    workspace = mkdtempSync(join(root, "uaap-sbx-"));
+  } catch (e) {
+    return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `workspace creation failed: ${e instanceof Error ? e.message : String(e)}`, audit: mkAudit(SandboxStatus.FAILED, null, null, 0, 0) };
+  }
+
+  try {
+    writeFileSync(join(workspace, "request.json"), JSON.stringify({ taskId, input: request.input ?? {} }));
+    const run = spawnSync(process.execPath, [RUNNER, "request.json"], {
+      cwd: workspace,
+      env: envEssential, // CONTROLLED: only OS-essential + allow-listed keys; no inherited secrets
+      timeout: Math.max(1, policy.limits.timeoutMs),
+      killSignal: "SIGKILL",
+      maxBuffer: Math.max(1024, policy.limits.maxOutputBytes),
+      windowsHide: true,
+      encoding: "utf8",
+    });
+
+    const stdout = typeof run.stdout === "string" ? run.stdout : "";
+    const stderr = typeof run.stderr === "string" ? run.stderr : "";
+    const outB = Buffer.byteLength(stdout);
+    const errB = Buffer.byteLength(stderr);
+
+    // Timeout: spawnSync sets error.code ETIMEDOUT and signal to the killSignal.
+    const timedOut = (run.error && (run.error as NodeJS.ErrnoException).code === "ETIMEDOUT") || run.signal === "SIGKILL" || run.signal === "SIGTERM";
+    if (timedOut) {
+      return { status: SandboxStatus.TIMED_OUT, result: null, stdout, stderr, reason: `exceeded ${policy.limits.timeoutMs}ms budget`, audit: mkAudit(SandboxStatus.TIMED_OUT, run.status, run.signal ?? "SIGKILL", outB, errB) };
+    }
+    if (run.error) {
+      return { status: SandboxStatus.FAILED, result: null, stdout, stderr, reason: `spawn error: ${run.error.message}`, audit: mkAudit(SandboxStatus.FAILED, run.status, run.signal, outB, errB) };
+    }
+
+    // Read the result artifact the runner wrote.
+    let result: unknown = null;
+    let haveResult = false;
+    try {
+      const rp = join(workspace, "result.json");
+      if (existsSync(rp)) { result = JSON.parse(readFileSync(rp, "utf8")); haveResult = true; }
+    } catch { haveResult = false; }
+
+    if (run.status !== 0 || !haveResult) {
+      return { status: SandboxStatus.FAILED, result: haveResult ? result : null, stdout, stderr, reason: run.status !== 0 ? `non-zero exit ${run.status}` : "no result artifact produced", audit: mkAudit(SandboxStatus.FAILED, run.status, run.signal, outB, errB) };
+    }
+    // The runner reports an application error inside result.json (e.g. unknown-task) — treat as FAILED.
+    if (result && typeof result === "object" && "error" in (result as Record<string, unknown>)) {
+      return { status: SandboxStatus.FAILED, result, stdout, stderr, reason: `runner error: ${String((result as Record<string, unknown>).error)}`, audit: mkAudit(SandboxStatus.FAILED, run.status, run.signal, outB, errB) };
+    }
+    return { status: SandboxStatus.COMPLETED, result, stdout, stderr, audit: mkAudit(SandboxStatus.COMPLETED, run.status, run.signal, outB, errB) };
+  } finally {
+    if (!policy.keepWorkspace) {
+      try { rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort cleanup */ }
+    }
+  }
+}
+
+export interface EvalCaseSpec {
+  readonly id: string;
+  readonly request: SandboxRequest;
+  /** Deep-equality expectation for `result` when the run COMPLETES. */
+  readonly expect?: unknown;
+  /** True if this case is EXPECTED to end in a non-COMPLETED status (timeout/crash/denied). */
+  readonly expectNonCompletion?: boolean;
+}
+
+function deepEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Run an evaluation case in the sandbox and map it to an agent-evaluation CaseOutcome. `correct` is
+ * true when the observed status + result match the spec's expectation. Policy compliance is true iff
+ * the run stayed within bounds (DENIED or a produced result — never a hang). latencyMs is the real
+ * measured duration. This wires the sandbox into the certification pipeline (aggregateMetrics).
+ */
+export function evaluateCase(spec: EvalCaseSpec, policy: SandboxPolicy, opts: RunOptions = {}): { outcome: CaseOutcome; run: SandboxResult } {
+  const run = runSandboxed(spec.request, policy, opts);
+  const completed = run.status === SandboxStatus.COMPLETED;
+  const correct = spec.expectNonCompletion
+    ? !completed
+    : completed && (spec.expect === undefined || deepEqual(run.result, spec.expect));
+  const outcome: CaseOutcome = {
+    id: spec.id,
+    correct,
+    policyCompliant: true, // the sandbox always resolves to a bounded, audited terminal state
+    evidenceOk: run.audit != null,
+    latencyMs: run.audit.durationMs,
+    tokenCost: 0,
+  };
+  return { outcome, run };
+}
