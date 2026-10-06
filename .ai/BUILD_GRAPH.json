@@ -765,8 +765,21 @@
       "tests": [
         "packages/sandbox-learning/test/sandbox-learning.test.ts"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "59f2c2cabe4d7a2d4ab3470b12bf3061458c8fae"
+      ],
+      "review": {
+        "loops": 6,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 16,
+        "mergedPR": 22,
+        "outcome": "public surface total by construction"
+      }
     },
     {
       "id": "project-model",
