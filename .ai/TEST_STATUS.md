@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **446 passed / 446** across 36 files (+ quality-web-engine functional web-flow engine, review round 1 fixes)
+- vitest: **448 passed / 448** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-2 fixes)
 
 New this change — `@uaap/quality-web-engine` (`packages/quality-web-engine/test/`): **9 tests**
 - Functional web/UI assurance on the @uaap/engine-core lifecycle over RECORDED web-interaction
@@ -35,4 +35,7 @@ tests: 2×P1 (network ok:false with a non-5xx status silently passed; safeUrl le
 userinfo credentials), 4×P2/P3 false-negatives + fail-closed gaps (required/forbidden element with
 null/non-boolean/unrecorded `present` silently passed; throwing flow-identity getter aborted the
 whole run; benign console allowlist flagged standard console.table/dir/group types; step-level
-cancellation checkpoint). P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Re-review runs on the fix commit.
+cancellation checkpoint). Round 2 (11 agents) confirmed 3 fix-introduced issues — ALL fixed:
+`console.assert` is a FAILED-assertion signal so it is now error-class (not benign); safeUrl now
+strips userinfo FIRST and to the LAST `@` before the path, so a credential containing `@`/`?`/`#` is
+fully removed. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Round 3 (cap) runs on the fix commit.

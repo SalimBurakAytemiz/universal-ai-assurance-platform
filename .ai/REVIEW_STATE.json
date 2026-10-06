@@ -21,6 +21,22 @@
     "regressionTests": "6 new (ok:false-with-success-status; null/non-boolean/unrecorded required+forbidden present; userinfo-stripped; throwing-id-getter isolation; standard-console-types benign; cancellation yields CANCELLED not engine-error). 15 in-package, 446/446 repo-wide.",
     "allResolved": true
   },
+  "reReview": {
+    "at": "2026-10-06T16:08:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #21 fix commit 18f6346 (round 2)",
+    "agents": 11,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P2 (fix-introduced): round 1 added `console.assert` to the benign allowlist, but console.assert() emits ONLY on a FAILED assertion — so a recorded `assert` is error-class, and marking it benign turned a surfaced finding into a silent pass. Moved `assert` into CONSOLE_ERROR_LEVELS (now => console-error); the round-1 test that enshrined it as benign was corrected.",
+      "P2 (fix-introduced, incomplete): safeUrl's userinfo strip used `[^/@]*@` which stops at the FIRST `@`, so a password containing `@` (e.g. alice:p@ss@host) partially survived. Now scans the authority to the LAST `@` before the first `/`.",
+      "P3 (fix-introduced, incomplete): safeUrl stripped query/fragment BEFORE userinfo, so a credential containing a raw `?`/`#` partially survived. Now userinfo is stripped FIRST (authority up to the first `/`, to the last `@`), biased toward over-stripping — a credential with `@`/`?`/`#` is fully removed; a path `@` (after the authority) is kept."
+    ],
+    "regressionTests": "2 new (console.assert => console-error; safeUrl strips userinfo containing @/?/# and keeps a path @). 17 in-package, 448/448 repo-wide.",
+    "boundedLoop": { "count": 2, "max": 3, "outcome": "CONVERGED" },
+    "allResolved": true
+  },
   "unresolved": {
     "P0": 0,
     "P1": 0,
@@ -28,7 +44,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "pr20": {

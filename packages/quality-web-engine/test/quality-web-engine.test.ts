@@ -141,7 +141,7 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
   });
 
   it("REGRESSION: standard console types are benign; only a truly-unknown level is surfaced", async () => {
-    for (const level of ["table", "dir", "group", "groupEnd", "count", "timeEnd", "assert", "debug"]) {
+    for (const level of ["table", "dir", "group", "groupEnd", "count", "timeEnd", "debug"]) {
       const r = await drive({ flows: [{ id: "f", steps: [{ console: [{ level }] }] }] });
       expect(forFlow(r, "f"), level).toHaveLength(0);
     }
@@ -149,6 +149,32 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
     expect(kinds(weird.findings)).toContain("unknown-console-level");
     const errs = await drive({ flows: [{ id: "f", steps: [{ console: [{ level: "error" }] }] }] });
     expect(kinds(errs.findings)).toContain("console-error");
+  });
+
+  it("REGRESSION (round 2): a recorded console.assert is a FAILED assertion => console-error, never benign", async () => {
+    const r = await drive({ flows: [{ id: "f", steps: [{ console: [{ level: "assert" }] }] }] });
+    expect(kinds(r.findings)).toContain("console-error");
+  });
+
+  it("REGRESSION (round 2): safeUrl strips userinfo even when the credential contains '@', '?' or '#'", async () => {
+    for (const url of [
+      "https://alice:p@ss@api.host/login", // '@' in password -> must strip to the LAST '@'
+      "https://user:pa?ss@host/login", // '?' in credential, stripped before query-split
+      "https://user:pw#x@host/login", // '#' in credential
+      "https://u:SUPERSECRET@host/a", // plain
+    ]) {
+      const r = await drive({ flows: [{ id: "f", steps: [{ network: [{ url, status: 500 }] }] }] });
+      const blob = JSON.stringify(r.findings);
+      expect(kinds(r.findings), url).toContain("network-request-failed");
+      expect(blob, url).not.toContain("SECRET");
+      expect(blob, url).not.toContain("SUPERSECRET");
+      expect(blob, url).not.toContain("ss@");
+      expect(blob, url).not.toContain("pa?ss");
+      expect(blob, url).not.toContain("pw#x");
+    }
+    // a path that merely contains '@' (after the authority) is NOT stripped
+    const keep = await drive({ flows: [{ id: "f", steps: [{ network: [{ url: "https://api.host/users/@handle", status: 500 }] }] }] });
+    expect(JSON.stringify(keep.findings)).toContain("/users/@handle");
   });
 
   it("REGRESSION: a cancellation yields CANCELLED, never a swallowed engine-error finding", async () => {

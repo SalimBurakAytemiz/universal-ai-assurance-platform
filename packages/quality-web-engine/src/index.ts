@@ -84,26 +84,40 @@ export interface WebEngineInput {
 }
 
 const SEV = { P0: "P0", P1: "P1", P2: "P2", P3: "P3" } as const;
-/** Console levels that count as an error. A truly unrecognized level is surfaced (fail-closed). */
-const CONSOLE_ERROR_LEVELS = new Set(["error", "severe", "fatal", "critical"]);
-/** Non-error console levels — includes every standard console API / Playwright ConsoleMessage.type()
- * value so a clean flow that merely uses console.table/dir/group/etc. yields ZERO findings. */
+/** Console levels that count as an error. `assert` is here because console.assert() emits a message
+ * ONLY when its assertion FAILS (a passing assert emits nothing), so a recorded `assert` is an error
+ * signal — never benign. A truly unrecognized level is surfaced separately (fail-closed). */
+const CONSOLE_ERROR_LEVELS = new Set(["error", "severe", "fatal", "critical", "assert"]);
+/** Non-error console levels — every standard console API / Playwright ConsoleMessage.type() value
+ * that is informational, so a clean flow that merely uses console.table/dir/group/etc. yields ZERO
+ * findings. (`assert` is deliberately NOT here — see CONSOLE_ERROR_LEVELS.) */
 const CONSOLE_BENIGN_LEVELS = new Set([
   "log", "info", "debug", "trace", "warn", "warning", "verbose", "notice",
-  "dir", "dirxml", "table", "clear", "count", "countreset", "assert",
+  "dir", "dirxml", "table", "clear", "count", "countreset",
   "group", "groupcollapsed", "groupend", "startgroup", "startgroupcollapsed", "endgroup",
   "profile", "profileend", "time", "timelog", "timeend", "timestamp",
 ]);
 
-/** The query string, fragment AND userinfo (basic-auth `user:pass@`) of a URL may carry tokens/PII —
- * strip ALL of them before echoing. Secret-safe by construction: a password embedded in a recorded
- * URL can never reach a finding. */
+/** Echo a URL with its query, fragment AND userinfo (basic-auth `user:pass@`) removed — all three
+ * can carry tokens/PII. SECRET-SAFE BY CONSTRUCTION and biased toward over-stripping: the userinfo
+ * is removed FIRST (before query/fragment) by scanning the authority (from after `[scheme:]//` up to
+ * the first `/`) to the LAST `@`, so a credential containing a raw `@`, `?` or `#` is fully dropped —
+ * a password embedded in a recorded URL can never reach a finding. A relative URL (no `//`) and a
+ * path that merely contains `@` (after the first `/`) are left intact. */
 function safeUrl(u: unknown): string {
   if (typeof u !== "string" || u.trim() === "") return "(no url)";
-  let path = u.split("#")[0]!.split("?")[0]!;
-  // Drop a leading authority userinfo segment: [scheme:]//user:pass@host -> [scheme:]//host.
-  path = path.replace(/^(([a-z][a-z0-9+.-]*:)?\/\/)[^/@]*@/i, "$1");
-  return path.length > 0 ? path : "(empty url)";
+  let s = u;
+  const scheme = /^([a-z][a-z0-9+.-]*:)?\/\//i.exec(s);
+  if (scheme) {
+    const start = scheme[0].length;
+    const slash = s.indexOf("/", start);
+    const authEnd = slash === -1 ? s.length : slash; // authority ends at the first '/' (NOT '?'/'#', so a credential with those is still inside it)
+    const authority = s.slice(start, authEnd);
+    const at = authority.lastIndexOf("@");
+    if (at !== -1) s = s.slice(0, start) + authority.slice(at + 1) + s.slice(authEnd);
+  }
+  s = s.split("#")[0]!.split("?")[0]!;
+  return s.length > 0 ? s : "(empty url)";
 }
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim() !== "";
