@@ -86,7 +86,8 @@ All runtime states are durable (persisted in `jobs.json`): `READY`, `RUNNING`, `
 
 Proven by `services/autopilot/test/autopilot.test.mjs` and `ci-monitor.test.mjs` (runtime tests, not
 claims): provider-unavailable → `WAITING_PROVIDER` persisted; restart → preserved on disk; provider
-available → auto-runs on the next tick, exactly once, from its checkpoint; repeated ticks never
-re-run a `DONE` job (no duplicate execution/commit/PR/merge); `WAITING_CI` survives restart; a
+available → auto-runs on the next tick, exactly once, from its persisted queued state (a job parked
+before execution has no partial-progress checkpoint — it simply becomes eligible again); repeated
+ticks never re-run a `DONE` job (no duplicate execution/commit/PR/merge); `WAITING_CI` survives restart; a
 RUNNING-crash job reconciles without a duplicate side effect. The consolidated end-to-end chain is
 the "provider-resume end-to-end durability proof" test.
