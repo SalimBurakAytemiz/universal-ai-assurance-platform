@@ -325,8 +325,21 @@
       "tests": [
         "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "5923fa6ea1ec712a4fa83af1b6ceb652e53490b3"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 5,
+        "mergedPR": 23,
+        "runtimeValidated": "apps/desktop/smoke/views-smoke.cjs exit 0"
+      }
     },
     {
       "id": "github-automation",
@@ -1172,8 +1185,21 @@
       "tests": [
         "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "5923fa6ea1ec712a4fa83af1b6ceb652e53490b3"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 5,
+        "mergedPR": 23,
+        "runtimeValidated": "apps/desktop/smoke/views-smoke.cjs exit 0"
+      }
     },
     {
       "id": "desktop-knowledge-view",
@@ -1198,8 +1224,21 @@
       "tests": [
         "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "5923fa6ea1ec712a4fa83af1b6ceb652e53490b3"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 5,
+        "mergedPR": 23,
+        "runtimeValidated": "apps/desktop/smoke/views-smoke.cjs exit 0"
+      }
     },
     {
       "id": "desktop-learning-view",
@@ -1224,8 +1263,21 @@
       "tests": [
         "apps/desktop/smoke/views-smoke.cjs (Electron runtime smoke, exit 0)"
       ],
-      "commits": [],
-      "review": {}
+      "commits": [
+        "5923fa6ea1ec712a4fa83af1b6ceb652e53490b3"
+      ],
+      "review": {
+        "loops": 2,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0,
+          "P3": 0
+        },
+        "confirmedDefectsFixed": 5,
+        "mergedPR": 23,
+        "runtimeValidated": "apps/desktop/smoke/views-smoke.cjs exit 0"
+      }
     },
     {
       "id": "desktop-packaging",
