@@ -75,3 +75,11 @@
   Active validation against a real target remains a SEPARATE capability, security-active-validation-
   gate, LOCKED_BY_DESIGN. Test secret-like strings are assembled from fragments so no verbatim
   secret is committed (keeps the repo's own secret scanner green).
+- **2026-10-06** `@uaap/research-intelligence` implements the SHARED local research pipeline for the
+  technology-scout / standards-intelligence / advisory-intelligence nodes: ingestion, mandatory
+  provenance (fail-closed), a certify-before-active lifecycle (findings admitted only as
+  DISCOVERED/CANDIDATE — never self-certified/activated here; that is the knowledge/evaluation
+  layer's authority), (kind,topic) supersede-by-recency, and a deterministic scheduler. LiveFetchGate
+  ALWAYS returns BLOCKED_EXTERNAL_RESEARCH — no finding is ever fabricated; only PROVIDED local
+  findings are ingested. Live external fetch stays BLOCKED_EXTERNAL_RESEARCH until a real fetcher is
+  authorized/available.

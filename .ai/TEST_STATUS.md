@@ -2,13 +2,13 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-06 (branch auto/security-appsec-engine)
+## Last local run — 2026-10-06 (branch auto/research-intelligence)
 
 Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **405 passed / 405** across 33 files (security-appsec-engine; 3 review rounds, leak closed by construction)
+- vitest: **412 passed / 412** across 34 files (+ research-intelligence)
 
 New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **36 tests**
 - content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.

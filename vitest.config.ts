@@ -33,6 +33,7 @@ export default defineConfig({
       "@uaap/quality-performance-engine": r("./packages/quality-performance-engine/src/index.ts"),
       "@uaap/quality-accessibility-engine": r("./packages/quality-accessibility-engine/src/index.ts"),
       "@uaap/security-appsec-engine": r("./packages/security-appsec-engine/src/index.ts"),
+      "@uaap/research-intelligence": r("./packages/research-intelligence/src/index.ts"),
     },
   },
   test: {
