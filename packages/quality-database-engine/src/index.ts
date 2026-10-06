@@ -123,19 +123,32 @@ export class QualityDatabaseEngine implements ExecutionEngine {
     return ctx.input as DbEngineInput;
   }
 
+  // discover()/plan() run BEFORE validatePrereqs, so they must tolerate a non-array tables/migrations
+  // field (e.g. {} or a string) without throwing — Array.isArray, never just `?? []`.
+  private tablesOf(ctx: EngineContext): readonly TableSpec[] {
+    const t = (this.input(ctx)?.schema as { tables?: unknown })?.tables;
+    return Array.isArray(t) ? (t as TableSpec[]) : [];
+  }
+  private migrationsOf(ctx: EngineContext): readonly Migration[] {
+    const m = (this.input(ctx) as { migrations?: unknown })?.migrations;
+    return Array.isArray(m) ? (m as Migration[]) : [];
+  }
+
   discover(ctx: EngineContext): Discovery {
-    const { schema, dataset } = this.input(ctx);
+    const dataset = this.input(ctx)?.dataset;
+    const tables = this.tablesOf(ctx);
     return {
-      items: schema?.tables?.map((t) => t.name) ?? [],
-      summary: `${schema?.tables?.length ?? 0} table(s); dataset has ${Object.keys(dataset ?? {}).length} table(s) of rows`,
+      items: tables.map((t) => t?.name),
+      summary: `${tables.length} table(s); dataset has ${dataset && typeof dataset === "object" ? Object.keys(dataset).length : 0} table(s) of rows`,
     };
   }
 
   plan(ctx: EngineContext, _discovery: Discovery): EnginePlan {
-    const { schema, migrations } = this.input(ctx);
+    const tables = this.tablesOf(ctx);
+    const migrations = this.migrationsOf(ctx);
     return {
-      steps: [...(schema?.tables ?? []).map((t) => ({ table: t?.name })), ...(migrations ?? []).map((m) => ({ migration: m?.id }))],
-      summary: `validate ${schema?.tables?.length ?? 0} table(s) and ${migrations?.length ?? 0} migration(s)`,
+      steps: [...tables.map((t) => ({ table: t?.name })), ...migrations.map((m) => ({ migration: m?.id }))],
+      summary: `validate ${tables.length} table(s) and ${migrations.length} migration(s)`,
     };
   }
 
@@ -153,9 +166,11 @@ export class QualityDatabaseEngine implements ExecutionEngine {
   execute(ctx: EngineContext, _plan: EnginePlan, token: CancellationToken, collector: EngineCollector): void {
     const { schema, dataset, migrations, allowDestructiveMigrations } = this.input(ctx);
     const tableByName = new Map<string, TableSpec>();
-    for (const t of schema.tables) {
-      if (t && typeof t === "object" && typeof t.name === "string") tableByName.set(t.name, t);
-      else collector.finding(finding({ severity: SEV.P2, kind: "malformed-table", title: "Malformed table in schema", detail: "Schema table is null or has no string name; skipped.", locator: "schema.tables" }));
+    for (const t of Array.isArray(schema?.tables) ? schema.tables : []) {
+      // A table must have a string name AND a columns array — otherwise table.columns.map() would
+      // throw and mask every constraint check behind a generic engine-error (a false negative).
+      if (t && typeof t === "object" && typeof t.name === "string" && Array.isArray(t.columns)) tableByName.set(t.name, t);
+      else collector.finding(finding({ severity: SEV.P2, kind: "malformed-table", title: "Malformed table in schema", detail: "Schema table is null, has no string name, or has no columns array; skipped.", locator: "schema.tables" }));
     }
 
     // Flag dataset tables not present in the schema (coverage gap, not silent).
@@ -282,7 +297,14 @@ export class QualityDatabaseEngine implements ExecutionEngine {
 
     // Migration safety (read-only default). FAIL-CLOSED on vocabulary: a kind that is neither a
     // known-safe op nor a recognized destructive/lossy one is surfaced as unknown, never assumed safe.
-    (migrations ?? []).forEach((m, mi) => {
+    // Normalize the container itself: a present-but-non-array `migrations` is a structured finding,
+    // not a crash that would void the whole run.
+    let migs: readonly Migration[] = [];
+    if (Array.isArray(migrations)) migs = migrations;
+    else if (migrations !== undefined && migrations !== null) {
+      collector.finding(finding({ severity: SEV.P2, kind: "malformed-migrations-input", title: "Malformed migrations field", detail: "`migrations` is present but not an array; it was not reviewed.", locator: "migrations" }));
+    }
+    migs.forEach((m, mi) => {
       token.throwIfCancelled();
       const mloc = `migration ${m && typeof m === "object" && m.id ? m.id : `#${mi}`}`;
       try {
@@ -307,8 +329,8 @@ export class QualityDatabaseEngine implements ExecutionEngine {
 
     collector.artifact({
       kind: "db-validation-summary",
-      summary: `${inspectedTables}/${tableByName.size} declared table(s) inspected; ${migrations?.length ?? 0} migration(s) reviewed`,
-      data: { declaredTables: tableByName.size, inspectedTables, migrations: migrations?.length ?? 0 },
+      summary: `${inspectedTables}/${tableByName.size} declared table(s) inspected; ${migs.length} migration(s) reviewed`,
+      data: { declaredTables: tableByName.size, inspectedTables, migrations: migs.length },
     });
   }
 }

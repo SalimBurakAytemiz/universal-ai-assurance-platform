@@ -24,12 +24,21 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": null,
-    "note": "re-review of the DB-engine fixes pending before merge"
+    "at": "2026-10-06T10:36:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #13 fix commit 06f90b0",
+    "agents": 6,
+    "reported": 2,
+    "confirmed": 2,
+    "distinctDefectsFixed": [
+      "P1 a table admitted on name alone but with no columns array crashed table.columns.map() into a masked P2 engine-error (false negative under DONE). Admission now requires Array.isArray(columns); such a table is surfaced as malformed-table and skipped.",
+      "P2 a non-array top-level `migrations` (or non-array schema.tables) crashed discover()/plan() (run before prereqs) -> FAILED, zero findings. discover/plan now Array.isArray-guard both; a present-but-non-array migrations is a malformed-migrations-input finding and table validation still runs."
+    ],
+    "allResolved": true
   },
   "pr2": {
     "loop1": {

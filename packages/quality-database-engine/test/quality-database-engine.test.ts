@@ -159,3 +159,32 @@ describe("QualityDatabaseEngine — review-fix regressions (fail-closed, isolati
     expect(k).toContain("destructive-migration"); // the valid migration still checked
   });
 });
+
+describe("QualityDatabaseEngine — re-review regressions (schema/migrations container robustness)", () => {
+  it("a table with no columns array is surfaced as malformed (not masked by a generic engine-error)", async () => {
+    const input = { schema: { tables: [{ name: "users", primaryKey: ["id"] }] }, dataset: { users: [{ id: 1 }, { id: 1 }] } };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE);
+    const k = kinds(r.findings);
+    expect(k).toContain("malformed-table");
+    expect(k).not.toContain("engine-error"); // no crash masking
+  });
+
+  it("a non-array migrations field is a structured finding, and table validation still runs", async () => {
+    const input = {
+      schema: { tables: [{ name: "t", columns: [{ name: "id", type: "integer" }], primaryKey: ["id"] }] },
+      dataset: { t: [{ id: 1 }, { id: 1 }] },
+      migrations: {},
+    };
+    const r = await drive(input);
+    expect(r.status).toBe(EngineStatus.DONE); // not FAILED
+    const k = kinds(r.findings);
+    expect(k).toContain("malformed-migrations-input");
+    expect(k).toContain("primary-key-duplicate"); // table validation was NOT suppressed
+  });
+
+  it("a non-array schema.tables fails PREREQ cleanly (discover/plan do not crash)", async () => {
+    const r = await drive({ schema: { tables: {} }, dataset: {} });
+    expect(r.status).toBe(EngineStatus.PREREQ_FAILED);
+  });
+});
