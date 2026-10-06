@@ -165,3 +165,139 @@ describe("autopilot CI monitor — 6 durability proofs", () => {
     expect(s.ci.jobs[0]).toMatchObject({ id: "CW", prNumber: 10, lastCiState: "PENDING" });
   });
 });
+
+import { GithubCiDriver } from "../lib/cidriver.mjs";
+
+/** Fake exec that records commands and answers by substring match. */
+function recExec(table) {
+  const calls = [];
+  const fn = (cmd) => {
+    calls.push(cmd);
+    const row = table.find((r) => cmd.includes(r.match));
+    return row ? { code: row.code ?? 0, stdout: row.stdout ?? "", stderr: row.stderr ?? "" } : { code: 0, stdout: "", stderr: "" };
+  };
+  fn.calls = calls;
+  return fn;
+}
+
+describe("GithubCiDriver.merge — fail-closed + idempotent + head-pinned (review fixes)", () => {
+  it("refuses (retryable) and does NOT merge when the pre-merge PR view fails", async () => {
+    const exec = recExec([{ match: "pr view", code: 1, stderr: "rate limited" }]);
+    const d = new GithubCiDriver({ exec });
+    const res = await d.merge({ prNumber: 10, expectedHead: "a".repeat(40) });
+    expect(res).toMatchObject({ ok: false, retryable: true });
+    expect(exec.calls.some((c) => c.includes("pr merge"))).toBe(false); // never merged on an unverifiable state
+  });
+
+  it("refuses (non-retryable) a head that no longer matches the reviewed head, without merging", async () => {
+    const head = "b".repeat(40);
+    const exec = recExec([{ match: "pr view", code: 0, stdout: JSON.stringify({ state: "OPEN", headRefOid: head }) }]);
+    const d = new GithubCiDriver({ exec });
+    const res = await d.merge({ prNumber: 10, expectedHead: "a".repeat(40) });
+    expect(res).toMatchObject({ ok: false, retryable: false });
+    expect(res.reason).toMatch(/head changed/);
+    expect(exec.calls.some((c) => c.includes("pr merge"))).toBe(false);
+  });
+
+  it("is idempotent: an already-MERGED PR returns already=true and does not merge again", async () => {
+    const exec = recExec([{ match: "pr view", code: 0, stdout: JSON.stringify({ state: "MERGED" }) }]);
+    const d = new GithubCiDriver({ exec });
+    const res = await d.merge({ prNumber: 10, expectedHead: "a".repeat(40) });
+    expect(res).toEqual({ ok: true, already: true });
+    expect(exec.calls.some((c) => c.includes("pr merge"))).toBe(false);
+  });
+
+  it("merges only after confirming OPEN + matching head, pinned with --match-head-commit", async () => {
+    const head = "a".repeat(40);
+    const exec = recExec([
+      { match: "pr view", code: 0, stdout: JSON.stringify({ state: "OPEN", headRefOid: head }) },
+      { match: "pr merge", code: 0, stdout: "" },
+    ]);
+    const d = new GithubCiDriver({ exec });
+    const res = await d.merge({ prNumber: 10, expectedHead: head });
+    expect(res).toEqual({ ok: true, merged: true });
+    const mergeCmd = exec.calls.find((c) => c.includes("pr merge"));
+    expect(mergeCmd).toMatch(/--squash/);
+    expect(mergeCmd).toContain(`--match-head-commit ${head}`);
+  });
+
+  it("reports a non-zero `gh pr merge` as retryable (not a permanent block)", async () => {
+    const head = "a".repeat(40);
+    const exec = recExec([
+      { match: "pr view", code: 0, stdout: JSON.stringify({ state: "OPEN", headRefOid: head }) },
+      { match: "pr merge", code: 1, stderr: "502 bad gateway" },
+    ]);
+    const d = new GithubCiDriver({ exec });
+    const res = await d.merge({ prNumber: 10, expectedHead: head });
+    expect(res).toMatchObject({ ok: false, retryable: true });
+  });
+});
+
+describe("reduceRollup — fail-closed on vocabulary (review fix)", () => {
+  it("an unknown COMPLETED conclusion is NOT success (maps to FAILURE)", () => {
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "SUCCESS" }, { status: "COMPLETED", conclusion: "WAT" }])).toBe("FAILURE");
+  });
+  it("still succeeds only when every check is a recognized pass", () => {
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "SUCCESS" }, { status: "COMPLETED", conclusion: "SKIPPED" }])).toBe("SUCCESS");
+  });
+  it("an unknown status on a still-running check keeps waiting", () => {
+    expect(reduceRollup([{ status: "COMPLETED", conclusion: "SUCCESS" }, { status: "SOMETHING_NEW" }])).toBe("PENDING");
+  });
+});
+
+describe("autopilot CI monitor — review-fix regressions", () => {
+  it("a transient (retryable) merge failure re-queues to WAITING_CI and later merges — never stranded", async () => {
+    const store = new JobStore(jobsPath);
+    const clock = makeClock();
+    let mergeN = 0;
+    const ci = {
+      calls: { poll: 0, merge: 0 },
+      async poll() { this.calls.poll++; return { state: "SUCCESS", head: "H1", prState: "OPEN" }; },
+      async merge() { this.calls.merge++; mergeN++; return mergeN === 1 ? { ok: false, retryable: true, reason: "502" } : { ok: true, merged: true }; },
+    };
+    const svc = new AutopilotService({ store, providerGate: gate(), clock, ci, backoff: { baseMs: 1000, factor: 2 } });
+    svc.addCiWaitJob({ id: "CW", name: "wait-ci", prNumber: 10, reviewedHead: "H1" });
+    await svc.tick(); // SUCCESS -> merge #1 transient -> WAITING_CI (NOT blocked)
+    expect(store.get("CW").state).toBe(RuntimeState.WAITING_CI);
+    clock.advance(5000);
+    await svc.tick(); // SUCCESS -> merge #2 ok -> DONE
+    expect(store.get("CW").state).toBe(RuntimeState.DONE);
+    expect(ci.calls.merge).toBe(2);
+  });
+
+  it("a ci-wait job BLOCKED by a missing dependency recovers once the dependency completes", async () => {
+    const store = new JobStore(jobsPath);
+    const ci = fakeCi([{ state: "SUCCESS", head: "H1", prState: "OPEN" }]);
+    const svc = new AutopilotService({ store, providerGate: gate(), clock: makeClock(), ci, handlers: { d: async () => 1 } });
+    svc.addCiWaitJob({ id: "CW", name: "wait-ci", prNumber: 10, reviewedHead: "H1", dependsOn: ["D"] });
+    await svc.tick(); // dep D missing -> CW BLOCKED
+    expect(store.get("CW").state).toBe(RuntimeState.BLOCKED);
+    svc.addJob({ id: "D", name: "d" });
+    await svc.tick(); // D runs to DONE (CW still pending/blocked this pass)
+    await svc.tick(); // deps ready -> CW unblocks -> polls SUCCESS -> merges -> DONE
+    expect(store.get("D").state).toBe(RuntimeState.DONE);
+    expect(store.get("CW").state).toBe(RuntimeState.DONE);
+    expect(ci.calls.merge).toBe(1);
+  });
+
+  it("a CI-failure BLOCK (needsFix) does NOT auto-unblock on a later tick", async () => {
+    const store = new JobStore(jobsPath);
+    const ci = fakeCi([{ state: "FAILURE", head: "H1", prState: "OPEN" }]);
+    const svc = new AutopilotService({ store, providerGate: gate(), clock: makeClock(), ci });
+    svc.addCiWaitJob({ id: "CW", name: "wait-ci", prNumber: 10, reviewedHead: "H1" });
+    await svc.tick(); // FAILURE -> BLOCKED needsFix
+    await svc.tick(); // must STAY blocked (not silently re-armed)
+    expect(store.get("CW").state).toBe(RuntimeState.BLOCKED);
+    expect(ci.calls.merge).toBe(0);
+  });
+
+  it("CI SUCCESS with an unverifiable (null) head does not merge — stays WAITING_CI", async () => {
+    const store = new JobStore(jobsPath);
+    const ci = fakeCi([{ state: "SUCCESS", head: null, prState: "OPEN" }]);
+    const svc = new AutopilotService({ store, providerGate: gate(), clock: makeClock(), ci, backoff: { baseMs: 1000 } });
+    svc.addCiWaitJob({ id: "CW", name: "wait-ci", prNumber: 10, reviewedHead: "H1" });
+    await svc.tick();
+    expect(store.get("CW").state).toBe(RuntimeState.WAITING_CI);
+    expect(ci.calls.merge).toBe(0);
+  });
+});

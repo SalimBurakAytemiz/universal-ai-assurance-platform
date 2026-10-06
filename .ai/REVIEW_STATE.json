@@ -2,21 +2,21 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-05T05:15:00.000Z",
+    "at": "2026-10-06T08:40:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #10 auto/knowledge-graph diff (@uaap/knowledge-graph)",
-    "agents": 22,
-    "reported": 9,
-    "confirmed": 7,
+    "scope": "PR #11 auto/autopilot-ci-monitor (durable CI/PR monitor)",
+    "agents": 23,
+    "reported": 10,
+    "confirmed": 9,
     "distinctDefectsFixed": [
-      "P0 releaseAssurance faked ASSURED for a release shipping a bare SERVICE/CODE/COMPONENT (untraceable check only covered FEATURE/BUSINESS_FLOW) — now ALL shipped types must trace to a requirement",
-      "P0 requirement discovery walked only IMPLEMENTS, missing requirements behind a shipped container — now traverses IMPLEMENTS+CONTAINS+EXPOSES so a shipped service's requirements are discovered and gated",
-      "P1 open-finding status match was case-sensitive — now case-insensitive",
-      "P1+P2 finding gate was a fail-OPEN allow-list — inverted to a CLOSED allow-list (only CLOSED / REJECTED_FALSE_POSITIVE do not block; unknown/missing/mis-cased blocks)",
-      "P2 findings on a shipped service's DATABASE never blocked — shippedSurface now follows PERSISTS_TO",
-      "P1 graphFromDocument silently last-wins merged duplicate node ids — now rejects duplicate ids (fail-closed on ambiguity)",
-      "P3 addNode/addEdge type guards used `in`/bracket access (prototype-chain fail-open for toString/constructor) — now Object.prototype.hasOwnProperty.call own-key checks"
-    ]
+      "P1 merge() FAILED OPEN: fell through to `gh pr merge` when the pre-merge `gh pr view` errored, JSON parse failed, or headRefOid was null — could merge a closed PR or an UNREVIEWED head. Now positively confirms OPEN + headRefOid===reviewedHead before merging, else refuses.",
+      "P1 transient/retryable merge failure permanently BLOCKED the job (stall). merge() now returns typed {retryable}; _tickCiWait re-queues retryable failures to WAITING_CI backoff, BLOCKs only on definitive safety refusal.",
+      "P1 ci-wait job BLOCKED by an unsatisfied dependency never recovered. Auto-unblock now suppressed ONLY for needsFix/reviewInvalidated ci-wait jobs; a dep-blocked ci-wait returns to READY when deps complete.",
+      "P2 TOCTOU: merge now pinned with --match-head-commit <reviewedHead> so GitHub atomically rejects a last-moment head change.",
+      "P2 reduceRollup FAILED OPEN: an unknown COMPLETED conclusion was treated SUCCESS. Now a success allowlist {SUCCESS,NEUTRAL,SKIPPED}; unknown completed conclusion => FAILURE; empty => PENDING.",
+      "P2 _tickCiWait merged on SUCCESS even when poll.head was null; now stays WAITING_CI when head is unverifiable."
+    ],
+    "allResolved": true
   },
   "unresolved": {
     "P0": 0,
@@ -25,22 +25,12 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
-    "max": 3,
-    "note": "bounded review cap reached; final P2 (evidence-verdict denylist) fixed vocabulary-closed and self-verified with regressions before merge"
+    "count": 1,
+    "max": 3
   },
   "reReview": {
-    "at": "2026-10-05T10:40:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "fix commit 7cb0eb0 (PR #10)",
-    "agents": 11,
-    "reported": 4,
-    "confirmed": 2,
-    "distinctDefectsFixed": [
-      "P1 residual: graphFromDocument duplicate-id guard caught only identical document ids, not two distinct doc ids resolving to the same (type,key) identity — addNode's idempotent last-wins merge could silently overwrite a CONFIRMED finding with a CLOSED one (order-dependent fake ASSURED). Now rejects identity collisions (fail-closed).",
-      "P3: releaseAssurance ignored FAILING evidence — a requirement with coexisting PASS+FAIL evidence was ASSURED. Now any failing evidence on a validating test forces GAP (neutral LOG evidence does not)."
-    ],
-    "allResolved": true
+    "at": null,
+    "note": "re-review of the autopilot CI-monitor fixes pending before merge"
   },
   "pr2": {
     "loop1": {

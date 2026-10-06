@@ -120,10 +120,16 @@ export class AutopilotService {
       if (deps === "pending") continue;
 
       let cur = this.store.get(job.id);
-      // Deps became satisfiable: a previously BLOCKED job can return to READY. (A ci-wait job that
-      // was BLOCKED for a CI failure or an invalidated review is NOT auto-unblocked — it needs a new
-      // reviewed head, handled when a fix pushes and re-arms the job.)
-      if (cur.state === RuntimeState.BLOCKED && cur.kind !== "ci-wait") { cur = this._set(cur, RuntimeState.READY); transitions.push([cur.id, "UNBLOCK_READY"]); }
+      // Deps became satisfiable: a previously BLOCKED job can return to READY. EXCEPTION: a ci-wait
+      // job BLOCKED for a CI failure or an invalidated review (needsFix / reviewInvalidated) stays
+      // BLOCKED until a fix re-arms it — but a ci-wait merely blocked by an unsatisfied DEPENDENCY
+      // must still unblock here, or it would stall forever once its dep completes.
+      if (cur.state === RuntimeState.BLOCKED) {
+        const ciHardBlock = cur.kind === "ci-wait" && (cur.needsFix || cur.ci?.reviewInvalidated);
+        if (ciHardBlock) continue;
+        cur = this._set(cur, RuntimeState.READY);
+        transitions.push([cur.id, "UNBLOCK_READY"]);
+      }
 
       // ci-wait jobs are driven by polling GitHub, not by the provider/retry/READY path.
       if (cur.kind === "ci-wait") {
@@ -239,17 +245,31 @@ export class AutopilotService {
       return;
     }
     if (poll?.state === "SUCCESS") {
+      // Fail-closed: if the head is unverifiable (null/absent), do NOT merge — keep polling.
+      if (!poll.head) {
+        this._set(job, RuntimeState.WAITING_CI, { ci: { ...base, nextPollAt: nextRetryAt(now, attempts, this.backoff) } });
+        transitions.push([job.id, "CI_WAIT_HEAD_UNVERIFIED"]);
+        return;
+      }
       // Side-effecting merge, persisted RUNNING before the effect. The driver's merge() is
-      // idempotent (re-checks MERGED + head), so a crash-then-retry or a duplicate event is safe.
+      // idempotent (re-checks MERGED + head, pins --match-head-commit), so a crash-then-retry or a
+      // duplicate event is safe.
       const running = this._set(job, RuntimeState.RUNNING, { ci: base });
       let res;
       try { res = await this.ci.merge({ prNumber: ci.prNumber, expectedHead: ci.reviewedHead }); }
-      catch (e) { res = { ok: false, reason: e instanceof Error ? e.message : String(e) }; }
+      catch (e) { res = { ok: false, retryable: true, reason: e instanceof Error ? e.message : String(e) }; }
       if (res?.ok || res?.merged) {
         this._set(running, RuntimeState.DONE, { ci: { ...base, prState: "MERGED" }, result: { merged: true, already: !!res.already } });
         transitions.push([job.id, res?.already ? "CI_ALREADY_MERGED" : "CI_MERGED"]);
+      } else if (res?.retryable) {
+        // Transient/unverifiable (network, 5xx, rate-limited pre-check): retry via backoff, NEVER strand.
+        this._set(running, RuntimeState.WAITING_CI, { ci: { ...base, nextPollAt: nextRetryAt(now, attempts, this.backoff) }, error: `merge retry: ${res?.reason ?? "transient"}` });
+        transitions.push([job.id, "CI_MERGE_RETRY"]);
       } else {
-        this._set(running, RuntimeState.BLOCKED, { ci: base, error: `safe-merge refused: ${res?.reason ?? "unknown"}` });
+        // Definitive safety refusal (PR closed, or head changed since review). Block for re-arm;
+        // flag reviewInvalidated for a head change, needsFix otherwise.
+        const headChanged = /head changed/i.test(res?.reason ?? "");
+        this._set(running, RuntimeState.BLOCKED, { ci: { ...base, reviewInvalidated: headChanged }, needsFix: !headChanged, error: `safe-merge refused: ${res?.reason ?? "unknown"}` });
         transitions.push([job.id, "CI_MERGE_REFUSED"]);
       }
       return;
