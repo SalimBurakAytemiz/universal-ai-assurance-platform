@@ -2,13 +2,13 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-06 (branch auto/knowledge-graph)
+## Last local run — 2026-10-06 (branch auto/autopilot-ci-monitor)
 
 Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **272 passed / 272** across 25 files
+- vitest: **280 passed / 280** across 26 files (autopilot durable CI monitor + 6 proofs)
 
 New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **36 tests**
 - content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.

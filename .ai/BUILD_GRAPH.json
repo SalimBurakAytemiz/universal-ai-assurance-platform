@@ -1369,14 +1369,29 @@
         "autopilot-service",
         "autopilot-provider-monitor"
       ],
-      "status": "READY",
+      "status": "DONE",
       "requirements": [
         "REQ-AUTOPILOT-CI-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "services/autopilot/lib/cidriver.mjs",
+        "services/autopilot/lib/service.mjs",
+        "services/autopilot/cli.mjs",
+        "services/autopilot/lib/states.mjs"
+      ],
+      "tests": [
+        "services/autopilot/test/ci-monitor.test.mjs"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     }
   ]
 }

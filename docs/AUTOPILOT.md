@@ -50,3 +50,22 @@ monitor parsing. **24/7 autonomy is not claimed beyond what these tests cover.**
 ## Desktop
 The desktop **Autopilot** view reads `.ai/autopilot/` and shows control state, provider
 availability, per-job state, waiting-on-provider / running counts, attempts, and next retry.
+
+## Durable CI/PR monitoring (session-independent)
+The autopilot does NOT depend on the Claude chat/UI receiving a CI notification. A `ci-wait` job
+(`addCiWaitJob({ prNumber, branch, reviewedHead })`) is persisted and driven by the scheduler's own
+polling of GitHub via a deterministic `GithubCiDriver` (`gh`, no LLM). Each due tick it polls and
+transitions:
+- **PR already MERGED** → `DONE` (idempotent; a duplicate event cannot re-merge).
+- **live head ≠ reviewed head** → `BLOCKED`, `ci.reviewInvalidated` (an unreviewed head is NEVER merged).
+- **CI SUCCESS** (head unchanged) → safe-merge via the driver (idempotent: re-checks MERGED + head) → `DONE`.
+- **CI FAILURE / CANCELLED / TIMED_OUT** → `BLOCKED`, `needsFix` (the fix workflow picks it up).
+- **CI PENDING / driver unavailable** → stay `WAITING_CI`, bounded-backoff `nextPollAt`.
+
+An interrupted (RUNNING) ci-wait merge recovers to `WAITING_CI` and simply re-polls; the idempotent
+merge makes that safe. `status()` exposes `ci.waiting` and `ci.lastGithubCheckAt` for the desktop.
+
+Proven by `services/autopilot/test/ci-monitor.test.mjs` (6 durability proofs):
+1. `WAITING_CI` survives restart; 2. CI GREEN resumes safe-merge; 3. CI FAILURE resumes the fix
+workflow; 4. a changed PR HEAD invalidates the prior review (no merge); 5. a duplicate CI event
+does not duplicate the merge; 6. with NO notification ever, the poll loop still resolves.
