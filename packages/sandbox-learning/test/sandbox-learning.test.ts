@@ -126,6 +126,17 @@ describe("@uaap/sandbox-learning — real bounded child-process execution", () =
     expect(typeof throwing.audit.startedAt).toBe("string"); // fell back to a real timestamp
   });
 
+  it("REGRESSION (round 3): TOTAL by construction — null opts and a hostile request getter never throw", () => {
+    // null opts (the = {} default only covers undefined)
+    const nullOpts = runSandboxed({ taskId: "noop" }, policy(), null as unknown as undefined);
+    expect(Object.values(SandboxStatus)).toContain(nullOpts.status);
+    // a request whose taskId getter throws -> structured result (FAILED via the outer backstop), no throw
+    const hostile = { get taskId() { throw new Error("hostile getter"); } } as unknown as { taskId: string };
+    const r = runSandboxed(hostile, policy());
+    expect(Object.values(SandboxStatus)).toContain(r.status);
+    expect(r.audit).toBeTruthy();
+  });
+
   it("REGRESSION (round 2): a malformed policy resolves structurally, never throws", () => {
     // missing limits on an allowed task (previously threw reading policy.limits.timeoutMs)
     const noLimits = runSandboxed({ taskId: "noop" }, { allowedTasks: ["noop"] } as unknown as SandboxPolicy);

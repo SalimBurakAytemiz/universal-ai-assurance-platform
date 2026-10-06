@@ -109,15 +109,34 @@ export interface RunOptions {
   now?: () => Date;
 }
 
+/** Minimal structured audit for the outer backstop when the normal path cannot even start. */
+function fallbackAudit(startedIso: string, t0: number): SandboxAudit {
+  let id = "SBX_error";
+  try { id = newId("SBX"); } catch { /* keep the fallback id */ }
+  return { id, taskId: "", inputHash: "", limits: { timeoutMs: 0, maxOutputBytes: 0 }, envKeys: [], startedAt: startedIso, finishedAt: startedIso, status: SandboxStatus.FAILED, exitCode: null, signal: null, durationMs: Math.max(0, Date.now() - t0), stdoutBytes: 0, stderrBytes: 0, osLevelIsolation: false };
+}
+
 /**
- * Run one request in the sandbox. TOTAL: never throws to the caller — a denied task, a timeout, a
- * crash, a bad workspace or a spawn error all map to a structured SandboxResult. Partial output is
+ * Run one request in the sandbox. TOTAL BY CONSTRUCTION: an outer backstop guarantees this NEVER
+ * throws to the caller — a denied task, a timeout, a crash, a bad workspace, a spawn error, a null
+ * opts, a hostile request getter, anything — all map to a structured SandboxResult. Partial output is
  * preserved. The workspace is always cleaned up (unless policy.keepWorkspace) even on failure.
  */
 export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opts: RunOptions = {}): SandboxResult {
-  // Defensive clock: a bad injected now() (throwing, or `new Date(NaN)` whose toISOString throws)
-  // must NOT break the TOTAL contract — fall back to a real timestamp.
-  const rawNow = opts.now ?? (() => new Date());
+  const t0 = Date.now();
+  const startedIso = new Date().toISOString();
+  try {
+    return runSandboxedInner(request, policy, opts);
+  } catch (e) {
+    return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `sandbox error: ${e instanceof Error ? e.message : String(e)}`, audit: fallbackAudit(startedIso, t0) };
+  }
+}
+
+function runSandboxedInner(request: SandboxRequest, policy: SandboxPolicy, opts: RunOptions): SandboxResult {
+  // Defensive opts/clock: a null opts, or a bad injected now() (throwing, or `new Date(NaN)` whose
+  // toISOString throws), must NOT break the TOTAL contract — fall back to a real timestamp.
+  const o = opts && typeof opts === "object" ? opts : {};
+  const rawNow = o.now ?? (() => new Date());
   const nowIso = (): string => {
     try {
       const s = rawNow().toISOString();
@@ -130,7 +149,8 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
   const pol = (policy && typeof policy === "object" ? policy : {}) as SandboxPolicy;
   const startedAt = nowIso();
   const t0 = Date.now();
-  const taskId = request && typeof request.taskId === "string" ? request.taskId : "";
+  let taskId = "";
+  try { taskId = request && typeof request.taskId === "string" ? request.taskId : ""; } catch { taskId = ""; }
   // Guard: a non-serializable input (BigInt, circular ref) must NOT make the function throw — the
   // contract is TOTAL. Fall back to a sentinel hash so the request still resolves structurally.
   let inputHash: string;

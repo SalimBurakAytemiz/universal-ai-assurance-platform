@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **467 passed / 467** across 37 files (+ sandbox-learning, real bounded child-process execution, review rounds 1-2 fixes)
+- vitest: **468 passed / 468** across 37 files (+ sandbox-learning, real bounded child-process execution, review rounds 1-3 fixes)
 
 New this change — `@uaap/sandbox-learning` (`packages/sandbox-learning/test/`): **9 tests**
 - A SAFE, LOCAL, bounded execution sandbox for the platform's synthetic learning/eval tasks — the
@@ -44,4 +44,7 @@ Round 2 (11 agents) confirmed 3 more — ALL fixed: P2 a bad injected clock (new
 escaped before the try (now a defensive nowIso fallback); P3 a malformed policy (missing limits/null)
 threw before the try (now read defensively -> DENIED/FAILED); P1 the committed Electron smoke exited 0
 on a FAILED assertion because app.quit() beat the deferred app.exit (now app.exit(ok?0:4) sync —
-proven: a forced-wrong title now exits 4). P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Round 3 (cap) runs next.
+proven: a forced-wrong title now exits 4). Round 3 (cap) confirmed 1 more TOTAL gap (null opts threw
+at opts.now; a hostile taskId getter); closed enumeration-free with an OUTER BACKSTOP (runSandboxed
+wraps the inner call in try/catch and returns a structured FAILED on ANY throw) + targeted opts/taskId
+guards. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. A final round-4 confirmation runs on the fix commit.
