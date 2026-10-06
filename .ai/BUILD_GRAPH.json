@@ -835,16 +835,30 @@
       "family": "quality",
       "dependencies": [
         "orchestrator",
-        "tool-adapter-registry"
+        "tool-adapter-registry",
+        "engine-core"
       ],
-      "status": "NOT_STARTED",
+      "status": "DONE",
       "requirements": [
         "REQ-QA-API-001"
       ],
-      "files": [],
-      "tests": [],
+      "files": [
+        "packages/quality-api-engine/src/index.ts",
+        "packages/quality-api-engine/fixtures/users-api.json"
+      ],
+      "tests": [
+        "packages/quality-api-engine/test/quality-api-engine.test.ts"
+      ],
       "commits": [],
-      "review": {}
+      "review": {
+        "loops": 0,
+        "unresolved": {
+          "P0": 0,
+          "P1": 0,
+          "P2": 0
+        },
+        "mergedPR": null
+      }
     },
     {
       "id": "quality-web-engine",
@@ -1394,6 +1408,27 @@
         },
         "mergedPR": 11
       }
+    },
+    {
+      "id": "engine-core",
+      "name": "Execution engine contract + lifecycle driver",
+      "family": "assurance",
+      "dependencies": [
+        "orchestrator",
+        "evidence-engine"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-ENGINE-CORE-001"
+      ],
+      "files": [
+        "packages/engine-core/src/index.ts"
+      ],
+      "tests": [
+        "packages/engine-core/test/engine-core.test.ts"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }

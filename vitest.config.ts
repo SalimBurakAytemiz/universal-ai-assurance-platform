@@ -26,6 +26,8 @@ export default defineConfig({
       "@uaap/domain-model": r("./packages/domain-model/src/index.ts"),
       "@uaap/assurance-planner": r("./packages/assurance-planner/src/index.ts"),
       "@uaap/knowledge-graph": r("./packages/knowledge-graph/src/index.ts"),
+      "@uaap/engine-core": r("./packages/engine-core/src/index.ts"),
+      "@uaap/quality-api-engine": r("./packages/quality-api-engine/src/index.ts"),
     },
   },
   test: {

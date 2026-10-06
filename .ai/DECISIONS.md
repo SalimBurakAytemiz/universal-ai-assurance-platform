@@ -28,3 +28,11 @@
   dependency readiness + local installability + deterministic testability. Starting with the
   API/contract engine: zero external browser/device deps, Ajv already present, fully testable
   against local fixtures. Order may change if the real dependency graph proves another superior.
+- **2026-10-06** Added `@uaap/engine-core`: the common execution-engine contract (discover → plan →
+  validate-prereqs → execute → collect → evidence) + a total `driveEngine` runner (cancellation,
+  timeout, health, structured EngineResult, never throws). Every assurance execution engine
+  (Quality/Web/DB/Security/…) implements it, so the orchestrator/desktop treat engines uniformly.
+- **2026-10-06** `@uaap/quality-api-engine` validates recorded request/response EXCHANGES against a
+  contract and is OFFLINE-ONLY (no target I/O, nothing to authorize). Live exchanges will come from a
+  broker-backed transport later; contract validation runs today against local fixtures. Dependency
+  added: `ajv-formats@3.0.1` (MIT) for JSON-Schema format checks (email/date-time/uri/uuid).

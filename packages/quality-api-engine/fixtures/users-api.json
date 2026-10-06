@@ -1,0 +1,55 @@
+{
+  "spec": {
+    "endpoints": [
+      {
+        "id": "getUser",
+        "method": "GET",
+        "path": "/users/{id}",
+        "responses": {
+          "200": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "email", "name"],
+              "properties": {
+                "id": { "type": "integer" },
+                "email": { "type": "string", "format": "email" },
+                "name": { "type": "string" }
+              }
+            },
+            "requiredHeaders": ["content-type"]
+          },
+          "404": {
+            "schema": { "type": "object", "required": ["error"], "properties": { "error": { "type": "string" } } }
+          }
+        }
+      },
+      {
+        "id": "createUser",
+        "method": "POST",
+        "path": "/users",
+        "request": {
+          "schema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["email", "name"],
+            "properties": { "email": { "type": "string", "format": "email" }, "name": { "type": "string" } }
+          }
+        },
+        "responses": {
+          "201": { "schema": { "type": "object", "required": ["id"], "properties": { "id": { "type": "integer" } } } }
+        }
+      }
+    ]
+  },
+  "exchanges": [
+    { "endpointId": "getUser", "response": { "status": 200, "headers": { "content-type": "application/json" }, "body": { "id": 1, "email": "a@b.com", "name": "Ada" } } },
+    { "endpointId": "getUser", "response": { "status": 200, "headers": {}, "body": { "id": 2, "email": "c@d.com", "name": "Grace", "role": "admin" } } },
+    { "endpointId": "getUser", "response": { "status": 200, "headers": { "content-type": "application/json" }, "body": { "id": "NaN", "email": "not-an-email", "name": "" } } },
+    { "endpointId": "getUser", "response": { "status": 418, "body": {} } },
+    { "endpointId": "getUser", "response": { "status": 404, "headers": {}, "body": { "error": "not found" } } },
+    { "endpointId": "createUser", "negative": true, "request": { "body": { "email": "bad" } }, "response": { "status": 201, "body": { "id": 5 } } },
+    { "endpointId": "createUser", "request": { "body": { "email": "e@f.com", "nickname": "x" } }, "response": { "status": 201, "body": { "id": 6 } } },
+    { "endpointId": "ghost", "response": { "status": 200, "body": {} } }
+  ]
+}
