@@ -37,6 +37,7 @@ export default defineConfig({
       "@uaap/research-intelligence": r("./packages/research-intelligence/src/index.ts"),
       "@uaap/desktop-viewmodels": r("./packages/desktop-viewmodels/src/index.ts"),
       "@uaap/sandbox-learning": r("./packages/sandbox-learning/src/index.ts"),
+      "@uaap/quality-web-live-adapter": r("./packages/quality-web-live-adapter/src/index.ts"),
     },
   },
   test: {

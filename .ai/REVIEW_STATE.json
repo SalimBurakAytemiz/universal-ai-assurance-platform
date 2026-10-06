@@ -2,15 +2,19 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T20:25:00.000Z",
+    "at": "2026-10-06T20:55:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #24 desktop-packaging (round 1)",
-    "agents": 4,
-    "reported": 1,
-    "confirmed": 1,
+    "scope": "PR #25 quality-web-live-adapter (round 1)",
+    "agents": 14,
+    "reported": 4,
+    "confirmed": 4,
     "distinctDefectsFixed": [
-      "P1 scope overstatement (no-fake honesty): REQ-PACKAGING-001 and the desktop-packaging node were titled packaging + update/rollback and marked IMPLEMENTED+TESTED/DONE, but update/rollback is NOT built (only dev/unsigned packaging + startup smoke). Fixed: packaging node narrowed to Windows desktop packaging (dev/unsigned build) (genuinely DONE); auto-update + rollback split into a new desktop-update-rollback node (NOT_STARTED, gated on signing + update infra) + its own traceability row; docs/DESKTOP-UX.md corrected. The packaging + startup-smoke claim itself was accurate and stays."
+      "P1 SSRF: isLocalTarget accepted file://REMOTE-host (host unchecked) -> on Windows Chrome loads it as UNC/SMB (NTLM credential leak). Now file: is local ONLY when host is empty/loopback.",
+      "P1 SSRF: //host and \\\\host (protocol-relative / UNC) were classified as local paths and pathToFileURL minted file://host -> remote SMB. Now refused outright; toLocalUrl re-verifies the resolved file URL host is local.",
+      "P2 fail-open navigation: only the initial goto string was validated; 3xx/meta/JS redirects and click-navigations to remote hosts were followed. Added a Playwright page.route guard that aborts ANY non-local request (incl. redirect targets, clicks, subresources) + a post-navigation page.url() locality check.",
+      "P2 fail-open capture: forbids presence used .catch(()=>false), turning an errored check into present:false (silent PASS in the engine). Presence helpers now return undefined on error so an unverifiable forbidden check surfaces forbidden-unverifiable (and requires surfaces requirement-unverifiable) instead of a fake green."
     ],
+    "runtimeValidation": "6 CI-safe unit tests incl. SSRF regression + live smoke exit 0 (broken=>planted findings, clean=>zero).",
     "boundedLoop": {
       "count": 1,
       "max": 3
@@ -24,7 +28,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 1,
+    "count": 2,
     "max": 3
   },
   "pr20": {
@@ -627,5 +631,44 @@
     "reReview": null,
     "mergedPR": 23,
     "outcome": "2 rounds; 5 defects fixed (3 fake-green, 2 weak-smoke); round 2 clean; merged 5923fa6"
+  },
+  "pr24": {
+    "lastReview": {
+      "at": "2026-10-06T20:25:00.000Z",
+      "type": "ADVERSARIAL_WORKFLOW",
+      "scope": "PR #24 desktop-packaging (round 1)",
+      "agents": 4,
+      "reported": 1,
+      "confirmed": 1,
+      "distinctDefectsFixed": [
+        "P1 scope overstatement (no-fake honesty): REQ-PACKAGING-001 and the desktop-packaging node were titled packaging + update/rollback and marked IMPLEMENTED+TESTED/DONE, but update/rollback is NOT built (only dev/unsigned packaging + startup smoke). Fixed: packaging node narrowed to Windows desktop packaging (dev/unsigned build) (genuinely DONE); auto-update + rollback split into a new desktop-update-rollback node (NOT_STARTED, gated on signing + update infra) + its own traceability row; docs/DESKTOP-UX.md corrected. The packaging + startup-smoke claim itself was accurate and stays."
+      ],
+      "boundedLoop": {
+        "count": 1,
+        "max": 3
+      },
+      "allResolved": true
+    },
+    "mergedPR": 24,
+    "outcome": "2 rounds; P1 packaging-scope honesty fixed (update/rollback split out NOT_STARTED); round 2 clean; merged c928a5f"
+  },
+  "reReview": {
+    "at": "2026-10-06T21:13:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #25 fix commit 3e1f7bf (round 2) + self-verified residual",
+    "agents": 7,
+    "reported": 2,
+    "confirmedByMajority": 0,
+    "note": "Round-2 majority confirmed 0, but I SELF-VERIFIED a security-critical SSRF claim the majority refuted and found it REAL: file:////host/share parses to empty host + //host path, which isLocalTarget accepted and Windows Chrome loads as \\hostshare SMB. Per the absolute no-exfiltration hard rule, I verify SSRF claims directly rather than trust a majority-refute.",
+    "distinctDefectsFixed": [
+      "P1 SSRF (self-verified, majority-missed): file:////host/share (and file://///...) — empty-host but UNC-style //host path. isLocalTarget now also rejects a file: URL whose pathname starts with // .",
+      "P3 (refuted finding, fixed for correctness): the route guard aborted local non-network subresources (blob:/about:/data:/filesystem:) causing spurious network-failed findings; the guard now passes those local schemes."
+    ],
+    "regressionTests": "file:////host/share + file://///host/share refused (SSRF). 6 CI unit tests + live smoke exit 0.",
+    "boundedLoop": {
+      "count": 2,
+      "max": 3
+    },
+    "allResolved": true
   }
 }

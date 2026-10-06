@@ -1818,6 +1818,28 @@
       "tests": [],
       "commits": [],
       "review": {}
+    },
+    {
+      "id": "quality-web-live-adapter",
+      "name": "Quality: web live-capture adapter (Playwright, local-only)",
+      "family": "quality",
+      "dependencies": [
+        "quality-web-engine",
+        "engine-core"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-QA-WEB-LIVE-001"
+      ],
+      "files": [
+        "packages/quality-web-live-adapter/src/index.ts"
+      ],
+      "tests": [
+        "packages/quality-web-live-adapter/test/quality-web-live-adapter.test.ts",
+        "packages/quality-web-live-adapter/smoke/live-capture.mjs (real Chrome capture -> engine, exit 0)"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }

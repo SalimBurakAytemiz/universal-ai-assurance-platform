@@ -58,9 +58,19 @@ recorded. This file is the evidence. "Runtime missing" is not, by itself, a prov
    container/VM runtime (a Docker/OCI backend can be added behind the same interface later).
 6. Conclusion: **NOT BLOCKED** for the platform's synthetic learning/eval tasks.
 
-### playwright live-capture adapter — ATTEMPT PENDING (Chrome present; npm reachable)
-Chrome is installed and npm is reachable, so a project-local Playwright install + a local-fixture
-headless capture is expected to be feasible. Attempt + exact result recorded in its own PR.
+### playwright live-capture adapter — PROVEN (local-fixture only)
+1. Required: Playwright + a browser.
+2. Attempt: `playwright-core` installed project-local (lightweight — NO browser download); launched the
+   ALREADY-INSTALLED Chrome via `chromium.launch({ channel: "chrome", headless: true })`.
+3. Result: headless launch + page load + DOM/console/network capture all work (probe exit 0).
+4. Adapter (`@uaap/quality-web-live-adapter`): drives a LOCAL fixture ONLY (fail-closed allow-list
+   refuses any non-local/external target before launch), captures navigation/element/console/network,
+   converts to the engine's WebFlow, and routes through the fail-closed @uaap/quality-web-engine.
+5. Live smoke (`npm run live`, exit 0): the broken fixture yields the planted findings
+   (required-element-missing, forbidden-element-present, console-error); the clean fixture yields ZERO.
+   Pure routing + allow-list are unit-tested in the root suite (5 tests, no browser) so CI covers them.
+6. Conclusion: **NOT BLOCKED.** Live capture against local fixtures is built + runtime-validated here.
+   No external customer target is ever required or permitted.
 
 ### security-active-validation-gate — LOCKED_BY_DESIGN (unchanged)
 Genuine, non-automatable: needs an explicit, signed, scoped human authorization record in

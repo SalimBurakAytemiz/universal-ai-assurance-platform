@@ -47,3 +47,4 @@ test-results/
 .ai/autopilot/*.steal.*
 apps/desktop/vendor/
 apps/desktop/dist/
+packages/quality-web-live-adapter/smoke/_adapter.mjs
