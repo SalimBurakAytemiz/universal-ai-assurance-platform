@@ -29,7 +29,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 4,
+    "count": 5,
     "max": 3
   },
   "pr20": {
@@ -541,6 +541,24 @@
     "regressionTests": "1 new (unstringifiable caught value -> structured FAILED, no throw). 17 in-package, 469/469 repo-wide.",
     "boundedLoop": {
       "count": 4,
+      "max": 3
+    },
+    "allResolved": true
+  },
+  "reReview4": {
+    "at": "2026-10-06T19:30:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #22 fix commit a5e2e81 (round 5 — final TOTAL confirmation)",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
+    "verified": "runSandboxed wrapper CONFIRMED genuinely total under any input (verified not to throw).",
+    "distinctDefectsFixed": [
+      "P2 evaluateCase (not runSandboxed) had an unguarded JSON.stringify in deepEqual: a non-serializable spec.expect (circular/BigInt) threw on a COMPLETED run. deepEqual now wraps JSON.stringify in try/catch (non-serializable expect => not-equal => correct=false), so evaluateCase is total too."
+    ],
+    "regressionTests": "1 new (non-serializable spec.expect => correct=false, no throw). 18 in-package, 470/470 repo-wide.",
+    "boundedLoop": {
+      "count": 5,
       "max": 3
     },
     "allResolved": true

@@ -156,6 +156,14 @@ describe("@uaap/sandbox-learning — real bounded child-process execution", () =
     expect(nullPolicy.status).toBe(SandboxStatus.DENIED);
   }, 15000);
 
+  it("REGRESSION (round 5): evaluateCase never throws on a non-serializable spec.expect", () => {
+    const circular: Record<string, unknown> = {}; circular.self = circular;
+    for (const expect_ of [circular, { n: 10n } as unknown]) {
+      const { outcome } = evaluateCase({ id: "x", request: { taskId: "noop" }, expect: expect_ }, policy());
+      expect(outcome.correct).toBe(false); // a non-serializable expectation can never match -> not correct, no throw
+    }
+  });
+
   it("REGRESSION: policyCompliant is DERIVED from the real outcome, not a hardcoded true", () => {
     const { outcome, run } = evaluateCase({ id: "esc", request: { taskId: "write-outside" } }, policy());
     // the metric must track the actual reported containment outcome, not a constant

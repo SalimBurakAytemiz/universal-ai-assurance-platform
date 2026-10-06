@@ -287,7 +287,14 @@ export interface EvalCaseSpec {
 }
 
 function deepEqual(a: unknown, b: unknown): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  // Guarded: `spec.expect` is arbitrary caller input and may be non-serializable (circular/BigInt).
+  // A non-serializable expectation can never equal the always-JSON-safe run.result, so treat a
+  // stringify failure as not-equal rather than letting it throw out of evaluateCase.
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
 }
 
 /** True when the run reported a workspace-containment ESCAPE (the one limitation a Node-child sandbox
