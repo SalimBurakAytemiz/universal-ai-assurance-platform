@@ -119,7 +119,14 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
   const startedAt = now().toISOString();
   const t0 = Date.now();
   const taskId = request && typeof request.taskId === "string" ? request.taskId : "";
-  const inputHash = hashObject(request ? request.input ?? null : null);
+  // Guard: a non-serializable input (BigInt, circular ref) must NOT make the function throw — the
+  // contract is TOTAL. Fall back to a sentinel hash so the request still resolves structurally.
+  let inputHash: string;
+  try {
+    inputHash = hashObject(request ? request.input ?? null : null);
+  } catch {
+    inputHash = "unserializable";
+  }
   const envEssential = osEssentialEnv();
   const allow = Array.isArray(policy.envAllowlist) ? policy.envAllowlist : [];
   for (const k of allow) {
@@ -161,14 +168,25 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
     return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `workspace creation failed: ${e instanceof Error ? e.message : String(e)}`, audit: mkAudit(SandboxStatus.FAILED, null, null, 0, 0) };
   }
 
+  // Clamp limits to finite, in-range values so a malformed policy can never make spawnSync throw.
+  const timeoutMs = Number.isFinite(policy.limits.timeoutMs) ? Math.max(1, Math.floor(policy.limits.timeoutMs)) : 1;
+  const maxBuffer = Number.isFinite(policy.limits.maxOutputBytes) ? Math.max(1024, Math.floor(policy.limits.maxOutputBytes)) : 1024;
+
   try {
-    writeFileSync(join(workspace, "request.json"), JSON.stringify({ taskId, input: request.input ?? {} }));
+    // Serialize the request safely: a non-serializable input cannot run the task -> FAILED, not throw.
+    let payload: string;
+    try {
+      payload = JSON.stringify({ taskId, input: request.input ?? {} });
+    } catch (e) {
+      return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `request input is not JSON-serializable: ${e instanceof Error ? e.message : String(e)}`, audit: mkAudit(SandboxStatus.FAILED, null, null, 0, 0) };
+    }
+    writeFileSync(join(workspace, "request.json"), payload);
     const run = spawnSync(process.execPath, [RUNNER, "request.json"], {
       cwd: workspace,
       env: envEssential, // CONTROLLED: only OS-essential + allow-listed keys; no inherited secrets
-      timeout: Math.max(1, policy.limits.timeoutMs),
+      timeout: timeoutMs,
       killSignal: "SIGKILL",
-      maxBuffer: Math.max(1024, policy.limits.maxOutputBytes),
+      maxBuffer,
       windowsHide: true,
       encoding: "utf8",
     });
@@ -177,11 +195,15 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
     const stderr = typeof run.stderr === "string" ? run.stderr : "";
     const outB = Buffer.byteLength(stdout);
     const errB = Buffer.byteLength(stderr);
+    const errCode = run.error ? (run.error as NodeJS.ErrnoException).code : undefined;
 
-    // Timeout: spawnSync sets error.code ETIMEDOUT and signal to the killSignal.
-    const timedOut = (run.error && (run.error as NodeJS.ErrnoException).code === "ETIMEDOUT") || run.signal === "SIGKILL" || run.signal === "SIGTERM";
-    if (timedOut) {
-      return { status: SandboxStatus.TIMED_OUT, result: null, stdout, stderr, reason: `exceeded ${policy.limits.timeoutMs}ms budget`, audit: mkAudit(SandboxStatus.TIMED_OUT, run.status, run.signal ?? "SIGKILL", outB, errB) };
+    // Classify by the ACTUAL cause — never conflate them (the signal is SIGKILL for both timeout and
+    // maxBuffer breach, so we key on error.code, not the signal, for an honest audit trail).
+    if (errCode === "ETIMEDOUT") {
+      return { status: SandboxStatus.TIMED_OUT, result: null, stdout, stderr, reason: `exceeded ${timeoutMs}ms budget`, audit: mkAudit(SandboxStatus.TIMED_OUT, run.status, run.signal ?? "SIGKILL", outB, errB) };
+    }
+    if (errCode === "ENOBUFS") {
+      return { status: SandboxStatus.FAILED, result: null, stdout, stderr, reason: `output exceeded the ${maxBuffer}-byte cap`, audit: mkAudit(SandboxStatus.FAILED, run.status, run.signal ?? "SIGKILL", outB, errB) };
     }
     if (run.error) {
       return { status: SandboxStatus.FAILED, result: null, stdout, stderr, reason: `spawn error: ${run.error.message}`, audit: mkAudit(SandboxStatus.FAILED, run.status, run.signal, outB, errB) };
@@ -203,6 +225,9 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
       return { status: SandboxStatus.FAILED, result, stdout, stderr, reason: `runner error: ${String((result as Record<string, unknown>).error)}`, audit: mkAudit(SandboxStatus.FAILED, run.status, run.signal, outB, errB) };
     }
     return { status: SandboxStatus.COMPLETED, result, stdout, stderr, audit: mkAudit(SandboxStatus.COMPLETED, run.status, run.signal, outB, errB) };
+  } catch (e) {
+    // TOTAL guarantee: any unexpected throw (IO error on write, spawn arg error) -> structured FAILED.
+    return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `sandbox error: ${e instanceof Error ? e.message : String(e)}`, audit: mkAudit(SandboxStatus.FAILED, null, null, 0, 0) };
   } finally {
     if (!policy.keepWorkspace) {
       try { rmSync(workspace, { recursive: true, force: true }); } catch { /* best-effort cleanup */ }
@@ -223,11 +248,19 @@ function deepEqual(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+/** True when the run reported a workspace-containment ESCAPE (the one limitation a Node-child sandbox
+ * has). Derived from the actual result, never assumed. */
+function reportedEscape(run: SandboxResult): boolean {
+  return !!(run.result && typeof run.result === "object" && (run.result as Record<string, unknown>).escapedWorkspace === true);
+}
+
 /**
  * Run an evaluation case in the sandbox and map it to an agent-evaluation CaseOutcome. `correct` is
- * true when the observed status + result match the spec's expectation. Policy compliance is true iff
- * the run stayed within bounds (DENIED or a produced result — never a hang). latencyMs is the real
- * measured duration. This wires the sandbox into the certification pipeline (aggregateMetrics).
+ * true when the observed status + result match the spec's expectation. `policyCompliant` is DERIVED
+ * from the real outcome: it is false when the run reported a containment escape (escapedWorkspace) —
+ * so the one limitation the sandbox admits can surface in the certification metric rather than being
+ * masked by a hardcoded constant. latencyMs is the real measured duration. Wires the sandbox into the
+ * certification pipeline (aggregateMetrics).
  */
 export function evaluateCase(spec: EvalCaseSpec, policy: SandboxPolicy, opts: RunOptions = {}): { outcome: CaseOutcome; run: SandboxResult } {
   const run = runSandboxed(spec.request, policy, opts);
@@ -238,7 +271,7 @@ export function evaluateCase(spec: EvalCaseSpec, policy: SandboxPolicy, opts: Ru
   const outcome: CaseOutcome = {
     id: spec.id,
     correct,
-    policyCompliant: true, // the sandbox always resolves to a bounded, audited terminal state
+    policyCompliant: !reportedEscape(run), // honest: a demonstrated containment escape is NOT compliant
     evidenceOk: run.audit != null,
     latencyMs: run.audit.durationMs,
     tokenCost: 0,

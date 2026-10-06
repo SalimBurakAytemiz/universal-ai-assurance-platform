@@ -21,19 +21,21 @@ recorded. This file is the evidence. "Runtime missing" is not, by itself, a prov
 
 ## Per-node blocker resolution
 
-### desktop-shell / desktop-*-view / desktop-packaging — Electron: PROVEN AVAILABLE
-1. Required: Electron runtime.
+### Electron runtime — PROVEN AVAILABLE (substantiated by a committed, runnable smoke)
+1. Required: Electron runtime (for desktop-shell, the desktop views, and dev packaging).
 2. Attempt: project-local install in `apps/desktop` (electron ^32 already declared).
 3. Command: `cd apps/desktop && npm install`.
 4. Result: exit 0; `node_modules/electron/dist/electron.exe` present (186 MB); `electron --version` → `v32.3.3`.
-5. Runtime smoke (headless, no display): a standalone script created a `BrowserWindow({show:false})`,
-   loaded a `data:` page, evaluated renderer JS, read it back, and shut down cleanly →
-   `SMOKE_RESULT:{"ok":true,"ready":true,"windowCreated":true,"loaded":true,...,"ms":667}` exit 0.
-6. Conclusion: **NOT BLOCKED.** Electron builds AND runtime-validates on this host headlessly.
-   Desktop shell, the three desktop views, and a dev (unsigned) package are all technically
-   executable here and are being implemented + runtime-validated. Only PRODUCTION CODE-SIGNING
-   (`DESKTOP_SIGNING_REQUIRED`) remains a credential blocker — a signing cert is not present and
-   cannot be safely synthesized.
+5. Runtime smoke (headless, no desktop session), committed + reproducible at
+   `apps/desktop/smoke/headless-smoke.cjs` (run via `npm run smoke` in apps/desktop): creates a
+   `BrowserWindow({show:false})`, loads a `data:` page, evaluates renderer JS, reads it back, exits 0 →
+   `SMOKE_RESULT:{"ok":true,"ready":true,"windowCreated":true,"loaded":true,...}`.
+6. Conclusion for desktop-shell / desktop-*-view: **NOT BLOCKED.** Electron builds AND runtime-validates
+   on this host headlessly; these nodes are implemented + runtime-validated in their own PRs.
+7. Scope note (honest): **dev packaging is NOT yet proven** — `apps/desktop`'s `build` script is still a
+   deliberate stub that exits 1. An electron-builder/packager dev build is ATTEMPTED and its exact
+   result recorded in the desktop-packaging PR. PRODUCTION CODE-SIGNING (`DESKTOP_SIGNING_REQUIRED`)
+   is a separate credential blocker — no signing cert is present and none can be safely synthesized.
 
 ### sandbox-learning — Docker absent → safe local alternative used: RESOLVED
 1. Required: an isolated execution runtime.

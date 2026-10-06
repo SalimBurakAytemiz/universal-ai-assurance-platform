@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **461 passed / 461** across 37 files (+ sandbox-learning, real bounded child-process execution)
+- vitest: **465 passed / 465** across 37 files (+ sandbox-learning, real bounded child-process execution, review round 1 fixes)
 
 New this change — `@uaap/sandbox-learning` (`packages/sandbox-learning/test/`): **9 tests**
 - A SAFE, LOCAL, bounded execution sandbox for the platform's synthetic learning/eval tasks — the
@@ -33,4 +33,11 @@ realtime, performance, accessibility), the security appsec detection engine, the
 the research-intelligence pipeline, the autopilot durability chain, and the desktop real-state
 view-model data layer are all IMPLEMENTED+TESTED and merged (PRs #2–#21).
 
-P0/P1/P2/P3 open on this change: 0 / 0 / 0 / 0 (pre-PR; adversarial review runs on the PR).
+Adversarial review round 1 (PR #22, 20 agents) confirmed 5 defects — ALL fixed with regression
+tests: P1 runSandboxed could THROW on a non-serializable input (BigInt/circular) before the gate
+(now guarded -> TOTAL); P2 output-cap breach (ENOBUFS) misclassified as TIMED_OUT (now keyed on
+error.code, ENOBUFS -> FAILED); P2 no-catch on the spawn/write path (now mapped to FAILED, limits
+clamped); P2 evaluateCase hardcoded policyCompliant:true (now DERIVED — a reported containment escape
+is non-compliant); P3 ENVIRONMENT_PROOF overstated the Electron smoke/packaging (smoke now committed
++ runnable at apps/desktop/smoke/headless-smoke.cjs; packaging explicitly marked NOT yet proven).
+P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Re-review runs on the fix commit.

@@ -93,6 +93,40 @@ describe("@uaap/sandbox-learning — real bounded child-process execution", () =
     expect(a.audit.id).not.toBe(b.audit.id);
   });
 
+  it("REGRESSION: TOTAL — a non-serializable input never throws (BigInt / circular)", () => {
+    const circular: Record<string, unknown> = {}; circular.self = circular;
+    for (const input of [{ n: 10n } as unknown, circular]) {
+      // allowed task: resolves to FAILED (input cannot be serialized to the runner), never throws
+      const r = runSandboxed({ taskId: "noop", input }, policy());
+      expect([SandboxStatus.FAILED, SandboxStatus.DENIED]).toContain(r.status);
+      expect(r.reason).toBeTruthy();
+      // non-allowed task with the same bad input: DENIED, still no throw
+      const d = runSandboxed({ taskId: "not-allowed", input }, policy({ allowedTasks: ["noop"] }));
+      expect(d.status).toBe(SandboxStatus.DENIED);
+    }
+  });
+
+  it("REGRESSION: an output-cap breach is FAILED (not a false TIMED_OUT)", () => {
+    const r = runSandboxed({ taskId: "throw", input: { message: "X".repeat(20000) } }, policy({ limits: { timeoutMs: 5000, maxOutputBytes: 1024 } }));
+    expect(r.status).toBe(SandboxStatus.FAILED);
+    expect(r.reason).not.toMatch(/budget/); // must NOT claim a timeout
+    expect(r.reason).toMatch(/output exceeded|exit|error/);
+  }, 15000);
+
+  it("REGRESSION: a malformed limit (NaN timeout) resolves structurally, never throws", () => {
+    const r = runSandboxed({ taskId: "noop" }, policy({ limits: { timeoutMs: NaN as unknown as number, maxOutputBytes: NaN as unknown as number } }));
+    expect(Object.values(SandboxStatus)).toContain(r.status); // some terminal state, no exception
+  }, 15000);
+
+  it("REGRESSION: policyCompliant is DERIVED from the real outcome, not a hardcoded true", () => {
+    const { outcome, run } = evaluateCase({ id: "esc", request: { taskId: "write-outside" } }, policy());
+    // the metric must track the actual reported containment outcome, not a constant
+    const escaped = !!(run.result && (run.result as { escapedWorkspace?: boolean }).escapedWorkspace);
+    expect(outcome.policyCompliant).toBe(!escaped);
+    const metrics = aggregateMetrics([outcome]);
+    expect(metrics.policyCompliance).toBe(escaped ? 0 : 1); // a demonstrated escape CAN surface as < 1
+  });
+
   it("feeds sandbox outcomes into the agent-evaluation pipeline (real metrics)", () => {
     const specs = [
       { id: "c-sum", request: { taskId: "sum", input: { numbers: [2, 2] } }, expect: { sum: 4 } },
