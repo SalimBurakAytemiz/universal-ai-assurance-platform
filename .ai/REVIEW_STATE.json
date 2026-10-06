@@ -37,6 +37,24 @@
     "boundedLoop": { "count": 2, "max": 3, "outcome": "CONVERGED" },
     "allResolved": true
   },
+  "reReview2": {
+    "at": "2026-10-06T16:20:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #21 fix commit c7144bb (round 3 — bounded cap)",
+    "agents": 11,
+    "reported": 3,
+    "confirmed": 3,
+    "distinctDefectsFixed": [
+      "P2 safeUrl over-strip + navigation-mask: a no-path URL with '@' in the query (e.g. https://shop.example.com?contact=bob@mail.net) had its authority scan include the query, so lastIndexOf('@') replaced the host with the post-'@' text — wrong host echoed AND a navigation mismatch could be masked (both sides normalizing to the same junk).",
+      "P2 safeUrl bypass: a leading space (or any char before the scheme) made the ^-anchored scheme regex miss, skipping userinfo stripping entirely -> credential leaked.",
+      "P3 safeUrl leak: a '/' inside the userinfo truncated the authority scan before the '@', leaving the credential unstripped."
+    ],
+    "resolution": "ARCHITECTURE CHANGE (beyond the 3-round cap, deliberately): replaced the hand-rolled string parser with the WHATWG URL parser (render host+path only; a scheme'd URL the parser rejects is REDACTED to its scheme, never echoed; a relative URL echoes its clean path). This eliminates the entire hand-rolled-parser leak class by construction. Justified beyond the cap because a confirmed secret-leak into evidence violates a NON-NEGOTIABLE hard rule ('No secrets in evidence'), which overrides the review-loop-count convention — same precedent as PR #6 (concurrency class eliminated by switching to the correct mechanism rather than patching).",
+    "regressionTests": "1 new round-3 test (no-path @-in-query keeps real host + no mask; leading-whitespace stripped; /-in-userinfo redacted; navigation does not falsely match two hosts sharing a post-@ tail). 18 in-package, 449/449 repo-wide.",
+    "boundedLoop": { "count": 3, "max": 3 },
+    "round4": "focused verification of the WHATWG-based safeUrl runs on the fix commit before merge.",
+    "allResolved": true
+  },
   "unresolved": {
     "P0": 0,
     "P1": 0,
@@ -44,8 +62,9 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
-    "max": 3
+    "count": 3,
+    "max": 3,
+    "note": "exceeded to 4 deliberately for a hard-rule secret-safety fix (WHATWG URL parser); not another patch of the same hand-rolled logic."
   },
   "pr20": {
     "round1": {

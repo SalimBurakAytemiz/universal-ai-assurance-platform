@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **448 passed / 448** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-2 fixes)
+- vitest: **449 passed / 449** across 36 files (+ quality-web-engine functional web-flow engine, review rounds 1-3 fixes)
 
 New this change — `@uaap/quality-web-engine` (`packages/quality-web-engine/test/`): **9 tests**
 - Functional web/UI assurance on the @uaap/engine-core lifecycle over RECORDED web-interaction
@@ -38,4 +38,9 @@ whole run; benign console allowlist flagged standard console.table/dir/group typ
 cancellation checkpoint). Round 2 (11 agents) confirmed 3 fix-introduced issues — ALL fixed:
 `console.assert` is a FAILED-assertion signal so it is now error-class (not benign); safeUrl now
 strips userinfo FIRST and to the LAST `@` before the path, so a credential containing `@`/`?`/`#` is
-fully removed. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. Round 3 (cap) runs on the fix commit.
+fully removed. Round 3 (11 agents, the bounded cap) confirmed 3 MORE safeUrl edge-case leaks
+(no-path `@`-in-query over-strip; leading-whitespace bypass; `/`-in-userinfo). Because a secret-leak
+into evidence violates a non-negotiable hard rule (overriding the 3-round convention), safeUrl was
+rewritten to use the WHATWG `URL` parser (host+path only; malformed authority => redacted) —
+eliminating the hand-rolled-parser class by construction. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. A focused
+round-4 verification runs on the fix commit.

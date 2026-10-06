@@ -177,6 +177,24 @@ describe("QualityWebEngine — recorded web-flow audit against the local fixture
     expect(JSON.stringify(keep.findings)).toContain("/users/@handle");
   });
 
+  it("REGRESSION (round 3): safeUrl is leak-proof on no-path @-in-query, leading whitespace, and /-in-userinfo", async () => {
+    // (1) '@' in a QUERY param with NO path: must keep the real host, not over-strip to the mail host,
+    // and must not mask a navigation mismatch.
+    const q = await drive({ flows: [{ id: "f", steps: [{ network: [{ url: "https://shop.example.com?contact=bob@mail.net", status: 500 }] }] }] });
+    const qblob = JSON.stringify(q.findings);
+    expect(qblob).toContain("shop.example.com");
+    expect(qblob).not.toContain("mail.net");
+    // (2) leading whitespace before the scheme must NOT bypass userinfo stripping
+    const w = await drive({ flows: [{ id: "f", steps: [{ network: [{ url: " https://alice:LEAKY@api.host/login", status: 500 }] }] }] });
+    expect(JSON.stringify(w.findings)).not.toContain("LEAKY");
+    // (3) a '/' inside the userinfo must not leave the credential unstripped (redacted when malformed)
+    const sl = await drive({ flows: [{ id: "f", steps: [{ network: [{ url: "https://user:pa/SS@host/x", status: 500 }] }] }] });
+    expect(JSON.stringify(sl.findings)).not.toContain("SS@");
+    // navigation must not falsely MATCH two different hosts that only share a post-@ query tail
+    const nav = await drive({ flows: [{ id: "f", steps: [{ expectedUrl: "https://good.example.com", url: "https://evil.example.com?x=a@good.example.com" }] }] });
+    expect(kinds(nav.findings)).toContain("navigation-mismatch");
+  });
+
   it("REGRESSION: a cancellation yields CANCELLED, never a swallowed engine-error finding", async () => {
     const tok = new CancellationToken();
     tok.cancel("test-cancel");
