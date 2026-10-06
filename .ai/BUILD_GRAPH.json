@@ -1298,11 +1298,14 @@
       "tests": [
         "apps/desktop: npm run package:dir && npm run verify:package (packaged UAAP.exe startup smoke, exit 0)"
       ],
-      "commits": [],
+      "commits": [
+        "c928a5fcb75a833bb042ffe172fd3e558db45875"
+      ],
       "review": {
         "kind": "DEV_UNSIGNED",
         "note": "dev/unsigned dir build + packaged-exe startup smoke (exit 0). Auto-update + rollback are tracked separately as desktop-update-rollback (NOT_STARTED, gated).",
-        "evidence": ".ai/PACKAGING_EVIDENCE.json"
+        "evidence": ".ai/PACKAGING_EVIDENCE.json",
+        "mergedPR": 24
       }
     },
     {

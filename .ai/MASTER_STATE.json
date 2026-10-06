@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "updatedAt": "2026-10-06T20:10:00.000Z",
+  "updatedAt": "2026-10-06T20:35:00.000Z",
   "product": "Universal AI Assurance Platform",
   "model": "ONE_PRODUCT_ONE_REPOSITORY_ONE_DESKTOP",
   "executionModel": "DEPENDENCY_AWARE_CONTINUOUS_BUILD_GRAPH",
@@ -38,7 +38,7 @@
     "implementedDefinitions": 72,
     "certified": 0
   },
-  "currentFocus": "Desktop shell + 3 views runtime-validated (PR #23). Next + last buildable node: desktop-packaging (attempt a dev/unsigned electron-builder/packager build on this Windows host; record exact result; production code-signing stays DESKTOP_SIGNING_REQUIRED). Also building a Playwright live-capture adapter feeding the merged quality-web-engine (Chrome present). Only security-active-validation-gate (LOCKED_BY_DESIGN) + production signing remain genuine blockers.",
+  "currentFocus": "Desktop packaging (dev/unsigned) merged (PR #24). Next: build the Playwright live-capture adapter — drive a LOCAL HTML fixture with Playwright (Chrome present), capture navigation/DOM/console/network/screenshots/traces, convert to the quality-web-engine recorded-artifact format, and route through the merged fail-closed engine (no external target). Genuine blockers remaining: security-active-validation-gate (LOCKED_BY_DESIGN), production code-signing + update/rollback (cert + infra), final license (legal).",
   "humanActionRequired": [
     {
       "id": "HAR-LICENSE",
@@ -47,11 +47,15 @@
     {
       "id": "HAR-SEC-AUTH",
       "reason": "Any active security validation against a real target requires explicit written authorization + scope. None exists; feature stays locked."
+    },
+    {
+      "id": "HAR-DESKTOP-SIGNING",
+      "reason": "Production desktop code-signing + a signed auto-update/rollback channel need a code-signing certificate and an update-hosting service. Dev/unsigned build is done + startup-validated."
     }
   ],
   "lastCheckpoint": {
-    "commit": "5923fa6ea1ec712a4fa83af1b6ceb652e53490b3",
-    "verifiedAt": "2026-10-06T20:10:00.000Z",
-    "note": "PR #23 merged: desktop shell + Agents/Knowledge/Learning/Security views, RUNTIME-VALIDATED headless (npm run views exit 0) against the reviewed @uaap/desktop-viewmodels bundle. DONE 60 / BLOCKED 1 / NOT_STARTED 1. Only desktop-packaging remains buildable; security-active-validation-gate LOCKED_BY_DESIGN; production signing = DESKTOP_SIGNING_REQUIRED."
+    "commit": "c928a5fcb75a833bb042ffe172fd3e558db45875",
+    "verifiedAt": "2026-10-06T20:35:00.000Z",
+    "note": "PR #24 merged: dev/unsigned Windows package built + packaged-exe startup-validated (renders real state). DONE 61 / BLOCKED 1 / NOT_STARTED 1. Remaining: security-active-validation-gate (LOCKED_BY_DESIGN); desktop-update-rollback (signed channel + update infra = DESKTOP_SIGNING_REQUIRED); plus building the Playwright live-capture adapter next."
   }
 }
