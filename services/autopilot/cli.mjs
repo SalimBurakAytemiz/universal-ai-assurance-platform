@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { JobStore } from "./lib/store.mjs";
 import { ProviderGate, defaultProbe } from "./lib/provider.mjs";
 import { GitCiMonitor } from "./lib/monitor.mjs";
+import { GithubCiDriver } from "./lib/cidriver.mjs";
 import { AutopilotService } from "./lib/service.mjs";
 import { acquireInstanceLock, releaseInstanceLock, liveInstanceHeld, clearStaleLock } from "./lib/instancelock.mjs";
 
@@ -34,7 +35,8 @@ const exec = (cmd) => {
 function build() {
   const store = new JobStore(JOBS_PATH);
   const providerGate = new ProviderGate({ probe: () => defaultProbe(PROVIDER_PATH) });
-  const service = new AutopilotService({ store, providerGate, clock: realClock });
+  const ci = new GithubCiDriver({ exec }); // deterministic GitHub CI/PR driver (poll + idempotent merge)
+  const service = new AutopilotService({ store, providerGate, clock: realClock, ci });
   const monitor = new GitCiMonitor({ exec });
   return { store, providerGate, service, monitor };
 }
