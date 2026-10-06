@@ -2,17 +2,16 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T11:02:00.000Z",
+    "at": "2026-10-06T11:33:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #14 quality-realtime-engine",
-    "agents": 19,
-    "reported": 8,
-    "confirmed": 8,
+    "scope": "PR #15 quality-performance-engine",
+    "agents": 12,
+    "reported": 5,
+    "confirmed": 5,
     "distinctDefectsFixed": [
-      "P1 per-key ordering ignored channel.orderKey (hardcoded to m.key) -> correctly-partitioned multi-key streams produced false duplicate/ordering violations. Now partitions on the orderKey field (fallback m.key), keyed type-preservingly (JSON.stringify) so numeric 1 and string '1' never collide.",
-      "P1 false green: a channel declaring total/per-key ordering whose messages carry no seq passed clean (ordering never verified). Now an unsequenced message on an ordered channel is a missing-sequence finding (fail-closed).",
-      "P2 the ack requirement was skipped for unknown event types (the unknown-event-type `continue` short-circuited it). Ack is channel-level and now checked for every message before the event lookup.",
-      "P3 a non-string requiredHeaders entry threw inside the per-channel try (masked as engine-error). Header names are now coerced with String()."
+      "P1 a non-finite/non-number VALUE on a known threshold key (e.g. p95:\"100\", null, NaN) was silently skipped -> false green. Now surfaced as malformed-threshold (fail-closed).",
+      "P2 negative latencies were accepted and deflated percentiles, masking a real breach. Now a negative/non-finite latencyMs is malformed-sample and excluded.",
+      "P2 an error sample lacking a latency (timeout) was dropped from BOTH error-rate numerator and denominator -> false pass. Error-rate base now counts every observed request (ok boolean OR valid latency); ok===false counts even without a latency."
     ],
     "allResolved": true
   },
@@ -23,18 +22,18 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
+    "count": 2,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T11:10:00.000Z",
+    "at": "2026-10-06T12:44:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #14 fix commit 47d2fe8",
-    "agents": 4,
+    "scope": "PR #15 fix commit 47428e9",
+    "agents": 3,
     "reported": 1,
     "confirmed": 1,
     "distinctDefectsFixed": [
-      "P1 the realtime engine's Ajv instance did not register ajv-formats, so declared `format` constraints (email/uuid/date-time/...) were silently ignored -> a false green on the payload contract (and classifyAjvError's format branch was dead code). Registered addFormats(); format violations are now reported. The 8 ordering/ack fixes were re-verified correct."
+      "P2 threshold RANGE not validated: errorRate>=1 was an un-fireable check (false green) and a negative latency budget cried wolf. Now a known threshold outside its valid range (errorRate in [0,1]; latency >= 0) is malformed-threshold (fail-closed) and not enforced."
     ],
     "allResolved": true
   },

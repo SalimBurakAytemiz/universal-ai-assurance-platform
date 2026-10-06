@@ -1503,6 +1503,27 @@
         },
         "mergedPR": 14
       }
+    },
+    {
+      "id": "quality-performance-engine",
+      "name": "Quality: performance budget engine",
+      "family": "quality",
+      "dependencies": [
+        "engine-core"
+      ],
+      "status": "DONE",
+      "requirements": [
+        "REQ-QA-PERF-001"
+      ],
+      "files": [
+        "packages/quality-performance-engine/src/index.ts",
+        "packages/quality-performance-engine/fixtures/api-perf.json"
+      ],
+      "tests": [
+        "packages/quality-performance-engine/test/quality-performance-engine.test.ts"
+      ],
+      "commits": [],
+      "review": {}
     }
   ]
 }
