@@ -2,32 +2,34 @@
 
 > Authoritative "what to do next". Updated at every validated checkpoint.
 
-## Status — all technically-buildable nodes DONE
-**Build graph: 62 DONE / 1 BLOCKED / 1 NOT_STARTED (64 total). verify: 477/477 across 38 files.**
+## Status — Release Candidate v0.9.0-rc.1 FROZEN (ACCEPT AS RC — NOT GA)
 
-This session the host was PROBED and the earlier "all remaining nodes are gated" conclusion was
-DISPROVEN by actual attempted execution (`.ai/ENVIRONMENT_PROOF.md`). Everything buildable here was
-then built AND runtime-validated:
-- `sandbox-learning` (PR #22) — Node-child sandbox (Docker's safe local alternative); real timeout-kill,
-  env isolation, audit; public surface total by construction.
-- `desktop-shell` + `desktop-agents/knowledge/learning-view` (PR #23) — Electron shell consuming the
-  reviewed `@uaap/desktop-viewmodels`; full-app headless views-smoke renders real state (exit 0).
-- `desktop-packaging` (PR #24) — dev/unsigned Windows build; the packaged `UAAP.exe` self-validates
-  (startup smoke exit 0).
-- `quality-web-live-adapter` (PR #25) — Playwright live capture against LOCAL fixtures only
-  (SSRF-safe, fail-closed), routed through the fail-closed web engine; live smoke exit 0.
+**PR #26 merged into `main` as `307cb8a78b64404f9ada58b79277385e33b8546f`** (squash of the reviewed
+HEAD `9f56ca4`; trees byte-identical → reviewed == merged). **main CI: success.** Post-merge verify on
+main: **500/500 across 39 files**; validators + typecheck OK. Build graph **62 DONE / 1 BLOCKED / 1
+NOT_STARTED**, **0 false DONEs**. Tag: **`v0.9.0-rc.1`**. Full report:
+`.ai/FINAL_SYSTEM_ACCEPTANCE_REPORT.md`; evidence: `.ai/ACCEPTANCE_EVIDENCE.md`.
 
-## Remaining — PROVEN blockers only (external runtime / human / legal)
-| Node / item | State | Proven blocker |
-|-------------|-------|----------------|
-| `security-active-validation-gate` | BLOCKED | LOCKED_BY_DESIGN — needs a signed, scoped human authorization record in `.ai/security/`. Engine/agents/lifecycle already built + tested on local fixtures. |
-| `desktop-update-rollback` | NOT_STARTED | Signed auto-update channel needs a code-signing certificate + an update-hosting service (`DESKTOP_SIGNING_REQUIRED` + external infra). |
-| Production desktop code-signing | — | `DESKTOP_SIGNING_REQUIRED` — no certificate present; cannot be safely synthesized. Dev/unsigned build is done + validated. |
-| Final product license | — | `FINAL_LICENSE_DECISION_REQUIRED` — business/legal; conservative all-rights-reserved default stays. |
-| Live external research fetch | — | `BLOCKED_EXTERNAL_RESEARCH` — offline research pipeline is built + tested; live fetch gated. |
+The final independent audit + 3-round adversarial review fixed every P0/P1 (and all but one documented
+P2) and hardened the trust kernel, broker, release-gate, SoD identity, autopilot, and desktop renderer.
+No security gate was weakened; the active-validation gate stayed LOCKED_BY_DESIGN.
+
+Agent certification: **72 defined, 0 certified** — the correct pre-certification state. Certification
+requires a real evaluation benchmark (not executed; not fabricated). See MASTER_STATE.agentCertification.
+
+## Remaining — PROVEN blockers only (external runtime / human / legal). The RC is frozen; these are GA gates.
+| Item | State | Blocker |
+|------|-------|---------|
+| `security-active-validation-gate` | BLOCKED | LOCKED_BY_DESIGN — needs a signed, scoped human authorization record in `.ai/security/`. |
+| `desktop-update-rollback` | NOT_STARTED | Signed auto-update channel needs a code-signing certificate + an update-hosting service. |
+| Production desktop code-signing | — | `DESKTOP_SIGNING_REQUIRED` — no certificate present. Dev/unsigned build is done + validated. |
+| Final product license | — | `FINAL_LICENSE_DECISION_REQUIRED` — business/legal; all-rights-reserved default stays. |
+| Live external research fetch | — | `BLOCKED_EXTERNAL_RESEARCH` — offline pipeline built + tested; live fetch gated. |
+| Agent certification to CERTIFIED/ACTIVE | — | Needs a real per-agent evaluation benchmark; must not be faked. |
 
 ## On resume
-Re-run the session-start procedure (`git status`/`log`, read `.ai/*`, `npm run verify`). There is no
-remaining node that is technically executable on this host without one of the proven blockers above
-being lifted (a signing cert, an authorization record, an update-hosting service, or a legal
-decision). If one is provided, pick up the matching node. Otherwise, do not fabricate progress.
+Re-run the session-start procedure (`git status`/`log`, read `.ai/*`, `npm run verify`). The RC is
+frozen at `v0.9.0-rc.1`. There is no remaining node technically executable on this host without one of
+the proven blockers above being lifted (a signing cert, an authorization record, an update-hosting
+service, a legal decision, or an evaluation benchmark). If one is provided, pick up the matching work.
+Otherwise, do not fabricate progress.

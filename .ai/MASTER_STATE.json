@@ -3,9 +3,22 @@
   "updatedAt": "2026-10-07T00:40:00.000Z",
   "releaseCandidate": {
     "version": "0.9.0-rc.1",
-    "status": "ACCEPTED_AS_RC",
+    "status": "FROZEN_RC",
+    "verdict": "ACCEPT_AS_RELEASE_CANDIDATE_NOT_GA",
+    "pr": 26,
+    "mergeCommit": "307cb8a78b64404f9ada58b79277385e33b8546f",
+    "reviewedHeadContentMatchesMerge": true,
+    "mainCi": "success",
+    "tag": "v0.9.0-rc.1",
     "report": ".ai/FINAL_SYSTEM_ACCEPTANCE_REPORT.md",
     "notProductionBecause": ["DESKTOP_SIGNING_REQUIRED", "ACTIVE_VALIDATION_LOCKED_BY_DESIGN", "FINAL_LICENSE_DECISION_REQUIRED"]
+  },
+  "agentCertification": {
+    "defined": 72,
+    "certified": 0,
+    "state": "CORRECT_PRE_CERTIFICATION",
+    "reason": "0 certified is the honest, correct state. Certification requires a REAL evaluation benchmark (>=10 cases/agent, >=2x repeats for reproducibility, policy-compliance=1.0, correctness>=0.9, FP<=0.05, FN<=0.1, evidence>=0.95, reproducibility>=0.95, recovery>=0.9) decided by a certifier that is NOT the agent (no self-cert). No such benchmark has been executed, and the 72 agents are schema-validated ROLE DEFINITIONS (least-privilege invariants enforced), not executable model versions with a benchmark harness on this host. Certifying them without real evaluation evidence would fabricate metrics (forbidden: NO_FAKE_PASS, SELF-LEARNING!=SELF-TRUSTING, certify-before-active). The certification mechanism (packages/agent-evaluation) exists and is tested (15 tests) and enforces the gate; nothing promotes an uncertified agent to ACTIVE.",
+    "resolution": "DOCUMENTED_NOT_FAKED"
   },
   "product": "Universal AI Assurance Platform",
   "model": "ONE_PRODUCT_ONE_REPOSITORY_ONE_DESKTOP",
@@ -60,8 +73,8 @@
     }
   ],
   "lastCheckpoint": {
-    "commit": "a80694299c0f292793e7efd46a16ff88e4e8dbe9",
-    "verifiedAt": "2026-10-07T00:40:00.000Z",
-    "note": "Final system audit + RC v0.9.0-rc.1 on branch audit/final-acceptance-rc (base a806942). Independent re-verification of all 62 DONE nodes (0 false DONEs); added the 14-test E2E acceptance suite; 3-round adversarial review (20 issues: P0x1/P1x7/P2x7/P3x5) with 19 fixed+regressed and 1 accepted+documented. Trust kernel, broker, release-gate, SoD identity, autopilot, and desktop renderer hardened — no gate weakened. Pre-merge verify: 500/500 across 39 files. The post-merge checkpoint will record the merge SHA."
+    "commit": "307cb8a78b64404f9ada58b79277385e33b8546f",
+    "verifiedAt": "2026-10-07T00:00:00.000Z",
+    "note": "PR #26 MERGED (squash) into main as 307cb8a — the final system audit + RC v0.9.0-rc.1. The merge commit's tree is byte-identical to the reviewed HEAD 9f56ca4 (reviewed content == merged content). main CI: success. Post-merge verify on main: 500/500 across 39 files; validators + typecheck OK. Build graph 62 DONE / 1 BLOCKED / 1 NOT_STARTED, 0 false DONEs. RC frozen at tag v0.9.0-rc.1. Agent certification: 0 certified is correct pre-certification (documented, not faked). Remaining blockers unchanged: active-validation LOCKED_BY_DESIGN, desktop signing/update gated, final license legal."
   }
 }

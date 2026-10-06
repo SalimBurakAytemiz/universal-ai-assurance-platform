@@ -2,10 +2,12 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-07 (branch `audit/final-acceptance-rc`, final system audit + RC)
+## Last local run — 2026-10-07 (main @ 307cb8a, post-merge RC closure)
 
-Command: `npm run verify` (validate → typecheck → test).
+Command: `npm run verify` (validate → typecheck → test), run on `main` after PR #26 merged.
 
+- Merged main commit: **`307cb8a78b64404f9ada58b79277385e33b8546f`** (squash of reviewed HEAD
+  `9f56ca4`; trees byte-identical). **main CI: success.** Tag: `v0.9.0-rc.1`.
 - validate: **OK**   typecheck (`tsc --noEmit`): **OK**
 - vitest: **500 passed / 500** across **39 files** (0 failed, 0 skipped).
 
