@@ -29,7 +29,8 @@
       "@uaap/quality-api-engine": ["packages/quality-api-engine/src/index.ts"],
       "@uaap/quality-database-engine": ["packages/quality-database-engine/src/index.ts"],
       "@uaap/quality-realtime-engine": ["packages/quality-realtime-engine/src/index.ts"],
-      "@uaap/quality-performance-engine": ["packages/quality-performance-engine/src/index.ts"]
+      "@uaap/quality-performance-engine": ["packages/quality-performance-engine/src/index.ts"],
+      "@uaap/quality-accessibility-engine": ["packages/quality-accessibility-engine/src/index.ts"]
     }
   },
   "include": [

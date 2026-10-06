@@ -2,13 +2,13 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-06 (branch auto/quality-performance-engine)
+## Last local run — 2026-10-06 (branch auto/quality-accessibility-engine)
 
 Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **372 passed / 372** across 31 files (quality-performance-engine; review + re-review fixes)
+- vitest: **386 passed / 386** across 32 files (quality-accessibility-engine + 4 review fixes)
 
 New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **36 tests**
 - content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.

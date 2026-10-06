@@ -59,3 +59,10 @@
   broker); it analyzes captured measurements. Fail-closed: a budget with no usable samples is
   UNVERIFIABLE, not a pass. Built with all robustness lessons baked in (array guards, per-sample
   isolation, duplicate-budget fail-closed, unknown-threshold vocabulary fail-closed).
+- **2026-10-06** `@uaap/quality-accessibility-engine` (engine F) runs deterministic WCAG-style checks
+  over captured page SNAPSHOTS (accessibility-tree-like element lists): image alt (alt="" is valid
+  decorative), control labels, interactive accessible names, document lang, heading-order,
+  duplicate ids, text contrast (WCAG luminance from provided fg/bg hex), and visual-regression
+  (baseline vs current snapshot hash). OFFLINE (a Playwright capture transport would feed live
+  snapshots later). Hardened: array guards, per-page/per-element isolation, duplicate-page
+  fail-closed, malformed-color/element surfaced.
