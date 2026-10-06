@@ -74,8 +74,11 @@ export class ResearchPipeline {
 
   constructor(private readonly clock: { now: () => string } = { now: () => new Date().toISOString() }) {}
 
-  static id(kind: ResearchKind, topic: string, source: string): string {
-    return `R_${hashObject({ kind, topic, source })}`.slice(0, 26);
+  // The id includes retrievedAt so successive versions from the SAME source get DISTINCT ids — a
+  // newer finding never collides with (and clobbers) the record it supersedes; the supersede chain
+  // stays retrievable.
+  static id(kind: ResearchKind, topic: string, source: string, retrievedAt: string): string {
+    return `R_${hashObject({ kind, topic, source, retrievedAt })}`.slice(0, 26);
   }
 
   /**
@@ -97,12 +100,22 @@ export class ResearchPipeline {
       return { ok: false, reason: `a finding at least as recent already exists for ${key} (incoming ${input.provenance.retrievedAt} <= current ${cur.provenance.retrievedAt})` };
     }
     const now = this.clock.now();
+    // Defensive copy: never store references into caller-owned objects — a later caller mutation
+    // must not corrupt the pipeline's dedup/supersede state or desync the contentHash.
+    const provenance: ResearchProvenance = { source: input.provenance.source, method: input.provenance.method, retrievedAt: input.provenance.retrievedAt };
+    const data = input.data === undefined ? undefined : structuredClone(input.data);
     const record: ResearchRecord = {
-      ...input,
-      id: ResearchPipeline.id(input.kind, input.topic, input.provenance.source),
+      kind: input.kind,
+      topic: input.topic,
+      title: input.title,
+      ...(input.url !== undefined ? { url: input.url } : {}),
+      ...(input.summary !== undefined ? { summary: input.summary } : {}),
+      ...(data !== undefined ? { data } : {}),
+      provenance,
+      id: ResearchPipeline.id(input.kind, input.topic, provenance.source, provenance.retrievedAt),
       status: ResearchStatus.DISCOVERED,
       admittedAt: now,
-      contentHash: hashObject({ kind: input.kind, topic: input.topic, title: input.title, url: input.url ?? null, summary: input.summary ?? null, data: input.data ?? null, provenance: input.provenance }),
+      contentHash: hashObject({ kind: input.kind, topic: input.topic, title: input.title, url: input.url ?? null, summary: input.summary ?? null, data: data ?? null, provenance }),
     };
     if (cur) this.byId.set(cur.id, { ...cur, status: ResearchStatus.SUPERSEDED });
     this.byId.set(record.id, record);
@@ -136,11 +149,21 @@ export class ResearchPipeline {
 
 /** Deterministic scheduler for recurring research runs. Pure; the clock is supplied by the caller. */
 export class ResearchScheduler {
+  /**
+   * Next run = lastRun + interval. FAIL-CLOSED: an invalid/empty lastRun throws rather than silently
+   * defaulting to epoch 0 (which would make the job perpetually "due"). A first-ever run with no
+   * history must be handled explicitly by the caller, not papered over with 1970.
+   */
   nextRunAt(lastRunIso: string, intervalMs: number): string {
-    const base = Number.isNaN(Date.parse(lastRunIso)) ? 0 : Date.parse(lastRunIso);
-    return new Date(base + Math.max(0, intervalMs)).toISOString();
+    const t = Date.parse(lastRunIso);
+    if (Number.isNaN(t)) throw new Error("nextRunAt requires a valid ISO lastRun timestamp");
+    return new Date(t + Math.max(0, intervalMs)).toISOString();
   }
+  /** Due only when both timestamps are valid and now >= next. Invalid input => NOT due (fail-closed). */
   due(nowIso: string, nextRunAtIso: string): boolean {
-    return Date.parse(nowIso) >= Date.parse(nextRunAtIso);
+    const now = Date.parse(nowIso);
+    const next = Date.parse(nextRunAtIso);
+    if (Number.isNaN(now) || Number.isNaN(next)) return false;
+    return now >= next;
   }
 }

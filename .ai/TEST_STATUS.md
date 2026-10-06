@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **412 passed / 412** across 34 files (+ research-intelligence)
+- vitest: **415 passed / 415** across 34 files (research-intelligence + 3 review fixes)
 
 New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **36 tests**
 - content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.

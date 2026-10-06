@@ -2,18 +2,16 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T13:36:00.000Z",
+    "at": "2026-10-06T14:12:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #18 security-appsec-engine",
-    "agents": 21,
-    "reported": 9,
-    "confirmed": 9,
+    "scope": "PR #19 research-intelligence",
+    "agents": 10,
+    "reported": 4,
+    "confirmed": 4,
     "distinctDefectsFixed": [
-      "P0 SECRET LEAK: redaction was per-RULE not per-LINE, so a secret on a line that also matched a non-redacted rule (injection/eval/xss/config) leaked verbatim via the echoed line. Now every echoed snippet is passed through redactSecretsInLine() which masks ALL secret matches — a secret can never leak regardless of which rule echoes the line.",
-      "P1/P2 insecure-config + hardcoded-credential rules missed JSON quoted keys (\"debug\": true) — false negatives on the dominant config format. Rules now tolerate an optional closing quote before the separator.",
-      "P3 SQL-concat rule over-matched English prose; now requires a quoted SQL string with a verb AND a clause keyword before the concat.",
-      "P3 xss-sink flagged `.innerHTML ===` comparisons; now requires assignment (=, not ==).",
-      "P3 weak-cipher regex missed 3DES; added."
+      "P1 same-source supersede collided ids (id excluded retrievedAt), so a newer finding clobbered the SUPERSEDED record (history lost) and `superseded` self-referenced. Id now includes retrievedAt -> distinct per version; the supersede chain is retrievable.",
+      "P2 stored record aliased caller-owned provenance/data (shallow spread); a later caller mutation corrupted dedup and desynced the contentHash. Now provenance is rebuilt from fields and data is structuredClone'd.",
+      "P3 scheduler failed OPEN: an invalid/empty lastRun defaulted to epoch 0 -> perpetually due. nextRunAt now throws on invalid input and due() returns false on invalid timestamps (fail-closed)."
     ],
     "allResolved": true
   },
@@ -24,20 +22,12 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
+    "count": 1,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T13:49:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #18 fix commit 0b427e6",
-    "agents": 8,
-    "reported": 3,
-    "confirmed": 3,
-    "distinctDefectsFixed": [
-      "P0 (x3, same root): the per-line secret sanitizer was a DENYLIST — any secret shape the 5 rules did not cover (snake_case keys like aws_secret_access_key, embedded-quote values, unquoted/$-prefixed, ghp_/AIza tokens, high-entropy literals) still leaked via a co-located non-redact rule's echoed line. Fixed by an ALLOWLIST stance: findings NEVER echo raw line content (only rule title + path:line), so a secret of ANY shape can never leak by construction. Also generalized credential detection to compound/snake_case keys (db_password/aws_secret_access_key/auth_token/...)."
-    ],
-    "allResolved": true
+    "at": null,
+    "note": "re-review of the research-pipeline fixes pending before merge"
   },
   "pr2": {
     "loop1": {

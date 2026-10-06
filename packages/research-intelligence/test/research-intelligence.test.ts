@@ -71,3 +71,39 @@ describe("ResearchScheduler — deterministic", () => {
     expect(s.due("2026-10-06T01:00:00.000Z", next)).toBe(true);
   });
 });
+
+describe("ResearchPipeline — review-fix regressions", () => {
+  it("same-source newer finding supersedes with a DISTINCT id; the prior version stays retrievable", () => {
+    const p = new ResearchPipeline(clock);
+    const a = p.ingest({ kind: ResearchKind.ADVISORY, topic: "CVE-X", title: "v1", provenance: prov("nvd", "2026-10-01T00:00:00.000Z") });
+    const b = p.ingest({ kind: ResearchKind.ADVISORY, topic: "CVE-X", title: "v2", provenance: prov("nvd", "2026-10-05T00:00:00.000Z") });
+    expect(a.ok && b.ok).toBe(true);
+    if (a.ok && b.ok) {
+      expect(b.record.id).not.toBe(a.record.id); // distinct ids across versions
+      expect(b.superseded).toBe(a.record.id);
+      const old = p.get(a.record.id);
+      expect(old?.status).toBe(ResearchStatus.SUPERSEDED); // prior version retained, not clobbered
+      expect(old?.title).toBe("v1");
+      expect(p.get(b.record.id)?.title).toBe("v2");
+      expect(p.list(ResearchKind.ADVISORY)).toHaveLength(1); // only the current is listed
+    }
+  });
+
+  it("defensive copy: mutating the caller's provenance after ingest cannot corrupt dedup state", () => {
+    const p = new ResearchPipeline(clock);
+    const prv = { source: "nvd", method: "manual-import", retrievedAt: "2026-10-05T00:00:00.000Z" };
+    const first = p.ingest({ kind: ResearchKind.ADVISORY, topic: "CVE-Y", title: "current-newest", provenance: prv });
+    expect(first.ok && first.record.provenance).not.toBe(prv); // stored provenance is a copy, not the caller's object
+    prv.retrievedAt = "2000-01-01T00:00:00.000Z"; // caller mutates its own object post-ingest
+    const stale = p.ingest({ kind: ResearchKind.ADVISORY, topic: "CVE-Y", title: "actually-older", provenance: prov("nvd", "2026-01-01T00:00:00.000Z") });
+    expect(stale.ok).toBe(false); // the genuinely older finding is still rejected (dedup used the stored copy)
+  });
+
+  it("scheduler fails CLOSED on invalid input (no perpetual-due from epoch default)", () => {
+    const s = new ResearchScheduler();
+    expect(() => s.nextRunAt("", 1000)).toThrow(/valid ISO/);
+    expect(() => s.nextRunAt("not-a-date", 1000)).toThrow(/valid ISO/);
+    expect(s.due("also-garbage", "2026-10-06T00:00:00.000Z")).toBe(false); // invalid now => not due
+    expect(s.due("2026-10-06T00:00:00.000Z", "garbage")).toBe(false); // invalid next => not due
+  });
+});
