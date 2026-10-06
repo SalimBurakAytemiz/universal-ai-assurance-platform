@@ -137,6 +137,16 @@ describe("@uaap/sandbox-learning — real bounded child-process execution", () =
     expect(r.audit).toBeTruthy();
   });
 
+  it("REGRESSION (round 4): the backstop never throws even when the caught value is unstringifiable", () => {
+    // A hostile opts whose getter throws a value with throwing toString + Symbol.toPrimitive: the
+    // backstop's message extraction must be guarded so the catch itself cannot throw.
+    const evil = { toString() { throw new Error("tostring boom"); }, [Symbol.toPrimitive]() { throw new Error("prim boom"); } };
+    const hostileOpts = { get now() { throw evil; } } as unknown as { now?: () => Date };
+    const r = runSandboxed({ taskId: "noop" }, policy(), hostileOpts);
+    expect(r.status).toBe(SandboxStatus.FAILED);
+    expect(typeof r.reason).toBe("string"); // resolved structurally, no throw to the caller
+  });
+
   it("REGRESSION (round 2): a malformed policy resolves structurally, never throws", () => {
     // missing limits on an allowed task (previously threw reading policy.limits.timeoutMs)
     const noLimits = runSandboxed({ taskId: "noop" }, { allowedTasks: ["noop"] } as unknown as SandboxPolicy);

@@ -8,7 +8,7 @@ Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **468 passed / 468** across 37 files (+ sandbox-learning, real bounded child-process execution, review rounds 1-3 fixes)
+- vitest: **469 passed / 469** across 37 files (+ sandbox-learning, real bounded child-process execution, review rounds 1-4 fixes)
 
 New this change — `@uaap/sandbox-learning` (`packages/sandbox-learning/test/`): **9 tests**
 - A SAFE, LOCAL, bounded execution sandbox for the platform's synthetic learning/eval tasks — the
@@ -47,4 +47,7 @@ on a FAILED assertion because app.quit() beat the deferred app.exit (now app.exi
 proven: a forced-wrong title now exits 4). Round 3 (cap) confirmed 1 more TOTAL gap (null opts threw
 at opts.now; a hostile taskId getter); closed enumeration-free with an OUTER BACKSTOP (runSandboxed
 wraps the inner call in try/catch and returns a structured FAILED on ANY throw) + targeted opts/taskId
-guards. P0/P1/P2/P3 open: 0 / 0 / 0 / 0. A final round-4 confirmation runs on the fix commit.
+guards. Round 4 found the backstop's OWN catch could throw when stringifying a pathological caught
+value (hostile toString/Symbol.toPrimitive/message getter); the message extraction is now guarded,
+so the catch can never throw — the wrapper is total for ANY input. P0/P1/P2/P3 open: 0 / 0 / 0 / 0.
+A final round-5 confirmation runs on the fix commit.

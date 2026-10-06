@@ -128,7 +128,13 @@ export function runSandboxed(request: SandboxRequest, policy: SandboxPolicy, opt
   try {
     return runSandboxedInner(request, policy, opts);
   } catch (e) {
-    return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `sandbox error: ${e instanceof Error ? e.message : String(e)}`, audit: fallbackAudit(startedIso, t0) };
+    // Extract the message under its OWN guard: a hostile thrown value (throwing toString /
+    // Symbol.toPrimitive / message getter) must not make the backstop itself throw. This is the last
+    // conversion in the total-by-construction chain.
+    let msg = "unknown error";
+    try { msg = e instanceof Error ? e.message : String(e); } catch { msg = "unstringifiable error"; }
+    if (typeof msg !== "string") msg = "non-string error";
+    return { status: SandboxStatus.FAILED, result: null, stdout: "", stderr: "", reason: `sandbox error: ${msg}`, audit: fallbackAudit(startedIso, t0) };
   }
 }
 

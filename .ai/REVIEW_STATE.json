@@ -29,7 +29,7 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 3,
+    "count": 4,
     "max": 3
   },
   "pr20": {
@@ -524,6 +524,23 @@
     "regressionTests": "1 new (null opts + hostile taskId getter never throw). 16 in-package, 468/468 repo-wide.",
     "boundedLoop": {
       "count": 3,
+      "max": 3
+    },
+    "allResolved": true
+  },
+  "reReview3": {
+    "at": "2026-10-06T19:23:00.000Z",
+    "type": "ADVERSARIAL_WORKFLOW",
+    "scope": "PR #22 fix commit 5715bcf (round 4 — final TOTAL confirmation)",
+    "agents": 4,
+    "reported": 1,
+    "confirmed": 1,
+    "distinctDefectsFixed": [
+      "P2 the outer backstop catch could ITSELF throw: `${e instanceof Error ? e.message : String(e)}` invokes a hostile toString/Symbol.toPrimitive/message getter on a pathological caught value, re-throwing out of the only backstop. The message extraction is now wrapped in its own try/catch (fallback strings), so the catch can never throw and runSandboxed is total for ANY input."
+    ],
+    "regressionTests": "1 new (unstringifiable caught value -> structured FAILED, no throw). 17 in-package, 469/469 repo-wide.",
+    "boundedLoop": {
+      "count": 4,
       "max": 3
     },
     "allResolved": true
