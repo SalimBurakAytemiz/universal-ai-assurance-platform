@@ -119,3 +119,28 @@ check is a fail-closed STRUCTURAL check in the view-model (id+target+scope prese
 re-implementation of the AuthorizationKernel's window/mode evaluation — the view-model's job is only
 to refuse to render active validation as unlocked unless a genuine scoped record exists; the kernel
 remains the authority for whether a specific action is permitted.
+
+## 2026-10-06 — quality-web-engine built as an OFFLINE recorded-artifact validator (not a live driver)
+
+The build graph's `quality-web-engine` node (QA §12, deps originally orchestrator + tool-adapter-
+registry) was the last READY/buildable quality node. Decision: implement it the SAME way as every
+sibling engine (api/database/realtime/performance/accessibility) — a deterministic, offline-only,
+fail-closed validator over RECORDED web-interaction artifacts — rather than a live Playwright
+driver. Rationale:
+- Architectural consistency + hard rules: engines never touch a target directly (no Agent→Target);
+  the accessibility engine already validates captured SNAPSHOTS, not a live browser. Driving a live
+  browser is a tool-broker adapter gated behind an authorization, which stays locked here. The
+  OFFLINE validation logic is what is technically executable in this environment, so it is what the
+  node delivers; the live capture remains a documented gated boundary.
+- Distinct scope (no overlap): functional web automation — navigation correctness (expected-URL
+  exact + prefix glob), navigation error status, required-element presence/visibility, forbidden-
+  element (error-state) detection, console errors, network failures, recorded step outcome — as
+  opposed to accessibility (WCAG), api (contracts), performance (budgets).
+- Node dependencies corrected to `["engine-core"]` (what the offline engine actually imports),
+  matching the accessibility/performance siblings; the original orchestrator/tool-adapter deps
+  reflected the never-built live-driver framing.
+- FAIL-CLOSED / NO FAKE GREEN: an unrecorded required element or an expected-URL-with-no-actual is
+  reported UNVERIFIABLE, never a silent pass. SECRET-SAFE BY CONSTRUCTION: URL query/fragment
+  stripped before echoing; console/request bodies never echoed (only levels/statuses/methods/counts).
+
+9 tests; `npm run verify` → 440/440 across 36 files. Adversarial review runs on the PR.

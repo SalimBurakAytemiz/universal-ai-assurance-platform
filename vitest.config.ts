@@ -32,6 +32,7 @@ export default defineConfig({
       "@uaap/quality-realtime-engine": r("./packages/quality-realtime-engine/src/index.ts"),
       "@uaap/quality-performance-engine": r("./packages/quality-performance-engine/src/index.ts"),
       "@uaap/quality-accessibility-engine": r("./packages/quality-accessibility-engine/src/index.ts"),
+      "@uaap/quality-web-engine": r("./packages/quality-web-engine/src/index.ts"),
       "@uaap/security-appsec-engine": r("./packages/security-appsec-engine/src/index.ts"),
       "@uaap/research-intelligence": r("./packages/research-intelligence/src/index.ts"),
       "@uaap/desktop-viewmodels": r("./packages/desktop-viewmodels/src/index.ts"),

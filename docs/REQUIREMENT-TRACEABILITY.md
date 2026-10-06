@@ -50,7 +50,7 @@ Sources: `QA` = AI_QA_COMMAND_CENTER spec · `SEC` = AI-SECURITY-FACTORY handoff
 | REQ-GRAPH-001 | Assurance knowledge graph | M1 §11 | NOT_STARTED | — | — |
 | REQ-DOMAIN-001 | Domain-aware + capability-based + packs (generic fallback, multi-domain) | M1 §12,§13 | IMPLEMENTED+TESTED | `packages/domain-model`, `domain-packs/`, `schemas/domain-pack.schema.json` | `domain-model.test.ts` |
 | REQ-QA-API-001 | Strict API contract (AJV) engine | QA §11, M1 §14 | NOT_STARTED | — | — |
-| REQ-QA-WEB-001 | Web automation engine | QA §12 | NOT_STARTED | — | — |
+| REQ-QA-WEB-001 | Web automation engine (offline: recorded web-flow validation; live Playwright capture gated) | QA §12 | IMPLEMENTED+TESTED | `packages/quality-web-engine` (navigation/element/console/network checks, fail-closed, secret-safe) | `quality-web-engine.test.ts` (9) |
 | REQ-SEC-APPSEC-001 | Application security engine | SEC §12 | NOT_STARTED | — | — |
 | REQ-SEC-ACTIVE-001 | Authorized active validation | SEC §4.2, M1 §17 | BLOCKED (needs external authorization + scope) | gate node | — |
 | REQ-EVIDENCE-001 | Execution-backed evidence + chain of custody | QA §16, M1 §29,§31 | IMPLEMENTED+TESTED | `packages/evidence-engine` | `evidence.test.ts` (11) |

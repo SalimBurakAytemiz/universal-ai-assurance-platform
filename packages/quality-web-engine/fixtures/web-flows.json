@@ -1,0 +1,69 @@
+{
+  "flows": [
+    {
+      "id": "login-checkout",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "/login",
+          "expectedUrl": "/login",
+          "status": 200,
+          "requires": [{ "selector": "#email", "present": true, "visible": true }],
+          "console": [{ "level": "info" }],
+          "network": [{ "url": "/api/session", "method": "GET", "status": 200, "ok": true }]
+        },
+        {
+          "action": "submit",
+          "ok": false,
+          "url": "/login?error=1",
+          "expectedUrl": "/dashboard",
+          "console": [{ "level": "error", "text": "irrelevant-should-never-be-echoed" }],
+          "network": [
+            { "url": "https://api.example.test/login?token=SECRET123&pii=alice@example.test", "method": "POST", "status": 401 },
+            { "url": "https://cdn.example.test/app.js", "method": "GET", "failed": true }
+          ]
+        },
+        {
+          "action": "assert",
+          "url": "/login",
+          "status": 503,
+          "requires": [{ "role": "button", "name": "Checkout", "present": false }],
+          "forbids": [{ "selector": ".error-banner", "present": true }]
+        },
+        {
+          "action": "assert",
+          "expectedUrl": "/welcome",
+          "requires": [
+            { "selector": "#cart", "present": true, "visible": false },
+            { "selector": "#total" }
+          ],
+          "console": [{ "level": "bananas" }],
+          "network": [{ "url": "/api/thing", "ok": false }]
+        }
+      ]
+    },
+    {
+      "id": "clean-browse",
+      "steps": [
+        {
+          "action": "navigate",
+          "url": "/",
+          "expectedUrl": "/",
+          "status": 200,
+          "requires": [{ "selector": "#hero", "present": true, "visible": true }],
+          "console": [{ "level": "info" }, { "level": "warn" }],
+          "network": [{ "url": "/api/data", "method": "GET", "status": 200, "ok": true }]
+        },
+        {
+          "action": "click",
+          "url": "/products",
+          "expectedUrl": "/products*",
+          "status": 200,
+          "requires": [{ "role": "button", "name": "Add to cart", "present": true }],
+          "forbids": [{ "selector": ".error", "present": false }],
+          "network": [{ "url": "/api/products?page=1", "method": "GET", "status": 200, "ok": true }]
+        }
+      ]
+    }
+  ]
+}
