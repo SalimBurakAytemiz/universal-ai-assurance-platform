@@ -1,0 +1,22 @@
+{
+  "recordedAt": "2026-10-06T20:16:00.000Z",
+  "kind": "DEV_UNSIGNED",
+  "tool": "@electron/packager@18",
+  "platform": "win32-x64",
+  "artifact": "apps/desktop/dist/UAAP-win32-x64/UAAP.exe (gitignored; regenerate with npm run package:dir)",
+  "sizeBytes": 186328576,
+  "sha256": "ed17ab79df4cf7862b404c8221941bd63282df1d8a19d953c847f2f2a22fde06",
+  "appName": "@uaap/desktop",
+  "appVersion": "0.1.0",
+  "electron": "32.3.3",
+  "signed": false,
+  "startupSmoke": {
+    "command": "UAAP_SMOKE=1 UAAP_REPO_ROOT=<repo> UAAP.exe",
+    "exitCode": 0,
+    "ok": true,
+    "agentsTotal": 72,
+    "securityLocked": true,
+    "note": "the PACKAGED binary launched headless and every view rendered the real repo state"
+  },
+  "productionSigning": "DESKTOP_SIGNING_REQUIRED — no code-signing certificate present; cannot be safely synthesized."
+}

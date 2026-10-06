@@ -9,4 +9,7 @@ System Health, Agents (counts), Authorization, Release Center, Audit, and Build 
 real `.ai` state; all other sections are explicitly marked not available.
 
 Run it: `npm run desktop:dev` (installs Electron into `apps/desktop` on first run).
-Packaging/update/rollback is NOT configured yet (build-graph node `desktop-packaging`).
+Dev/unsigned packaging IS built (`npm run package:dir` → `dist/UAAP-win32-x64/UAAP.exe`; validated by
+`npm run verify:package`). Auto-update + rollback are NOT built yet (build-graph node
+`desktop-update-rollback`, NOT_STARTED — a signed update channel needs a code-signing cert + an
+update server; see `.ai/KNOWN_ISSUES.md` DESKTOP-SIGNING).

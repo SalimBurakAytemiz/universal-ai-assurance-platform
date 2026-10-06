@@ -6,8 +6,12 @@
 const { readFileSync, existsSync } = require("node:fs");
 const { join } = require("node:path");
 
-// Repo root is three levels up from apps/desktop/src.
-const REPO_ROOT = join(__dirname, "..", "..", "..");
+// Repo root is three levels up from apps/desktop/src — OVERRIDABLE via UAAP_REPO_ROOT so a PACKAGED
+// build (where __dirname is inside the app bundle, not the repo) can be pointed at the real repo for
+// a startup smoke. In normal dev/app use the env is unset and the computed path is used.
+const REPO_ROOT = (typeof process.env.UAAP_REPO_ROOT === "string" && process.env.UAAP_REPO_ROOT.trim())
+  ? process.env.UAAP_REPO_ROOT
+  : join(__dirname, "..", "..", "..");
 
 // The REVIEWED view-model logic (bundled from @uaap/desktop-viewmodels). The desktop never
 // re-implements these derivations — it consumes the same adversarially-reviewed, fail-closed layer
@@ -24,7 +28,8 @@ try {
 function computeViewModels() {
   if (!VM || typeof VM.allViewModels !== "function" || typeof VM.loadRepoState !== "function") return null;
   try {
-    return VM.allViewModels(VM.loadRepoState(__dirname));
+    // Load from REPO_ROOT (honors UAAP_REPO_ROOT) so a packaged build resolves the real repo state.
+    return VM.allViewModels(VM.loadRepoState(REPO_ROOT));
   } catch {
     return null;
   }
