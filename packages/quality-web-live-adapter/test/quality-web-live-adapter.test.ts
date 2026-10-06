@@ -13,7 +13,6 @@ describe("@uaap/quality-web-live-adapter — local-target allow-list (fail-close
       "http://localhost:3000/x",
       "http://127.0.0.1/x",
       "https://app.localhost/x",
-      "http://svc.test/x",
       "fixtures/clean.html", // bare relative path -> local file
     ]) {
       expect(isLocalTarget(ok), ok).toBe(true);
@@ -27,6 +26,8 @@ describe("@uaap/quality-web-live-adapter — local-target allow-list (fail-close
       "https://169.254.169.254/latest", // cloud metadata — must be refused
       "http://10.0.0.5/x",
       "ftp://host/x",
+      "http://svc.test/x", // .test is NOT pinned to loopback by Chrome → SSRF via DNS; must be refused
+      "http://metadata.test/", // the same bypass aimed at the metadata IP
       "",
     ]) {
       expect(isLocalTarget(bad), bad).toBe(false);

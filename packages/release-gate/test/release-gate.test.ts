@@ -136,6 +136,19 @@ describe("evaluateRelease", () => {
     expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
   });
 
+  it("REGRESSION (P1): rejects a CASE-VARIANT self-approval (owner 'Alice' / approver 'alice')", () => {
+    const acc: RiskAcceptance = { findingId: "F_P1", reason: "x", owner: "Alice", approver: "alice", expiry: FUTURE };
+    const r = evaluateRelease({ domainResults: okDomains, findings: [finding(Severity.P1)], acceptances: [acc], evidenceBundleValid: true, now: NOW });
+    expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
+  });
+
+  it("REGRESSION (P1): rejects a UNICODE-VARIANT self-approval (fullwidth 'ＡＬＩＣＥ' / 'alice')", () => {
+    // NFKC maps the fullwidth form to ASCII; both canonicalize to "alice" → same identity → blocked.
+    const acc: RiskAcceptance = { findingId: "F_P1", reason: "x", owner: "ＡＬＩＣＥ", approver: "alice", expiry: FUTURE };
+    const r = evaluateRelease({ domainResults: okDomains, findings: [finding(Severity.P1)], acceptances: [acc], evidenceBundleValid: true, now: NOW });
+    expect(r.decision).toBe(ReleaseDecision.RELEASE_BLOCKED);
+  });
+
   it("requires approval when no domains were reported at all", () => {
     const r = evaluateRelease({ domainResults: [], findings: [], evidenceBundleValid: true, now: NOW });
     expect(r.decision).toBe(ReleaseDecision.HUMAN_APPROVAL_REQUIRED);

@@ -12,15 +12,18 @@ import {
 } from "@uaap/core";
 import { AuthorizationKernel, type PolicyEvaluator } from "@uaap/authorization-kernel";
 
-const KNOWN_ACTIONS = new Set<string>([
-  "public.dns.lookup",
-  "http.readonly.get",
-  "db.readonly.query",
-  "web.click",
-  "security.active.probe",
+// Authoritative action→canonical-class catalog (the trusted source an action's risk is derived from,
+// NOT the caller-supplied request.actionClass).
+const KNOWN_ACTIONS = new Map<string, ActionClass>([
+  ["public.dns.lookup", ActionClass.R0_PASSIVE],
+  ["http.readonly.get", ActionClass.R1_LOW_IMPACT],
+  ["db.readonly.query", ActionClass.R1_LOW_IMPACT],
+  ["web.click", ActionClass.R1_LOW_IMPACT],
+  ["security.active.probe", ActionClass.R2_ELEVATED],
 ]);
 
 const NOW = "2026-10-03T12:00:00.000Z";
+const NOW_MS = Date.parse(NOW);
 
 function auth(overrides: Partial<AuthorizationRecord> = {}): AuthorizationRecord {
   return {
@@ -64,7 +67,8 @@ function req(overrides: Partial<ActionRequest> = {}): ActionRequest {
 const kernel = (
   authorizations: AuthorizationRecord[] = [],
   policy?: PolicyEvaluator,
-): AuthorizationKernel => new AuthorizationKernel({ authorizations, knownActions: KNOWN_ACTIONS, policy });
+  clock: () => number = () => NOW_MS,
+): AuthorizationKernel => new AuthorizationKernel({ authorizations, knownActions: KNOWN_ACTIONS, policy, clock });
 
 describe("AuthorizationKernel — fail-closed behavior", () => {
   it("DENIES an unknown action (default deny)", () => {
@@ -101,8 +105,9 @@ describe("AuthorizationKernel — fail-closed behavior", () => {
     expect(r.reason).toBe(DecisionReason.AUTHORIZATION_MISSING);
   });
 
-  it("DENIES when the authorization window has not opened / has expired", () => {
-    const r = kernel([auth()]).decide(req({ now: "2026-12-01T00:00:00.000Z" }));
+  it("DENIES when the authorization window has not opened / has expired (TRUSTED clock)", () => {
+    const expiredClock = () => Date.parse("2026-12-01T00:00:00.000Z");
+    const r = kernel([auth()], undefined, expiredClock).decide(req());
     expect(r.decision).toBe(Decision.DENY);
     expect(r.reason).toBe(DecisionReason.AUTHORIZATION_EXPIRED);
   });
@@ -209,5 +214,48 @@ describe("AuthorizationKernel — the narrow ALLOW paths", () => {
     const r = kernel([auth()], allowAll).decide(req());
     expect(r.decision).toBe(Decision.ALLOW);
     expect(r.evaluated).toContain("policy:allow-in-scope");
+  });
+});
+
+describe("AuthorizationKernel — adversarial-review regression fixes", () => {
+  it("REGRESSION (P0): a target-touching action mislabeled R0_PASSIVE cannot skip authorization", () => {
+    // http.readonly.get is canonically R1 (touches a target). Self-asserting R0_PASSIVE must NOT
+    // downgrade it onto the no-authorization passive path. With no authorization record → DENY.
+    const r = kernel([]).decide(req({ action: "http.readonly.get", actionClass: ActionClass.R0_PASSIVE }));
+    expect(r.decision).toBe(Decision.DENY);
+    expect(r.reason).toBe(DecisionReason.AUTHORIZATION_MISSING);
+    // ...and even inside PROSPECT_PASSIVE mode, the mislabel is still treated as the active R1 it is.
+    const r2 = kernel().decide(
+      req({ mode: Mode.PROSPECT_PASSIVE, action: "http.readonly.get", actionClass: ActionClass.R0_PASSIVE }),
+    );
+    expect(r2.decision).toBe(Decision.DENY);
+  });
+
+  it("REGRESSION (P0): the self-asserted class cannot ESCAPE the authorized ceiling by declaring lower", () => {
+    // security.active.probe is canonically R2. Declaring R1 must not duck the R2 approval requirement.
+    const r = kernel([auth({ maxActionClass: ActionClass.R2_ELEVATED })]).decide(
+      req({ action: "security.active.probe", actionClass: ActionClass.R1_LOW_IMPACT }),
+    );
+    expect(r.decision).toBe(Decision.HUMAN_APPROVAL_REQUIRED);
+    expect(r.reason).toBe(DecisionReason.ELEVATED_REQUIRES_APPROVAL);
+  });
+
+  it("REGRESSION (P1): a request environment contradicting the target's environment is denied", () => {
+    const r = kernel([auth()]).decide(
+      req({
+        environment: Environment.STAGING,
+        target: { id: "T1", name: "x", identifiers: ["app.example.com"], environment: Environment.PRODUCTION },
+      }),
+    );
+    expect(r.decision).toBe(Decision.DENY);
+    expect(r.reason).toBe(DecisionReason.AMBIGUOUS_SCOPE);
+  });
+
+  it("REGRESSION (P1): a backdated request.now cannot revive an expired authorization", () => {
+    // Trusted clock is PAST the window; the agent backdates request.now into the window — still DENY.
+    const pastWindow = () => Date.parse("2026-12-01T00:00:00.000Z");
+    const r = kernel([auth()], undefined, pastWindow).decide(req({ now: "2026-10-15T00:00:00.000Z" }));
+    expect(r.decision).toBe(Decision.DENY);
+    expect(r.reason).toBe(DecisionReason.AUTHORIZATION_EXPIRED);
   });
 });

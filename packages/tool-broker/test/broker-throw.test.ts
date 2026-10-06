@@ -58,13 +58,16 @@ function req(): ActionRequest {
   };
 }
 
+const CLOCK = () => Date.parse(NOW); // trusted clock pinned to NOW for deterministic window/expiry
+
 async function runWith(thrown: unknown) {
   const audit = new AuditLedger();
   const kernel = new AuthorizationKernel({
     authorizations: [auth()],
-    knownActions: new Set(["danger.run"]),
+    knownActions: new Map([["danger.run", ActionClass.R1_LOW_IMPACT]]),
+    clock: CLOCK,
   });
-  const broker = new ToolBroker({ kernel, audit, adapters: new Map([["danger", new ThrowingAdapter(thrown)]]) });
+  const broker = new ToolBroker({ kernel, audit, adapters: new Map([["danger", new ThrowingAdapter(thrown)]]), clock: CLOCK });
   const lease = broker.issueLease({
     runId: "RUN",
     targetId: "T1",

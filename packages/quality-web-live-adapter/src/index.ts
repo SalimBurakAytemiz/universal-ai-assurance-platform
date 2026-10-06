@@ -21,10 +21,15 @@ import {
   type WebStep,
 } from "@uaap/quality-web-engine";
 
-/** Loopback / local hostnames permitted for http(s) and resolved file: hosts. */
+/** Loopback / local hostnames permitted for http(s) and resolved file: hosts.
+ * NOTE: `.test` is deliberately NOT allowed. Unlike `localhost`/`*.localhost`, which Chrome's host
+ * resolver pins unconditionally to loopback, `.test` names are resolved by ordinary DNS — a
+ * split-horizon/wildcard/attacker resolver can map `*.test` to a non-loopback or link-local address
+ * (e.g. the cloud-metadata IP), turning a name-based allow of `.test` into an SSRF. The allow-list is
+ * name-based, so it may only bless names the browser guarantees terminate at loopback. */
 function isLocalHost(hostname: string): boolean {
   const h = (hostname || "").toLowerCase();
-  return h === "" || h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]" || h.endsWith(".localhost") || h.endsWith(".test");
+  return h === "" || h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "[::1]" || h.endsWith(".localhost");
 }
 
 /** FAIL-CLOSED allow-list: only genuinely LOCAL targets may be driven. Everything else is refused —

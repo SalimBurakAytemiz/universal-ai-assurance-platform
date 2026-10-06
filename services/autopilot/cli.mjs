@@ -57,20 +57,27 @@ async function main() {
         process.exitCode = 3;
         break;
       }
-      await service.recover(); // resume interrupted jobs before looping (bare `start` self-recovers)
-      service.resume();
+      // The lock MUST be released even if ANY step after acquisition throws — recover(), resume(),
+      // or the loop (e.g. a transient store-save rename failure). The try therefore opens IMMEDIATELY
+      // after a successful acquire so no throwing step sits outside it; otherwise a dead PID's lock
+      // would block every future `start` until a manual `clear`.
       const release = () => releaseInstanceLock(PID_PATH);
-      process.on("SIGINT", () => { service.stop(); });
-      process.on("SIGTERM", () => { service.stop(); });
-      console.log(`[autopilot] started pid=${process.pid}; provider=${providerGate.isAvailable()}; jobs=${store.list().length}`);
-      // Deterministic monitoring each tick (no LLM): snapshot git/PR/CI to .ai/autopilot/monitor.json.
-      const beforeTick = async () => {
-        const branch = monitor.currentBranch();
-        const snap = { at: realClock.now(), branch, head: monitor.headSha(), pr: branch ? monitor.prStatus(branch) : null, ci: branch ? monitor.ciStatus(branch) : null };
-        try { writeFileSync(join(AI_DIR, "monitor.json"), JSON.stringify(snap, null, 2) + "\n"); } catch { /* ignore */ }
-      };
-      await service.startLoop(5000, { beforeTick });
-      release();
+      try {
+        await service.recover(); // resume interrupted jobs before looping (bare `start` self-recovers)
+        service.resume();
+        process.on("SIGINT", () => { service.stop(); });
+        process.on("SIGTERM", () => { service.stop(); });
+        console.log(`[autopilot] started pid=${process.pid}; provider=${providerGate.isAvailable()}; jobs=${store.list().length}`);
+        // Deterministic monitoring each tick (no LLM): snapshot git/PR/CI to .ai/autopilot/monitor.json.
+        const beforeTick = async () => {
+          const branch = monitor.currentBranch();
+          const snap = { at: realClock.now(), branch, head: monitor.headSha(), pr: branch ? monitor.prStatus(branch) : null, ci: branch ? monitor.ciStatus(branch) : null };
+          try { writeFileSync(join(AI_DIR, "monitor.json"), JSON.stringify(snap, null, 2) + "\n"); } catch { /* ignore */ }
+        };
+        await service.startLoop(5000, { beforeTick });
+      } finally {
+        release();
+      }
       console.log("[autopilot] stopped");
       break;
     }
