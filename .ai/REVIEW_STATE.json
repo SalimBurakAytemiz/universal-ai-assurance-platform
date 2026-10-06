@@ -2,16 +2,16 @@
   "mode": "CLAUDE_IMPLEMENTER_PLUS_ISOLATED_REVIEW",
   "maxBoundedReviewLoops": 3,
   "lastReview": {
-    "at": "2026-10-06T11:33:00.000Z",
+    "at": "2026-10-06T13:11:00.000Z",
     "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #15 quality-performance-engine",
-    "agents": 12,
-    "reported": 5,
-    "confirmed": 5,
+    "scope": "PR #17 quality-accessibility-engine",
+    "agents": 8,
+    "reported": 3,
+    "confirmed": 3,
     "distinctDefectsFixed": [
-      "P1 a non-finite/non-number VALUE on a known threshold key (e.g. p95:\"100\", null, NaN) was silently skipped -> false green. Now surfaced as malformed-threshold (fail-closed).",
-      "P2 negative latencies were accepted and deflated percentiles, masking a real breach. Now a negative/non-finite latencyMs is malformed-sample and excluded.",
-      "P2 an error sample lacking a latency (timeout) was dropped from BOTH error-rate numerator and denominator -> false pass. Error-rate base now counts every observed request (ok boolean OR valid latency); ok===false counts even without a latency."
+      "P2 image name-rule ignored `title` (a valid accname source) -> title-named image falsely flagged image-missing-alt. Now title counts.",
+      "P2 control/interactive name checks omitted name-requiring ARIA roles searchbox / menuitemcheckbox / menuitemradio -> unnamed such controls audited clean (false negative). Added to the role sets.",
+      "P3 whitespace-only aria-label/accessibleName accepted as a name -> genuinely unnamed element passed. All name checks now use a trimmed hasName() / accName()."
     ],
     "allResolved": true
   },
@@ -22,20 +22,12 @@
     "P3": 0
   },
   "boundedLoop": {
-    "count": 2,
+    "count": 1,
     "max": 3
   },
   "reReview": {
-    "at": "2026-10-06T12:44:00.000Z",
-    "type": "ADVERSARIAL_WORKFLOW",
-    "scope": "PR #15 fix commit 47428e9",
-    "agents": 3,
-    "reported": 1,
-    "confirmed": 1,
-    "distinctDefectsFixed": [
-      "P2 threshold RANGE not validated: errorRate>=1 was an un-fireable check (false green) and a negative latency budget cried wolf. Now a known threshold outside its valid range (errorRate in [0,1]; latency >= 0) is malformed-threshold (fail-closed) and not enforced."
-    ],
-    "allResolved": true
+    "at": null,
+    "note": "re-review of the a11y fixes pending before merge"
   },
   "pr2": {
     "loop1": {

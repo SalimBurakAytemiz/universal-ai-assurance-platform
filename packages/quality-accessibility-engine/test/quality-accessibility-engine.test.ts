@@ -82,3 +82,33 @@ describe("QualityAccessibilityEngine — snapshot audit against the local fixtur
     expect(caps.capabilities).toContain("visual.regression");
   });
 });
+
+describe("QualityAccessibilityEngine — review-fix regressions (name sources, roles, whitespace)", () => {
+  it("an image named only via title is NOT flagged (title is a valid accessible name)", async () => {
+    const r = await drive({ pages: [{ id: "p", lang: "en", elements: [{ tag: "img", title: "Company logo" }] }] });
+    expect(kinds(r.findings)).not.toContain("image-missing-alt");
+  });
+
+  it("name-requiring ARIA roles (searchbox / menuitemcheckbox / menuitemradio) without a name are flagged", async () => {
+    const r = await drive({ pages: [{ id: "p", lang: "en", elements: [{ tag: "div", role: "searchbox" }, { tag: "div", role: "menuitemcheckbox" }, { tag: "div", role: "menuitemradio" }] }] });
+    const k = kinds(r.findings);
+    expect(k).toContain("control-missing-label"); // searchbox
+    expect(k).toContain("missing-accessible-name"); // menuitemcheckbox/radio
+  });
+
+  it("a whitespace-only name is not a real name (flagged as unnamed)", async () => {
+    const button = await drive({ pages: [{ id: "p", lang: "en", elements: [{ tag: "button", ariaLabel: " " }] }] });
+    expect(kinds(button.findings)).toContain("missing-accessible-name");
+    const input = await drive({ pages: [{ id: "p", lang: "en", elements: [{ tag: "input", ariaLabel: "  " }] }] });
+    expect(kinds(input.findings)).toContain("control-missing-label");
+    const img = await drive({ pages: [{ id: "p", lang: "en", elements: [{ tag: "img", ariaLabel: " " }] }] });
+    expect(kinds(img.findings)).toContain("image-missing-alt");
+  });
+
+  it("a properly title-labelled control is still accepted (no false positive from the trim change)", async () => {
+    const r = await drive({ pages: [{ id: "p", lang: "en", elements: [{ tag: "input", title: "Email" }, { tag: "button", ariaLabel: "Submit" }] }] });
+    const k = kinds(r.findings);
+    expect(k).not.toContain("control-missing-label");
+    expect(k).not.toContain("missing-accessible-name");
+  });
+});

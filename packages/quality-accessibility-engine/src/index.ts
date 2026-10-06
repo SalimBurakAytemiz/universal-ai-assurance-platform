@@ -55,12 +55,17 @@ export interface A11yEngineInput {
 
 const SEV = { P0: "P0", P1: "P1", P2: "P2", P3: "P3" } as const;
 const CONTROL_TAGS = new Set(["input", "select", "textarea"]);
-const CONTROL_ROLES = new Set(["textbox", "combobox", "listbox", "checkbox", "radio", "switch", "spinbutton", "slider"]);
-const INTERACTIVE_ROLES = new Set(["button", "link", "menuitem", "tab"]);
+const CONTROL_ROLES = new Set(["textbox", "searchbox", "combobox", "listbox", "checkbox", "radio", "switch", "spinbutton", "slider"]);
+const INTERACTIVE_ROLES = new Set(["button", "link", "menuitem", "menuitemcheckbox", "menuitemradio", "tab"]);
 const NON_NAME_INPUT_TYPES = new Set(["hidden"]);
 
 function accName(el: A11yElement): string {
   return (el.accessibleName ?? el.ariaLabel ?? el.title ?? el.text ?? "").trim();
+}
+/** A string is a usable accessible name only if it is non-empty after trimming (a whitespace-only
+ * "name" is trimmed to empty by assistive tech and is NOT a real name). */
+function hasName(s: unknown): boolean {
+  return typeof s === "string" && s.trim() !== "";
 }
 
 /** WCAG relative luminance of an #rrggbb color, or null if the hex is unparseable. */
@@ -169,18 +174,18 @@ export class QualityAccessibilityEngine implements ExecutionEngine {
           // the correct marker for a decorative image. Only a MISSING alt (with no aria-label /
           // accessible name) is a violation.
           if ((tag === "img" || role === "img") && !decorative) {
-            const hasAltAttr = typeof el.alt === "string";
-            if (!hasAltAttr && !el.ariaLabel && !el.accessibleName) add(finding({ severity: SEV.P1, kind: "image-missing-alt", title: "Image missing alt attribute", detail: `<${tag}> has no alt attribute, aria-label, or accessible name (use alt="" for a decorative image).`, locator: eloc }));
+            const hasAltAttr = typeof el.alt === "string"; // present (even "") = valid decorative
+            if (!hasAltAttr && !hasName(el.ariaLabel) && !hasName(el.accessibleName) && !hasName(el.title)) add(finding({ severity: SEV.P1, kind: "image-missing-alt", title: "Image missing alt attribute", detail: `<${tag}> has no alt attribute, aria-label, title, or accessible name (use alt="" for a decorative image).`, locator: eloc }));
           }
-          // Form-control label.
+          // Form-control label. (title IS a valid name source per the accname algorithm.)
           const isControl = (CONTROL_TAGS.has(tag) && !NON_NAME_INPUT_TYPES.has(String((el as { type?: string }).type ?? ""))) || (role !== undefined && CONTROL_ROLES.has(role));
           if (isControl && !decorative) {
-            if (!el.labelled && !el.ariaLabel && !el.accessibleName && !el.title) add(finding({ severity: SEV.P1, kind: "control-missing-label", title: "Form control missing label", detail: `<${tag}${role ? ` role=${role}` : ""}> has no associated label / aria-label / accessible name.`, locator: eloc }));
+            if (!el.labelled && !hasName(el.ariaLabel) && !hasName(el.accessibleName) && !hasName(el.title)) add(finding({ severity: SEV.P1, kind: "control-missing-label", title: "Form control missing label", detail: `<${tag}${role ? ` role=${role}` : ""}> has no associated label / aria-label / accessible name.`, locator: eloc }));
           }
-          // Interactive accessible name (button / link).
+          // Interactive accessible name (button / link). accName() already trims every source.
           const isInteractive = tag === "button" || (tag === "a" && typeof el.href === "string" && el.href !== "") || (role !== undefined && INTERACTIVE_ROLES.has(role));
           if (isInteractive && !decorative) {
-            if (accName(el) === "" && !el.ariaLabel && !el.accessibleName) add(finding({ severity: SEV.P1, kind: "missing-accessible-name", title: "Interactive element missing accessible name", detail: `<${tag}${role ? ` role=${role}` : ""}> has no text / aria-label / accessible name.`, locator: eloc }));
+            if (accName(el) === "") add(finding({ severity: SEV.P1, kind: "missing-accessible-name", title: "Interactive element missing accessible name", detail: `<${tag}${role ? ` role=${role}` : ""}> has no text / aria-label / accessible name.`, locator: eloc }));
           }
           // Headings (for order check).
           const hMatch = /^h([1-6])$/.exec(tag);
