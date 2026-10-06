@@ -2,13 +2,13 @@
 
 Recorded from ACTUAL local runs (never hand-written as "pass").
 
-## Last local run — 2026-10-06 (branch auto/research-intelligence)
+## Last local run — 2026-10-06 (branch auto/desktop-viewmodels)
 
 Command: `npm run verify` (validate → typecheck → test)
 
 - validate: **OK** (policies, build graph, agents, skills, adapters, domains, knowledge, state)
 - typecheck (`tsc --noEmit`): **OK**
-- vitest: **416 passed / 416** across 34 files (research-intelligence; review + re-review fixes)
+- vitest: **431 passed / 431** across 35 files (+ desktop-viewmodels real-state data layer, hardened through review round 3)
 
 New this change — `@uaap/knowledge-graph` (`packages/knowledge-graph/test/`): **36 tests**
 - content-addressed + idempotent nodes/edges; fail-closed endpoint-type validation.

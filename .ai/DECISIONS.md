@@ -83,3 +83,39 @@
   ALWAYS returns BLOCKED_EXTERNAL_RESEARCH — no finding is ever fabricated; only PROVIDED local
   findings are ingested. Live external fetch stays BLOCKED_EXTERNAL_RESEARCH until a real fetcher is
   authorized/available.
+- **2026-10-06** `@uaap/desktop-viewmodels` builds the REAL-state data layer behind the desktop views
+  (Home/BuildGraph/Agents/Reviews/SecurityPosture) as pure, unit-tested derivations of .ai/* + the
+  registries + the recorded test status — "no fake green dashboard": every value traces to state,
+  absent state reads "unknown" (never "ok"), and security posture is FAIL-CLOSED (active validation
+  reads LOCKED unless the real state says otherwise AND an authorization record exists; an
+  inconsistency is surfaced, not hidden). The Electron window RENDERING of these view-models (the
+  desktop-*-view nodes) still needs the desktop runtime to build/run and is not claimed here.
+
+## 2026-10-06 — desktop-viewmodels adversarial review (PR #20, round 1): 8 confirmed defects fixed
+
+An isolated adversarial workflow (27 agents: 3 review dimensions → 3-skeptic majority verify)
+reviewed `@uaap/desktop-viewmodels` AFTER CI was already green. It confirmed 8 defects (all
+unanimous 3/3) — exactly the fail-open / fake-green / crash-not-degrade failures the module exists
+to prevent. CI green is NOT sufficient; the adversarial gate caught what the tests did not:
+
+- **P1 fail-open (allow-list, not deny-list).** `securityPostureViewModel.locked` keyed on
+  `=== "LOCKED_BY_DESIGN"`, so ANY other state value (typo, "", "PENDING", "enabled", stale) with a
+  non-empty auth array read as UNLOCKED. Now unlock requires the state to be explicitly `ENABLED`
+  AND a genuine authorization; every unrecognized state is LOCKED and surfaces an inconsistency.
+- **P1 fail-open (genuine authorization).** `authorizationsPresent` was `Array.isArray && length>0`,
+  so `[{}]`/`[null]`/`[0]`/`[""]`/an id-only stub masqueraded as a real authorization. Now each
+  entry is structurally validated against `@uaap/core` `AuthorizationRecord` — non-empty `id` +
+  `targetId` + at least one `allowedIdentifiers` entry (the "record + explicit scope" hard rule).
+- **P2 fake-green on home.** `homeViewModel.activeSecurityValidation` passed the raw master state
+  through (home badge read "ENABLED" with no auth). Now auth-gated to the effective posture.
+- **P2 crash-not-degrade ×2.** `findRepoRoot()` and the `TEST_STATUS.md` `readFileSync` were outside
+  try/catch; a packaged build or an EISDIR/EACCES/TOCTOU crashed the whole data layer. Both now
+  degrade to the documented honest defaults.
+- **P3 stale count.** `parseTestStatus` returned the FIRST doc match; now anchored to the
+  authoritative `## Last local run` section.
+
+Fixed with 5 new regression tests (13 in-package, 429/429 repo-wide). Decision: the authorization
+check is a fail-closed STRUCTURAL check in the view-model (id+target+scope present), NOT a
+re-implementation of the AuthorizationKernel's window/mode evaluation — the view-model's job is only
+to refuse to render active validation as unlocked unless a genuine scoped record exists; the kernel
+remains the authority for whether a specific action is permitted.
